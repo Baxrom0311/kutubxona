@@ -6,6 +6,9 @@ from django.core.exceptions import ValidationError
 from catalog.admin import LoanEntryAdmin, QaytarilganFilter
 from catalog.models import LoanEntry
 
+pytestmark = pytest.mark.django_db
+
+
 
 def test_mehmon_admin_panelga_kirmaydi(client):
     response = client.get("/admin/")
@@ -69,3 +72,12 @@ def test_admin_holat_filtri(rf, kitob, oquvchi, kutubxonachi, form_darslik):
     f_qaytarilgan = QaytarilganFilter(request, {"holat": ["qaytarilgan"]}, LoanEntry, model_admin)
     qs_qaytarilgan = f_qaytarilgan.queryset(request, LoanEntry.objects.all())
     assert list(qs_qaytarilgan) == [qarz2]
+
+
+def test_axes_brute_force_qayd_qilish(client):
+    """Admin panelga ketma-ket noto'g'ri kirish urinishlari qayd etilishini tekshirish."""
+    from axes.models import AccessAttempt
+    for _ in range(3):
+        client.post("/admin/login/", {"username": "hacker", "password": "wrongpassword"})
+    assert AccessAttempt.objects.filter(username="hacker").exists()
+
