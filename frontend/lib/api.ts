@@ -8,7 +8,7 @@ import {
   Yonalish,
 } from "./types";
 
-const ASOS = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+const ASOS = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001/api";
 
 export async function kitoblarniOlish(
   params: KatalogFiltri = {}
