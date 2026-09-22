@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -14,11 +14,13 @@ export default function Navbar() {
   const searchParams = useSearchParams();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [prevPathname, setPrevPathname] = useState(pathname);
 
-  // Close mobile menu on navigation
-  useEffect(() => {
+  // Close mobile menu on navigation without cascading effect
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setMobileMenuOpen(false);
-  }, [pathname]);
+  }
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const nextLocale = e.target.value as "uz" | "ru" | "en";
@@ -84,7 +86,7 @@ export default function Navbar() {
                 aria-label={t("til")}
                 className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer pr-1"
               >
-                <option value="uz" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">O'zbek</option>
+                <option value="uz" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">O&apos;zbek</option>
                 <option value="ru" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">Русский</option>
                 <option value="en" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">English</option>
               </select>

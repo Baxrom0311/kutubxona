@@ -1,11 +1,24 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
-import { routing } from "@/i18n/routing";
+import { routing, Locale } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import ClientShell from "@/components/ClientShell";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "../globals.css";
+
+const inter = Inter({
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin", "cyrillic-ext"],
+  display: "swap",
+  variable: "--font-jakarta",
+});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -17,7 +30,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  if (!routing.locales.includes(locale as any)) {
+  if (!routing.locales.includes(locale as Locale)) {
     return {};
   }
   const t = await getTranslations({ locale, namespace: "metadata" });
@@ -35,7 +48,7 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (!routing.locales.includes(locale as any)) {
+  if (!routing.locales.includes(locale as Locale)) {
     notFound();
   }
   const messages = await getMessages();
@@ -46,16 +59,6 @@ export default async function LocaleLayout({
     <html lang={locale} className={isDark ? "dark" : ""} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-          rel="stylesheet"
-        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -79,7 +82,7 @@ export default async function LocaleLayout({
           }}
         />
       </head>
-      <body className="antialiased min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-150">
+      <body className={`${inter.variable} ${plusJakarta.variable} font-sans antialiased min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-150`}>
         <NextIntlClientProvider messages={messages}>
           <ClientShell initialTheme={isDark ? "dark" : "light"}>{children}</ClientShell>
         </NextIntlClientProvider>

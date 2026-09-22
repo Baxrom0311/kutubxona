@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
@@ -30,24 +30,16 @@ export default function AiChatWidget({
 
   const xabarlarOxiriRef = useRef<HTMLDivElement>(null);
 
-  // Set initial welcome message translated to current locale
-  useEffect(() => {
-    setXabarlar((prev) => {
-      if (prev.length === 0 || (prev.length === 1 && prev[0].rol === "assistant")) {
-        return [
-          {
-            rol: "assistant",
-            matn: t("salom"),
-          },
-        ];
-      }
-      return prev;
-    });
-  }, [t]);
+  // Derived messages: if user hasn't messaged yet, show translated welcome message
+  const displayXabarlar: Xabar[] = useMemo(() => {
+    return xabarlar.length === 0
+      ? [{ rol: "assistant", matn: t("salom") }]
+      : xabarlar;
+  }, [xabarlar, t]);
 
   useEffect(() => {
     xabarlarOxiriRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [xabarlar, yuklanmoqda]);
+  }, [displayXabarlar, yuklanmoqda]);
 
   const xabarYuborish = async (matn: string) => {
     if (!matn.trim() || yuklanmoqda) return;
@@ -182,7 +174,7 @@ export default function AiChatWidget({
               </div>
 
               {/* Conversation */}
-              {xabarlar.map((x, i) => (
+              {displayXabarlar.map((x, i) => (
                 <div
                   key={i}
                   className={`flex flex-col ${

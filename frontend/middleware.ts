@@ -1,5 +1,5 @@
 import createMiddleware from "next-intl/middleware";
-import { routing } from "./i18n/routing";
+import { routing, Locale } from "./i18n/routing";
 import { NextRequest, NextResponse } from "next/server";
 
 const intlMiddleware = createMiddleware(routing);
@@ -10,7 +10,7 @@ export default function middleware(request: NextRequest) {
   // Root URL visit: Check if user has chosen a locale before
   if (pathname === "/") {
     const savedLocale = request.cookies.get("NEXT_LOCALE")?.value;
-    if (savedLocale && routing.locales.includes(savedLocale as any)) {
+    if (savedLocale && routing.locales.includes(savedLocale as Locale)) {
       return NextResponse.redirect(new URL(`/${savedLocale}`, request.url));
     }
     // Initial / first-time visit: default to 'uz'

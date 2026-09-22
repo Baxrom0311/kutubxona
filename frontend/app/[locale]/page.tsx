@@ -1,5 +1,5 @@
 import { Link } from "@/i18n/routing";
-import { kitoblarniOlish, yonalishlarniOlish } from "@/lib/api";
+import { kitoblarniOlish } from "@/lib/api";
 import KitobKartochka from "@/components/KitobKartochka";
 import OpenAiChatButton from "@/components/OpenAiChatButton";
 import { getTranslations } from "next-intl/server";
@@ -17,10 +17,7 @@ export default async function HomePage({ params }: HomePageProps) {
   const t = await getTranslations({ locale, namespace: "home" });
 
   // Yangi va eng ko'p o'qilgan kitoblarni olish
-  const [yangiKitoblarRes, yonalishlar] = await Promise.all([
-    kitoblarniOlish({ saralash: "-qoshilgan_sana" }),
-    yonalishlarniOlish(),
-  ]);
+  const yangiKitoblarRes = await kitoblarniOlish({ saralash: "-qoshilgan_sana" });
 
   const yangiKitoblar = yangiKitoblarRes.natijalar.slice(0, 4);
 

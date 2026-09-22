@@ -23,7 +23,7 @@ export function ThemeProvider({
 }) {
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
-  // Sync theme on mount and whenever initialTheme/route changes
+  // Sync theme on mount if client localStorage has an explicitly saved preference
   useEffect(() => {
     try {
       const savedLocal = localStorage.getItem("theme") as Theme | null;
@@ -32,7 +32,9 @@ export function ThemeProvider({
       const effectiveTheme = savedLocal || savedCookie || initialTheme;
 
       if (effectiveTheme === "dark" || effectiveTheme === "light") {
-        setTheme(effectiveTheme);
+        if (effectiveTheme !== theme) {
+          queueMicrotask(() => setTheme(effectiveTheme));
+        }
         if (effectiveTheme === "dark") {
           document.documentElement.classList.add("dark");
         } else {
@@ -45,7 +47,7 @@ export function ThemeProvider({
     } catch {
       // Ignore in restricted environments
     }
-  }, [initialTheme]);
+  }, [initialTheme, theme]);
 
   // Ensure <html> always has the right class whenever state changes
   useEffect(() => {
