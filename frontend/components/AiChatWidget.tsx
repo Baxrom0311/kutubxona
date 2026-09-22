@@ -190,7 +190,7 @@ export default function AiChatWidget({
               }`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs ${
+                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs animate-fade-in-fast ${
                   x.rol === "user"
                     ? "bg-sky-800 text-white rounded-tr-none"
                     : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-tl-none"

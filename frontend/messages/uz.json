@@ -27,7 +27,7 @@
     "yangiAdabiyotlar": "Yangi qo‘shilgan klinik darsliklar",
     "yangiAdabiyotlarSub": "Yangi adabiyotlar",
     "katalogdaKorish": "Katalogda ko'rish",
-    "aiBannerBadge": "DeepSeek AI LLM Maslahatchisi",
+    "aiBannerBadge": "Aqlli AI Maslahatchisi",
     "aiBannerSarlavha": "Kerakli darslik yoki klinik protokolni topa olmadingizmi?",
     "aiBannerTavsif": "Sun'iy intellekt yordamchisiga kasallik alomati, muolaja nomi yoki dars mavzusini ayting — u kutubxona fondidagi eng mos darsliklarni tavsiya qiladi.",
     "aiBannerBtn": "AI Maslahatchi bilan suhbat"
@@ -85,7 +85,7 @@
   "ai": {
     "tugma": "AI Maslahatchi",
     "sarlavha": "Kutubxona AI Maslahatchisi",
-    "onlayn": "DeepSeek AI • Onlayn",
+    "onlayn": "AI Maslahatchi • Onlayn",
     "salom": "Assalomu alaykum! Men kutubxonaning aqlli AI maslahatchisiman. Qaysi soha yoki mavzu bo'yicha darslik qidiryapsiz? Sizga kutubxonadagi eng yaxshi kitoblarni topib bera olaman.",
     "tezkor": "Tezkor so'rovlar:",
     "taklif1": "Kardiologiya bo'yicha kitoblar",
@@ -108,7 +108,7 @@
     "epubYuklabOlish": "EPUB faylni yuklab olish"
   },
   "footer": {
-    "tavsif": "Tibbiyot va umumta'lim darsliklarining ochiq elektron kutubxonasi va DeepSeek AI maslahatchisi.",
+    "tavsif": "Tibbiyot va hamshiralik ishi bo'yicha klinik darsliklar hamda yo'nalishlar bo'yicha elektron adabiyotlar fondi.",
     "manzilSarlavha": "Manzil va Bog‘lanish",
     "manzil": "Toshkent sh., Chilonzor t., Bunyodkor shoh ko‘chasi 1-uy",
     "telefon": "+998 (71) 200-00-00",
@@ -121,7 +121,6 @@
     "darsliklar": "Darsliklar",
     "ommabop": "Ommabop darsliklar",
     "ijtimoiyTarmoqlar": "Biz ijtimoiy tarmoqlarda",
-    "bepulFond": "100% Bepul va Ochiq Fond",
     "huquqlar": "Barcha huquqlar himoyalangan."
   }
 }

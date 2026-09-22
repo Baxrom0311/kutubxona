@@ -87,9 +87,9 @@ export default async function HomePage({ params }: HomePageProps) {
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[850px] h-[450px] bg-sky-200/40 dark:bg-sky-950/30 rounded-full blur-[110px] pointer-events-none" />
         <div className="absolute top-1/3 -right-24 w-[420px] h-[420px] bg-teal-200/40 dark:bg-teal-950/30 rounded-full blur-[90px] pointer-events-none" />
 
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-12 flex flex-col items-center text-center">
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-12 flex flex-col items-center text-center animate-fade-in">
           {/* Verified Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 shadow-xs mb-6 border border-slate-100 dark:border-slate-800">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 shadow-2xs mb-6 border border-slate-200 dark:border-slate-800 hover:scale-102 transition-transform">
             <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-600 text-white">
               <span className="material-symbols-outlined text-[12px]">check</span>
             </span>
@@ -109,7 +109,7 @@ export default async function HomePage({ params }: HomePageProps) {
           </p>
 
           {/* Search Bar */}
-          <div className="w-full max-w-3xl bg-white dark:bg-slate-900 p-2.5 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 mb-6">
+          <div className="w-full max-w-3xl bg-white dark:bg-slate-900 p-2.5 rounded-2xl shadow-md hover:shadow-lg focus-within:shadow-xl focus-within:ring-2 focus-within:ring-sky-500/20 border border-slate-200 dark:border-slate-800 mb-6 transition-all duration-300">
             <form action={`/${locale}/katalog`} method="GET" className="flex flex-col sm:flex-row items-center gap-2">
               <div className="flex items-center gap-3 w-full px-4 py-2 text-slate-400">
                 <span className="material-symbols-outlined text-sky-700 dark:text-sky-400 text-[26px]">search</span>
@@ -117,12 +117,12 @@ export default async function HomePage({ params }: HomePageProps) {
                   name="q"
                   type="text"
                   placeholder={t("qidiruvPlaceholder")}
-                  className="w-full bg-transparent text-sm sm:text-base text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none"
+                  className="w-full bg-transparent text-sm sm:text-base text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-sm font-semibold transition-all flex items-center justify-center gap-2 shadow-md flex-shrink-0"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-sm font-semibold hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shadow-md flex-shrink-0"
               >
                 <span>{t("qidirish")}</span>
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
@@ -137,7 +137,7 @@ export default async function HomePage({ params }: HomePageProps) {
               <Link
                 key={m.q}
                 href={`/katalog?q=${encodeURIComponent(m.q)}`}
-                className="px-3 py-1 rounded-full bg-white dark:bg-slate-800 hover:bg-sky-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-sky-800 dark:hover:text-white text-xs font-medium border border-slate-200/60 dark:border-slate-700 shadow-2xs transition-colors"
+                className="px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-sky-800 dark:hover:text-white text-xs font-medium border border-slate-200 dark:border-slate-800 shadow-2xs hover:-translate-y-0.5 transition-all duration-200"
               >
                 {m.nom}
               </Link>
@@ -148,14 +148,14 @@ export default async function HomePage({ params }: HomePageProps) {
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <Link
               href="/katalog"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-sm font-semibold shadow-md flex items-center justify-center gap-2 transition-all"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 transition-all duration-200"
             >
               <span className="material-symbols-outlined text-[20px]">menu_book</span>
               <span>{t("kataloggaOtish")}</span>
             </Link>
             <Link
               href="/katalog"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-sky-900 dark:text-white text-sm font-semibold border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center gap-2 transition-all"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sky-900 dark:text-white text-sm font-semibold border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 transition-all duration-200"
             >
               <span className="material-symbols-outlined text-teal-600 dark:text-teal-400 text-[20px]">auto_awesome</span>
               <span>{t("barchaDarsliklar")}</span>
@@ -167,7 +167,7 @@ export default async function HomePage({ params }: HomePageProps) {
       {/* 2. Metrics Strip */}
       <section className="w-full max-w-7xl mx-auto px-6 lg:px-12 mb-16">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex items-center gap-4">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
               <span className="material-symbols-outlined text-[26px]">collections_bookmark</span>
             </div>
@@ -177,7 +177,7 @@ export default async function HomePage({ params }: HomePageProps) {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex items-center gap-4">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-400 flex items-center justify-center flex-shrink-0">
               <span className="material-symbols-outlined text-[26px]">medical_services</span>
             </div>
@@ -187,7 +187,7 @@ export default async function HomePage({ params }: HomePageProps) {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex items-center gap-4">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
               <span className="material-symbols-outlined text-[26px]">lock_open_right</span>
             </div>
@@ -197,7 +197,7 @@ export default async function HomePage({ params }: HomePageProps) {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex items-center gap-4">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
               <span className="material-symbols-outlined text-[26px]">bolt</span>
             </div>
@@ -234,10 +234,10 @@ export default async function HomePage({ params }: HomePageProps) {
             <Link
               key={spec.nom}
               href={`/katalog?yonalish=${spec.yonalish}`}
-              className="group p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-teal-300 dark:hover:border-teal-600 hover:shadow-lg transition-all flex flex-col justify-between"
+              className="group p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-400 dark:hover:border-teal-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
             >
               <div>
-                <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-slate-800 group-hover:bg-teal-600 text-sky-800 dark:text-sky-400 group-hover:text-white flex items-center justify-center transition-colors mb-4">
+                <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-slate-800 group-hover:bg-teal-600 text-sky-800 dark:text-sky-400 group-hover:text-white flex items-center justify-center transition-colors mb-4 shadow-2xs">
                   <span className="material-symbols-outlined text-[24px]">
                     {spec.icon}
                   </span>
@@ -289,12 +289,12 @@ export default async function HomePage({ params }: HomePageProps) {
         </section>
       )}
 
-      {/* 5. DeepSeek AI Banner Callout (From Stitch) */}
+      {/* 5. AI Maslahatchi Banner Callout */}
       <section className="w-full max-w-7xl mx-auto px-6 lg:px-12 mb-24">
-        <div className="relative rounded-3xl p-8 lg:p-12 bg-gradient-to-r from-sky-900 via-teal-900 to-slate-900 text-white overflow-hidden shadow-2xl">
-          <div className="absolute right-0 top-0 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative rounded-3xl p-8 lg:p-12 bg-gradient-to-br from-sky-900 via-teal-900 to-slate-900 text-white overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 border border-sky-800/40 dark:border-slate-800">
+          <div className="absolute right-0 top-0 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-teal-300 mb-4 border border-white/10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-teal-300 mb-4 border border-white/10">
               <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
               <span>{t("aiBannerBadge")}</span>
             </div>
@@ -306,7 +306,7 @@ export default async function HomePage({ params }: HomePageProps) {
             </p>
             <Link
               href="/katalog"
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 text-sm font-bold shadow-lg transition-all"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 active:scale-95 text-slate-950 text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
             >
               <span className="material-symbols-outlined text-[20px]">smart_toy</span>
               <span>{t("aiBannerBtn")}</span>

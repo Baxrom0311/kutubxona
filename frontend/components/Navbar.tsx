@@ -96,9 +96,9 @@ export default function Navbar({ onOpenAiChat }: NavbarProps) {
             type="button"
             aria-label={theme === "dark" ? t("yorug") : t("qorongu")}
             title={theme === "dark" ? t("yorug") : t("qorongu")}
-            className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 flex items-center justify-center transition-colors shadow-2xs"
+            className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 shadow-2xs"
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span className={`material-symbols-outlined text-[20px] transition-transform duration-300 ${theme === "dark" ? "rotate-0" : "-rotate-90"}`}>
               {theme === "dark" ? "light_mode" : "dark_mode"}
             </span>
           </button>
@@ -107,7 +107,7 @@ export default function Navbar({ onOpenAiChat }: NavbarProps) {
           <button
             onClick={onOpenAiChat}
             type="button"
-            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-700 hover:bg-sky-800 dark:bg-teal-600 dark:hover:bg-teal-500 text-white text-xs font-semibold transition-all shadow-sm"
+            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-700 hover:bg-sky-800 dark:bg-teal-600 dark:hover:bg-teal-500 text-white text-xs font-semibold hover:scale-103 active:scale-95 transition-all duration-200 shadow-sm"
           >
             <span className="material-symbols-outlined text-[18px]">smart_toy</span>
             <span>{t("aiMaslahatchi")}</span>

@@ -24,10 +24,6 @@ export default function Footer() {
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               {t("tavsif")}
             </p>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-50 dark:bg-slate-900 text-[11px] font-semibold text-teal-800 dark:text-emerald-400 border border-teal-100 dark:border-slate-800 w-fit">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>{t("bepulFond")}</span>
-            </div>
           </div>
 
           {/* 2. Tezkor havolalar */}

@@ -27,7 +27,7 @@
     "yangiAdabiyotlar": "New Clinical Textbooks",
     "yangiAdabiyotlarSub": "Recent Arrivals",
     "katalogdaKorish": "View in catalog",
-    "aiBannerBadge": "DeepSeek AI LLM Assistant",
+    "aiBannerBadge": "Smart AI Assistant",
     "aiBannerSarlavha": "Can't find the clinical guide or textbook you need?",
     "aiBannerTavsif": "Describe a medical symptom, treatment protocol, or study subject to our AI — it will instantly recommend matching literature from the library catalog.",
     "aiBannerBtn": "Chat with AI Assistant"
@@ -86,7 +86,7 @@
   "ai": {
     "tugma": "AI Assistant",
     "sarlavha": "Library AI Assistant",
-    "onlayn": "DeepSeek AI • Online",
+    "onlayn": "AI Assistant • Online",
     "salom": "Hello! I am the library's AI assistant. Which subject or specialty are you researching? I can help find the best textbooks from our catalog.",
     "tezkor": "Quick prompts:",
     "taklif1": "Books on cardiology",
@@ -109,7 +109,7 @@
     "epubYuklabOlish": "Download EPUB file"
   },
   "footer": {
-    "tavsif": "Open digital library of medical and nursing textbooks powered by DeepSeek AI assistant.",
+    "tavsif": "Open digital library of clinical textbooks and intelligent AI literature search assistant for medical education.",
     "manzilSarlavha": "Address & Contact",
     "manzil": "Tashkent city, Chilanzar district, Bunyodkor avenue, building 1",
     "telefon": "+998 (71) 200-00-00",
@@ -122,7 +122,6 @@
     "darsliklar": "Textbooks",
     "ommabop": "Popular Books",
     "ijtimoiyTarmoqlar": "Follow Us",
-    "bepulFond": "100% Free & Open Access",
     "huquqlar": "All rights reserved."
   }
 }
