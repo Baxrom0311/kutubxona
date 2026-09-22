@@ -3,6 +3,7 @@
 from datetime import timedelta
 from django.db.models import Count
 from django.utils import timezone
+from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -42,6 +43,28 @@ class BookViewSet(viewsets.ReadOnlyModelViewSet):
             return BookDetailSerializer
         return BookListSerializer
 
+    @extend_schema(
+        summary="Kitobni o'qish uchun Presigned URL",
+        description="Kitob faylini Cloudflare R2 dan o'qish uchun 2 soatlik vaqtinchalik xavfsiz URL qaytaradi",
+        parameters=[
+            OpenApiParameter(
+                name="fayl_id",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.PATH,
+                description="Fayl ID raqami",
+            ),
+        ],
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string"},
+                    "format": {"type": "string"},
+                    "amal_qiladi": {"type": "string"},
+                },
+            }
+        },
+    )
     @action(
         detail=True,
         methods=["get"],
@@ -111,6 +134,12 @@ class ChatBotView(APIView):
 
     throttle_classes = [ChatRateThrottle]
 
+    @extend_schema(
+        summary="DeepSeek AI kutubxona virtual maslahatchisi",
+        description="Foydalanuvchi so'roviga javob beradi va kerakli kitoblarni tavsiya qiladi",
+        request=ChatRequestSerializer,
+        responses={200: ChatResponseSerializer},
+    )
     def post(self, request):
         serializer = ChatRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -139,6 +168,11 @@ class ChatBotView(APIView):
 class ChatSessionView(APIView):
     """Suhbat sessiyasi tarixini olish."""
 
+    @extend_schema(
+        summary="Suhbat sessiyasi tarixini olish",
+        description="Berilgan session_id bo'yicha barcha xabarlar tarixini qaytaradi",
+        responses={200: ChatMessageSerializer(many=True)},
+    )
     def get(self, request, session_id):
         session = ChatSession.objects.filter(id=session_id).first()
         if not session:

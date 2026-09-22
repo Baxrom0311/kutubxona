@@ -1,5 +1,6 @@
 """Kutubxona API serializatorlari."""
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from catalog.models import Author, Book, BookFile, Form, Subject
@@ -60,6 +61,7 @@ class SubjectSerializer(serializers.ModelSerializer):
         all_ids = self._get_all_descendant_ids(obj)
         return Book.objects.filter(yonalishlar__id__in=all_ids).distinct().count()
 
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
     def get_bolalar(self, obj):
         children = obj.bolalar.all().order_by("tartib", "nomi_uz")
         return SubjectSerializer(children, many=True).data

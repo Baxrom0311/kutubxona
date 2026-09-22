@@ -1,0 +1,934 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Elektron Kutubxona API",
+        "version": "1.0.0",
+        "description": "Maktab va kollej elektron kutubxonasi hamda DeepSeek AI maslahatchisi REST API hujjati"
+    },
+    "paths": {
+        "/api/chat/": {
+            "post": {
+                "operationId": "chat_create",
+                "description": "Foydalanuvchi so'roviga javob beradi va kerakli kitoblarni tavsiya qiladi",
+                "summary": "DeepSeek AI kutubxona virtual maslahatchisi",
+                "tags": [
+                    "chat"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatRequest"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatRequest"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/chat/sessiya/{session_id}/": {
+            "get": {
+                "operationId": "chat_sessiya_list",
+                "description": "Berilgan session_id bo'yicha barcha xabarlar tarixini qaytaradi",
+                "summary": "Suhbat sessiyasi tarixini olish",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "session_id",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ChatMessage"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/kitoblar/": {
+            "get": {
+                "operationId": "kitoblar_list",
+                "description": "Kitoblar katalogi uchun ochiq API (faqat GET).",
+                "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sahifa",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "saralash",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "-korishlar_soni",
+                                    "-nomi",
+                                    "-qoshilgan_sana",
+                                    "-yil",
+                                    "korishlar_soni",
+                                    "nomi",
+                                    "qoshilgan_sana",
+                                    "yil"
+                                ]
+                            }
+                        },
+                        "description": "Ordering\n\n* `qoshilgan_sana` - Qo'shilgan sana\n* `-qoshilgan_sana` - Qo'shilgan sana (descending)\n* `nomi` - Kitob nomi\n* `-nomi` - Kitob nomi (descending)\n* `korishlar_soni` - Ko'rishlar soni\n* `-korishlar_soni` - Ko'rishlar soni (descending)\n* `yil` - Chiqarilgan yili\n* `-yil` - Chiqarilgan yili (descending)",
+                        "explode": false,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "til",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "turi",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "yil_dan",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "yil_gacha",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "yonalish",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "kitoblar"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedBookListList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/kitoblar/{slug}/": {
+            "get": {
+                "operationId": "kitoblar_retrieve",
+                "description": "Kitoblar katalogi uchun ochiq API (faqat GET).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "kitoblar"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BookDetail"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/kitoblar/{slug}/oqish/{fayl_id}/": {
+            "get": {
+                "operationId": "kitoblar_oqish_retrieve",
+                "description": "Kitob faylini Cloudflare R2 dan o'qish uchun 2 soatlik vaqtinchalik xavfsiz URL qaytaradi",
+                "summary": "Kitobni o'qish uchun Presigned URL",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "fayl_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Fayl ID raqami",
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "kitoblar"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "format": {
+                                            "type": "string"
+                                        },
+                                        "amal_qiladi": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/turlar/": {
+            "get": {
+                "operationId": "turlar_list",
+                "description": "Kitob turlari API.",
+                "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "turlar"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Form"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/turlar/{slug}/": {
+            "get": {
+                "operationId": "turlar_retrieve",
+                "description": "Kitob turlari API.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "turlar"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Form"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/yonalishlar/": {
+            "get": {
+                "operationId": "yonalishlar_list",
+                "description": "Kitob yo'nalishlari API (ierarxik daraxt).",
+                "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "yonalishlar"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Subject"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/yonalishlar/{slug}/": {
+            "get": {
+                "operationId": "yonalishlar_retrieve",
+                "description": "Kitob yo'nalishlari API (ierarxik daraxt).",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "slug",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "yonalishlar"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {
+                        "basicAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Subject"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BookDetail": {
+                "type": "object",
+                "description": "Bitta kitobning to'liq ma'lumotlari serializatori.",
+                "properties": {
+                    "slug": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 300,
+                                "pattern": "^[-a-zA-Z0-9_]+$"
+                            },
+                            {
+                                "type": "string",
+                                "maxLength": 0
+                            }
+                        ]
+                    },
+                    "nomi": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "mualliflar": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "turi": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "readOnly": true
+                    },
+                    "yonalishlar": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "readOnly": true
+                    },
+                    "yil": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64",
+                        "nullable": true
+                    },
+                    "til": {
+                        "$ref": "#/components/schemas/TilEnum"
+                    },
+                    "muqova": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "formatlar": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "korishlar_soni": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64"
+                    },
+                    "tavsif": {
+                        "type": "string"
+                    },
+                    "nashriyot": {
+                        "type": "string",
+                        "maxLength": 200
+                    },
+                    "qoshilgan_sana": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "fayllar": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BookFile"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "fayllar",
+                    "formatlar",
+                    "mualliflar",
+                    "muqova",
+                    "nomi",
+                    "qoshilgan_sana",
+                    "turi",
+                    "yonalishlar"
+                ]
+            },
+            "BookFile": {
+                "type": "object",
+                "description": "Kitob raqamli fayli serializatori.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "format": {
+                        "$ref": "#/components/schemas/FormatEnum"
+                    },
+                    "hajm": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64"
+                    },
+                    "sahifalar_soni": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "format",
+                    "id"
+                ]
+            },
+            "BookList": {
+                "type": "object",
+                "description": "Katalogdagi kitoblar ro'yxati serializatori.",
+                "properties": {
+                    "slug": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 300,
+                                "pattern": "^[-a-zA-Z0-9_]+$"
+                            },
+                            {
+                                "type": "string",
+                                "maxLength": 0
+                            }
+                        ]
+                    },
+                    "nomi": {
+                        "type": "string",
+                        "maxLength": 300
+                    },
+                    "mualliflar": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "turi": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "readOnly": true
+                    },
+                    "yonalishlar": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "readOnly": true
+                    },
+                    "yil": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64",
+                        "nullable": true
+                    },
+                    "til": {
+                        "$ref": "#/components/schemas/TilEnum"
+                    },
+                    "muqova": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "formatlar": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "readOnly": true
+                    },
+                    "korishlar_soni": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "formatlar",
+                    "mualliflar",
+                    "muqova",
+                    "nomi",
+                    "turi",
+                    "yonalishlar"
+                ]
+            },
+            "ChatMessage": {
+                "type": "object",
+                "description": "Suhbat xabarlari serializatori.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "rol": {
+                        "$ref": "#/components/schemas/RolEnum"
+                    },
+                    "matn": {
+                        "type": "string"
+                    },
+                    "yaratilgan_sana": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "matn",
+                    "rol",
+                    "yaratilgan_sana"
+                ]
+            },
+            "ChatRequest": {
+                "type": "object",
+                "description": "AI chatbotga yuboriladigan xabar formati.",
+                "properties": {
+                    "xabar": {
+                        "type": "string",
+                        "maxLength": 2000
+                    },
+                    "session_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "nullable": true
+                    },
+                    "tarix": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        }
+                    }
+                },
+                "required": [
+                    "xabar"
+                ]
+            },
+            "ChatResponse": {
+                "type": "object",
+                "description": "AI chatbot javobi formati.",
+                "properties": {
+                    "javob": {
+                        "type": "string"
+                    },
+                    "session_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "tavsiya_etilgan_kitoblar": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TavsiyaKitob"
+                        }
+                    }
+                },
+                "required": [
+                    "javob",
+                    "session_id"
+                ]
+            },
+            "Form": {
+                "type": "object",
+                "description": "Kitob turi serializatori.",
+                "properties": {
+                    "slug": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 100,
+                                "pattern": "^[-a-zA-Z0-9_]+$"
+                            },
+                            {
+                                "type": "string",
+                                "maxLength": 0
+                            }
+                        ]
+                    },
+                    "nomi": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "readOnly": true
+                    },
+                    "kitoblar_soni": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "default": 0
+                    }
+                },
+                "required": [
+                    "kitoblar_soni",
+                    "nomi"
+                ]
+            },
+            "FormatEnum": {
+                "enum": [
+                    "pdf",
+                    "epub"
+                ],
+                "type": "string",
+                "description": "* `pdf` - PDF\n* `epub` - EPUB"
+            },
+            "PaginatedBookListList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?sahifa=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?sahifa=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BookList"
+                        }
+                    }
+                }
+            },
+            "RolEnum": {
+                "enum": [
+                    "user",
+                    "assistant",
+                    "system"
+                ],
+                "type": "string",
+                "description": "* `user` - Foydalanuvchi\n* `assistant` - AI Maslahatchi\n* `system` - Tizim"
+            },
+            "Subject": {
+                "type": "object",
+                "description": "Yo'nalish ierarxik serializatori (bolalari bilan).",
+                "properties": {
+                    "slug": {
+                        "oneOf": [
+                            {
+                                "type": "string",
+                                "maxLength": 100,
+                                "pattern": "^[-a-zA-Z0-9_]+$"
+                            },
+                            {
+                                "type": "string",
+                                "maxLength": 0
+                            }
+                        ]
+                    },
+                    "nomi": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "readOnly": true
+                    },
+                    "kitoblar_soni": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "bolalar": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "additionalProperties": {}
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "bolalar",
+                    "kitoblar_soni",
+                    "nomi"
+                ]
+            },
+            "TavsiyaKitob": {
+                "type": "object",
+                "description": "AI tavsiya etgan kitob qisqacha ma'lumoti.",
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "nomi": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "nomi",
+                    "slug"
+                ]
+            },
+            "TilEnum": {
+                "enum": [
+                    "uz",
+                    "ru",
+                    "en"
+                ],
+                "type": "string",
+                "description": "* `uz` - O'zbekcha\n* `ru` - Русский\n* `en` - English"
+            }
+        },
+        "securitySchemes": {
+            "basicAuth": {
+                "type": "http",
+                "scheme": "basic"
+            },
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "sessionid"
+            }
+        }
+    }
+}

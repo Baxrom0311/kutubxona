@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "axes",
+    "drf_spectacular",
     "catalog",
 ]
 
@@ -147,7 +148,15 @@ REST_FRAMEWORK = {
         "oqish": "60/hour",
         "chat": "30/minute",
     },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "catalog.exceptions.custom_exception_handler",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Elektron Kutubxona API",
+    "DESCRIPTION": "Maktab va kollej elektron kutubxonasi hamda DeepSeek AI maslahatchisi REST API hujjati",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # --- DeepSeek AI LLM Sozlamalari --------------------------------------------
