@@ -24,12 +24,16 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "django_filters",
+    "corsheaders",
     "catalog",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -98,7 +102,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"
     },
 }
 
@@ -110,3 +114,47 @@ LOGIN_REDIRECT_URL = "/"
 # Kitob fayllari uchun ruxsat etilgan formatlar
 ALLOWED_BOOK_EXTENSIONS = ["pdf", "epub"]
 MAX_BOOK_FILE_MB = 200
+
+# --- CORS -------------------------------------------------------------------
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=["http://localhost:3000", "http://127.0.0.1:3000"],
+)
+CORS_ALLOW_CREDENTIALS = False
+
+# --- Django Rest Framework --------------------------------------------------
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "catalog.pagination.KutubxonaPagination",
+    "PAGE_SIZE": 24,
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.OrderingFilter",
+    ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "5000/day",
+        "oqish": "60/hour",
+    },
+    "EXCEPTION_HANDLER": "catalog.exceptions.custom_exception_handler",
+}
+
+# --- Cloudflare R2 / S3 -----------------------------------------------------
+S3_ENDPOINT = env("S3_ENDPOINT", default="")
+S3_REGION = env("S3_REGION", default="auto")
+S3_ACCESS_KEY = env("S3_ACCESS_KEY", default="")
+S3_SECRET_KEY = env("S3_SECRET_KEY", default="")
+S3_BUCKET_KITOBLAR = env("S3_BUCKET_KITOBLAR", default="kutubxona-kitoblar")
+S3_BUCKET_MUQOVALAR = env("S3_BUCKET_MUQOVALAR", default="kutubxona-muqovalar")
+S3_OCHIQ_DOMEN = env("S3_OCHIQ_DOMEN", default="https://muqovalar.kutubxona.uz")
+SAQLAGICH = env("SAQLAGICH", default="catalog.storage.SoxtaSaqlagich")
+
+# HTTPS / Proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=False)
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False)
+SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=False)
+SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", default=False)
+CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", default=False)

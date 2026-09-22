@@ -1,7 +1,9 @@
 import pytest
 from django.core.exceptions import ValidationError
+from django.db.models import ProtectedError
 
-from catalog.models import Book, LoanEntry, Subject
+from catalog.models import Book, BookFile, Form, LoanEntry, Subject
+from catalog.slugs import translit_uz
 
 
 def test_kitob_slug_avtomatik_yaratiladi(kitob):
@@ -13,12 +15,36 @@ def test_slug_takrorlanmaydi(db, form_darslik):
     a = Book.objects.create(nomi="Anatomiya", turi=form_darslik)
     b = Book.objects.create(nomi="Anatomiya", turi=form_darslik)
     assert a.slug != b.slug
+    assert a.slug == "anatomiya"
+    assert b.slug == "anatomiya-2"
+
+
+def test_kirill_transliteratsiya(db, form_darslik):
+    """ARCHITECTURE.md 5.4: Kirill nomli kitob ham o'qiladigan URL oladi."""
+    kitob = Book.objects.create(nomi="Кардиология", turi=form_darslik)
+    assert kitob.slug == "kardiologiya"
+
+
+def test_translit_uz_funktsiyasi():
+    """slugs.py translit lug'atining to'g'riligini tekshirish."""
+    assert translit_uz("Кардиология") == "kardiologiya"
+    assert translit_uz("O'zbek tili") == "ozbek tili"
+    assert translit_uz("Ёш юраклар") == "yosh yuraklar"
+    assert translit_uz("Қўлёзма") == "qolyozma"
 
 
 def test_subject_ierarxiyasi(subject_kardiologiya, subject_ichki):
     assert subject_kardiologiya.ota == subject_ichki
     assert subject_kardiologiya.toliq_nomi() == "Ichki kasalliklar → Kardiologiya"
     assert list(subject_ichki.bolalar.all()) == [subject_kardiologiya]
+
+
+def test_subject_oziga_ota_bola_olmaydi(db):
+    """ARCHITECTURE.md 5.3 qoida 4: Subject o'zining otasi bo'la olmaydi."""
+    s = Subject.objects.create(nomi_uz="Test yo'nalish")
+    s.ota = s
+    with pytest.raises(ValidationError):
+        s.full_clean()
 
 
 def test_toifa_nomi_tilga_qarab(subject_terapiya):
@@ -30,6 +56,20 @@ def test_toifa_nomi_tilga_qarab(subject_terapiya):
 def test_bosh_tilda_nom_bosh_bolsa_uzbekchaga_qaytadi(db):
     s = Subject.objects.create(nomi_uz="Jarrohlik")
     assert s.nomi("ru") == "Jarrohlik"
+
+
+def test_form_nomi_tilga_qarab(form_darslik):
+    """Form.nomi(til) metodi ham to'g'ri ishlashini tekshirish."""
+    assert form_darslik.nomi("uz") == "Darslik"
+    assert form_darslik.nomi("ru") == "Учебник"
+    assert form_darslik.nomi("en") == "Textbook"
+
+
+def test_form_boglangan_kitob_bolsa_ochirilmaydi(db, form_darslik):
+    """ARCHITECTURE.md 5.3 qoida 3: Form o'chirilmaydi, agar unga bog'langan kitob bo'lsa (PROTECT)."""
+    Book.objects.create(nomi="Test kitob", turi=form_darslik)
+    with pytest.raises(ProtectedError):
+        form_darslik.delete()
 
 
 def test_qaytarilmagan_kitobni_qayta_berib_bolmaydi(kitob, oquvchi, kutubxonachi):
