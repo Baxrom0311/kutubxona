@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "boshSahifa": "Bosh sahifa",
+    "katalog": "Katalog",
+    "admin": "Kutubxonachi",
+    "til": "Til"
+  },
+  "home": {
+    "sarlavha": "Elektron kutubxona",
+    "tavsif": "Maktab va kollej o'quvchilari uchun bepul, boyitilgan darsliklar va adabiyotlar xazinasi",
+    "qidiruvPlaceholder": "Kitob nomi yoki muallif bo'yicha qidiruv...",
+    "qidirish": "Qidirish",
+    "yangiKitoblar": "Yangi qo'shilgan kitoblar",
+    "ommabopKitoblar": "Eng ko'p o'qilganlar",
+    "barchasiniKorish": "Barcha kitoblar",
+    "yonalishlar": "Asosiy yo'nalishlar",
+    "turlar": "Kitob turlari"
+  },
+  "katalog": {
+    "sarlavha": "Kitoblar katalogi",
+    "jami": "Jami {count} ta kitob",
+    "filtrlar": "Filtrlar",
+    "barchasi": "Barchasi",
+    "tur": "Kitob turi",
+    "yonalish": "Yo'nalish",
+    "til": "Tili",
+    "yil": "Nashr yili",
+    "yilDan": "Yildan",
+    "yilGacha": "Yilgacha",
+    "saralash": "Saralash",
+    "yangi": "Eng yangi",
+    "engKopOqilgan": "Eng ko'p o'qilgan",
+    "nomiAz": "Nomi (A-Z)",
+    "tozalash": "Filtrni tozalash",
+    "topilmadi": "Hech qanday kitob topilmadi",
+    "topilmadiIzoh": "Qidiruv parametrlarini o'zgartirib qayta urinib ko'ring"
+  },
+  "kitob": {
+    "oqish": "Mutolaa qilish",
+    "mualliflar": "Mualliflar",
+    "turi": "Turi",
+    "yonalishlar": "Yo'nalishlar",
+    "yil": "Chiqarilgan yili",
+    "til": "Tili",
+    "nashriyot": "Nashriyot",
+    "korishlar": "Ko'rishlar soni",
+    "fayllar": "Mavjud formatlar",
+    "sahifa": "sahifa",
+    "tavsif": "Kitob haqida",
+    "mavjudEmas": "Fayl mavjud emas"
+  },
+  "oquvchi": {
+    "sahifa": "Sahifa",
+    "ortga": "Katalogga qaytish",
+    "kattalashtirish": "Kattalashtirish",
+    "kichiklashtirish": "Kichiklashtirish",
+    "toliqEkran": "To'liq ekran",
+    "yuklanmoqda": "Kitob yuklanmoqda...",
+    "xato": "Faylni ochishda xatolik yuz berdi"
+  },
+  "footer": {
+    "huquqlar": "Barcha huquqlar himoyalangan.",
+    "maktab": "Kutubxona axborot tizimi"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "boshSahifa": "Home",
+    "katalog": "Catalog",
+    "admin": "Librarian",
+    "til": "Language"
+  },
+  "home": {
+    "sarlavha": "Digital Library",
+    "tavsif": "Free digital repository of textbooks and literature for school and college students",
+    "qidiruvPlaceholder": "Search by book title or author...",
+    "qidirish": "Search",
+    "yangiKitoblar": "New arrivals",
+    "ommabopKitoblar": "Most read books",
+    "barchasiniKorish": "All books",
+    "yonalishlar": "Main subjects",
+    "turlar": "Book categories"
+  },
+  "katalog": {
+    "sarlavha": "Book Catalog",
+    "jami": "Total {count} books",
+    "filtrlar": "Filters",
+    "barchasi": "All",
+    "tur": "Category",
+    "yonalish": "Subject",
+    "til": "Language",
+    "yil": "Publication Year",
+    "yilDan": "From year",
+    "yilGacha": "To year",
+    "saralash": "Sort by",
+    "yangi": "Newest",
+    "engKopOqilgan": "Most popular",
+    "nomiAz": "Title (A-Z)",
+    "tozalash": "Clear filters",
+    "topilmadi": "No books found",
+    "topilmadiIzoh": "Try adjusting your search criteria"
+  },
+  "kitob": {
+    "oqish": "Read Online",
+    "mualliflar": "Authors",
+    "turi": "Type",
+    "yonalishlar": "Subjects",
+    "yil": "Year",
+    "til": "Language",
+    "nashriyot": "Publisher",
+    "korishlar": "Views",
+    "fayllar": "Available formats",
+    "sahifa": "pages",
+    "tavsif": "About the book",
+    "mavjudEmas": "File unavailable"
+  },
+  "oquvchi": {
+    "sahifa": "Page",
+    "ortga": "Back to catalog",
+    "kattalashtirish": "Zoom in",
+    "kichiklashtirish": "Zoom out",
+    "toliqEkran": "Full screen",
+    "yuklanmoqda": "Loading document...",
+    "xato": "Failed to open document"
+  },
+  "footer": {
+    "huquqlar": "All rights reserved.",
+    "maktab": "Library Information System"
+  }
+}
