@@ -5,11 +5,7 @@ import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "./ThemeProvider";
 
-interface NavbarProps {
-  onOpenAiChat?: () => void;
-}
-
-export default function Navbar({ onOpenAiChat }: NavbarProps) {
+export default function Navbar() {
   const t = useTranslations("nav");
   const locale = useLocale();
   const router = useRouter();
@@ -103,16 +99,6 @@ export default function Navbar({ onOpenAiChat }: NavbarProps) {
               </span>
             </button>
 
-            {/* ONLY ONE AI CTA button on the desktop navbar */}
-            <button
-              onClick={onOpenAiChat}
-              type="button"
-              className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-xs font-bold shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-[18px]">smart_toy</span>
-              <span>{t("aiMaslahatchi")}</span>
-            </button>
-
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -157,23 +143,6 @@ export default function Navbar({ onOpenAiChat }: NavbarProps) {
               >
                 {t("katalog")}
               </Link>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenAiChat?.();
-                }}
-                className="py-2.5 px-3 rounded-xl text-sm font-semibold bg-teal-50 dark:bg-slate-800 text-teal-800 dark:text-teal-300 flex items-center justify-between border border-teal-200/60 dark:border-slate-700 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px] text-teal-600 dark:text-teal-400">
-                    smart_toy
-                  </span>
-                  <span>{t("aiMaslahatchi")}</span>
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400 bg-teal-100 dark:bg-teal-950/60 px-2 py-0.5 rounded-full">
-                  Onlayn
-                </span>
-              </button>
             </div>
           </>
         )}

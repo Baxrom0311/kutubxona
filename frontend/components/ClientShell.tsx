@@ -15,7 +15,7 @@ export default function ClientShell({
 
   return (
     <ThemeProvider>
-      <Navbar onOpenAiChat={() => setAiChatOpen(true)} />
+      <Navbar />
       <main className="flex-1 pt-16 sm:pt-20">{children}</main>
       <Footer />
       <AiChatWidget
