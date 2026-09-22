@@ -33,7 +33,7 @@ export default function Navbar({ onOpenAiChat }: NavbarProps) {
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-lg text-sky-900 dark:text-sky-300 tracking-tight leading-tight">
-              Kutubxona<span className="text-teal-600 dark:text-teal-400">.AI</span>
+              Kutubxona
             </span>
             <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-medium">
               Malaka Oshirish Portali

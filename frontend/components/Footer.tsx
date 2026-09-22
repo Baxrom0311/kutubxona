@@ -18,7 +18,7 @@ export default function Footer() {
                 </span>
               </div>
               <span className="font-bold text-xl text-slate-900 dark:text-white">
-                Kutubxona<span className="text-teal-600 dark:text-teal-400">.AI</span>
+                Kutubxona
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
