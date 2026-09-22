@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
@@ -12,10 +13,14 @@ export default function Footer() {
           {/* 1. Brand & Description */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-700 dark:bg-sky-600 flex items-center justify-center text-white shadow-md">
-                <span className="material-symbols-outlined text-[24px]">
-                  local_library
-                </span>
+              <div className="relative w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shadow-xs">
+                <Image
+                  src="/logo_neww.png"
+                  alt="Kutubxona"
+                  width={40}
+                  height={40}
+                  className="object-contain w-full h-full"
+                />
               </div>
               <span className="font-bold text-xl text-slate-900 dark:text-white">
                 Kutubxona

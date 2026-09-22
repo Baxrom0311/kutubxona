@@ -27,6 +27,8 @@ export default async function LocaleLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Elektron Kutubxona — Tibbiyot va Darsliklar Portali</title>
+        <link rel="icon" href="/logo_neww.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo_neww.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
