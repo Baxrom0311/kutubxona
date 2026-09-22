@@ -4,7 +4,18 @@ from django.contrib import admin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from catalog.models import Author, Book, BookFile, Form, LoanEntry, Reader, Subject
+from catalog.models import (
+    AiBotConfig,
+    Author,
+    Book,
+    BookFile,
+    ChatMessage,
+    ChatSession,
+    Form,
+    LoanEntry,
+    Reader,
+    Subject,
+)
 
 
 class QaytarilganFilter(admin.SimpleListFilter):
@@ -111,3 +122,67 @@ class LoanEntryAdmin(admin.ModelAdmin):
         if not obj.kutubxonachi_id:
             obj.kutubxonachi = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(AiBotConfig)
+class AiBotConfigAdmin(admin.ModelAdmin):
+    """DeepSeek AI Bot tizim prompti va parametrlarini boshqarish."""
+
+    list_display = (
+        "nomi",
+        "model_nomi",
+        "harorat",
+        "katalog_konteksti_yoqilgan",
+        "faol",
+        "yangilangan_sana",
+    )
+    list_editable = ("faol",)
+    fieldsets = (
+        (
+            _("Asosiy sozlamalar"),
+            {
+                "fields": ("nomi", "faol", "model_nomi"),
+            },
+        ),
+        (
+            _("Tizim Yo'riqnomasi (System Prompt)"),
+            {
+                "fields": ("tizim_prompti", "katalog_konteksti_yoqilgan"),
+                "description": _(
+                    "Kutubxona AI yordamchisining fe'l-atvori va yo'riqnomasini shu yerdan o'zgartiring. "
+                    "Katalog konteksti yoqilgan bo'lsa, mavjud kitoblar ro'yxati AI ga avtomatik taqdim etiladi."
+                ),
+            },
+        ),
+        (
+            _("Qo'shimcha parametrlar"),
+            {
+                "fields": ("harorat", "max_tokens"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+
+class ChatMessageInline(admin.TabularInline):
+    """Sessiyadagi xabarlar (faqat o'qish uchun)."""
+
+    model = ChatMessage
+    extra = 0
+    readonly_fields = ("rol", "matn", "yaratilgan_sana")
+    can_delete = False
+
+
+@admin.register(ChatSession)
+class ChatSessionAdmin(admin.ModelAdmin):
+    """Foydalanuvchilarning AI bilan suhbatlari jurnali."""
+
+    list_display = ("id", "yaratilgan_sana", "yangilangan_sana", "xabarlar_soni")
+    readonly_fields = ("id", "yaratilgan_sana", "yangilangan_sana")
+    inlines = [ChatMessageInline]
+    search_fields = ("xabarlar__matn",)
+
+    @admin.display(description=_("Xabarlar soni"))
+    def xabarlar_soni(self, obj):
+        return obj.xabarlar.count()
+

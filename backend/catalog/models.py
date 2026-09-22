@@ -1,5 +1,6 @@
 """Elektron kutubxona katalog modellari."""
 
+import uuid
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -223,3 +224,94 @@ class LoanEntry(models.Model):
 
     def __str__(self) -> str:
         return f"{self.kitob} → {self.oquvchi}"
+
+
+class AiBotConfig(models.Model):
+    """DeepSeek AI bot konfiguratsiyasi va tizim prompti (Admin orqali boshqariladi)."""
+
+    nomi = models.CharField(max_length=100, default="Kutubxona AI Maslahatchisi")
+    tizim_prompti = models.TextField(
+        default=(
+            "Siz maktab va kollej elektron kutubxonasining aqlli virtual maslahatchisisiz. "
+            "Vazifangiz: o'quvchilarga kerakli kitoblarni topishda yordam berish, darsliklar va ilmiy mavzular "
+            "bo'yicha tushunarli maslahatlar berish. "
+            "Har doim o'zbek tilida (yoki foydalanuvchi murojaat qilgan tilda) xushmuomala, aniq va dalillarga asoslangan javob bering."
+        ),
+        help_text="AI uchun tizim yo'riqnomasi (System Prompt). Admin buni xohlagan vaqt o'zgartirishi mumkin.",
+    )
+    model_nomi = models.CharField(max_length=50, default="deepseek-chat")
+    harorat = models.FloatField(
+        default=0.7,
+        help_text="Ijodiylik darajasi (0.0 — qat'iy/aniq, 1.0 — ijodiy). Standart: 0.7",
+    )
+    max_tokens = models.PositiveIntegerField(
+        default=2000,
+        help_text="Javob uchun maksimal tokenlar soni",
+    )
+    katalog_konteksti_yoqilgan = models.BooleanField(
+        default=True,
+        help_text="Kutubxonada mavjud kitoblar ro'yxatini AI tizimiga avtomatik kontekst sifatida uzatish",
+    )
+    faol = models.BooleanField(default=True, help_text="Ushbu konfiguratsiya faolmi?")
+    yaratilgan_sana = models.DateTimeField(auto_now_add=True)
+    yangilangan_sana = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "AI Bot Sozlamasi"
+        verbose_name_plural = "AI Bot Sozlamalari"
+
+    def __str__(self) -> str:
+        holat = "Faol" if self.faol else "Nofaol"
+        return f"{self.nomi} ({holat})"
+
+    @classmethod
+    def get_active_config(cls) -> "AiBotConfig":
+        """Faol konfiguratsiyani oladi yoki mavjud bo'lmasa standart yaratadi."""
+        config = cls.objects.filter(faol=True).order_by("-yangilangan_sana").first()
+        if not config:
+            config = cls.objects.create(
+                nomi="Kutubxona AI Maslahatchisi",
+                faol=True,
+            )
+        return config
+
+
+class ChatSession(models.Model):
+    """Foydalanuvchi bilan suhbat sessiyasi."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    yaratilgan_sana = models.DateTimeField(auto_now_add=True)
+    yangilangan_sana = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "AI Suhbat Sessiyasi"
+        verbose_name_plural = "AI Suhbat Sessiyalari"
+        ordering = ["-yangilangan_sana"]
+
+    def __str__(self) -> str:
+        return f"Sessiya {str(self.id)[:8]} ({self.yaratilgan_sana.strftime('%Y-%m-%d %H:%M')})"
+
+
+class ChatMessage(models.Model):
+    """Suhbat xabarlari (Foydalanuvchi va AI o'rtasidagi yozishmalar)."""
+
+    ROL_TANLOVI = [
+        ("user", "Foydalanuvchi"),
+        ("assistant", "AI Maslahatchi"),
+        ("system", "Tizim"),
+    ]
+
+    session = models.ForeignKey(
+        ChatSession, on_delete=models.CASCADE, related_name="xabarlar"
+    )
+    rol = models.CharField(max_length=20, choices=ROL_TANLOVI)
+    matn = models.TextField()
+    yaratilgan_sana = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Suhbat xabari"
+        verbose_name_plural = "Suhbat xabarlari"
+        ordering = ["yaratilgan_sana"]
+
+    def __str__(self) -> str:
+        return f"{self.rol}: {self.matn[:50]}"

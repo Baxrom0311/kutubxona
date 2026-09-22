@@ -136,9 +136,15 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "5000/day",
         "oqish": "60/hour",
+        "chat": "30/minute",
     },
     "EXCEPTION_HANDLER": "catalog.exceptions.custom_exception_handler",
 }
+
+# --- DeepSeek AI LLM Sozlamalari --------------------------------------------
+DEEPSEEK_API_KEY = env("DEEPSEEK_API_KEY", default="")
+DEEPSEEK_BASE_URL = env("DEEPSEEK_BASE_URL", default="https://api.deepseek.com")
+DEEPSEEK_MODEL = env("DEEPSEEK_MODEL", default="deepseek-chat")
 
 # --- Cloudflare R2 / S3 -----------------------------------------------------
 S3_ENDPOINT = env("S3_ENDPOINT", default="")

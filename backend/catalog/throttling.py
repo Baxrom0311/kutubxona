@@ -8,3 +8,11 @@ class OqishRateThrottle(AnonRateThrottle):
 
     scope = "oqish"
     rate = "60/hour"
+
+
+class ChatRateThrottle(AnonRateThrottle):
+    """AI bot bilan suhbat uchun cheklov (daqiqasiga 30 ta so'rov)."""
+
+    scope = "chat"
+    rate = "30/minute"
+

@@ -135,3 +135,57 @@ class BookDetailSerializer(BookListSerializer):
             "qoshilgan_sana",
             "fayllar",
         ]
+
+
+class ChatRequestSerializer(serializers.Serializer):
+    """AI chatbotga yuboriladigan xabar formati."""
+
+    xabar = serializers.CharField(required=True, max_length=2000)
+    session_id = serializers.UUIDField(required=False, allow_null=True)
+    tarix = serializers.ListField(
+        child=serializers.DictField(), required=False, default=list
+    )
+
+
+class TavsiyaKitobSerializer(serializers.Serializer):
+    """AI tavsiya etgan kitob qisqacha ma'lumoti."""
+
+    slug = serializers.CharField()
+    nomi = serializers.CharField()
+
+
+class ChatResponseSerializer(serializers.Serializer):
+    """AI chatbot javobi formati."""
+
+    javob = serializers.CharField()
+    session_id = serializers.UUIDField()
+    tavsiya_etilgan_kitoblar = TavsiyaKitobSerializer(many=True, default=list)
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    """Suhbat xabarlari serializatori."""
+
+    class Meta:
+        from catalog.models import ChatMessage
+        model = ChatMessage
+        fields = ["id", "rol", "matn", "yaratilgan_sana"]
+
+
+class AiBotConfigSerializer(serializers.ModelSerializer):
+    """AI bot konfiguratsiyasi serializatori."""
+
+    class Meta:
+        from catalog.models import AiBotConfig
+        model = AiBotConfig
+        fields = [
+            "id",
+            "nomi",
+            "tizim_prompti",
+            "model_nomi",
+            "harorat",
+            "max_tokens",
+            "katalog_konteksti_yoqilgan",
+            "faol",
+            "yangilangan_sana",
+        ]
+

@@ -6,17 +6,22 @@ from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from catalog.ai import DeepSeekService
 from catalog.filters import BookFilter
-from catalog.models import Book, Form, Subject
+from catalog.models import Book, ChatMessage, ChatSession, Form, Subject
 from catalog.serializers import (
     BookDetailSerializer,
     BookListSerializer,
+    ChatMessageSerializer,
+    ChatRequestSerializer,
+    ChatResponseSerializer,
     FormSerializer,
     SubjectSerializer,
 )
 from catalog.storage import get_saqlagich
-from catalog.throttling import OqishRateThrottle
+from catalog.throttling import ChatRateThrottle, OqishRateThrottle
 
 
 class BookViewSet(viewsets.ReadOnlyModelViewSet):
@@ -99,3 +104,48 @@ class SubjectViewSet(viewsets.ReadOnlyModelViewSet):
             .prefetch_related("bolalar")
             .order_by("tartib", "nomi_uz")
         )
+
+
+class ChatBotView(APIView):
+    """DeepSeek AI kutubxona virtual maslahatchisi bilan suhbat endpointi."""
+
+    throttle_classes = [ChatRateThrottle]
+
+    def post(self, request):
+        serializer = ChatRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        xabar = serializer.validated_data["xabar"]
+        session_id = serializer.validated_data.get("session_id")
+        tarix = serializer.validated_data.get("tarix", [])
+
+        service = DeepSeekService()
+        javob_matni, session, tavsiyalar = service.javob_olish(
+            xabar=xabar,
+            session_id=str(session_id) if session_id else None,
+            tarix=tarix,
+        )
+
+        response_serializer = ChatResponseSerializer(
+            {
+                "javob": javob_matni,
+                "session_id": session.id,
+                "tavsiya_etilgan_kitoblar": tavsiyalar,
+            }
+        )
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+
+class ChatSessionView(APIView):
+    """Suhbat sessiyasi tarixini olish."""
+
+    def get(self, request, session_id):
+        session = ChatSession.objects.filter(id=session_id).first()
+        if not session:
+            return Response(
+                {"xato": "Suhbat sessiyasi topilmadi"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        xabarlar = session.xabarlar.all()
+        return Response(ChatMessageSerializer(xabarlar, many=True).data)
+
