@@ -1,123 +1,149 @@
 # Elektron kutubxona — Arxitektura
 
-Sana: 2026-09-22 · Holat: tasdiq kutilmoqda
-Bog'liq hujjat: [dizayn spetsifikatsiyasi](superpowers/specs/2026-09-22-kutubxona-design.md)
+Sana: 2026-09-22 · Versiya 2 (ajratilgan frontend)
+Bog'liq: [dizayn spetsifikatsiyasi](superpowers/specs/2026-09-22-kutubxona-design.md)
 
 ---
 
 ## 0. Asosiy cheklov: maksimal bepul
 
-Bu loyihaning arxitekturasini **funksional talablar emas, byudjet** belgilaydi.
-"Bepul" degani quyidagi to'rtta narsadan voz kechish demakdir:
+Arxitekturani funksional talablar emas, **byudjet** belgilaydi. "Bepul" degani
+ikkita narsadan voz kechish:
 
-| Yo'qotamiz | Sabab | Nima bilan almashtiramiz |
+| Yo'qotamiz | Sabab | Almashtiruvchi |
 |---|---|---|
-| **Doimiy disk** | Bepul platformalarda disk yo'q yoki har deploy'da o'chadi | Fayllar → tashqi obyekt saqlagich (S3-mos) |
-| **SQLite** | Disk yo'q → SQLite fayli saqlanmaydi | Neon PostgreSQL (bepul) |
-| **Doim yoqiq server** | Bepul compute uxlaydi | Vercel Fluid (soniyada uyg'onadi), Neon scale-to-zero |
-| **Uzoq so'rovlar** | Hobby'da funksiya ~10 soniya | Fayl yuklash brauzerdan to'g'ridan-to'g'ri saqlagichga (presigned URL) |
+| **Ishonchli disk** | Bepul konteyner diski deploy'da yo'qolishi mumkin | Fayllar → tashqi S3-mos saqlagich |
+| **Katta baza** | Bepul Postgres kichik | <1000 kitob uchun ortig'i bilan yetarli |
 
-Shu to'rt qaror butun arxitekturani tushuntiradi.
+Qolgan hammasi bepul tarifda to'liq ishlaydi.
 
 ---
 
-## 1. Tanlangan stek
+## 1. Stek
 
 ```
-┌──────────────┐     HTML/HTMX      ┌────────────────────────┐
-│   Brauzer    │◄──────────────────►│  Vercel (Django 6.1)   │
-│ PDF.js/epub.js│                    │  Python 3.12, Fluid    │
-└──────┬───────┘                    └───────┬────────────────┘
-       │                                    │ SQL (pooled)
-       │ PDF/EPUB to'g'ridan-to'g'ri        ▼
-       │ (presigned URL, CDN)       ┌────────────────────────┐
-       │                            │  Neon PostgreSQL       │
-       ▼                            │  0.5 GB, scale-to-zero │
-┌──────────────────────┐            └────────────────────────┘
-│  S3-mos saqlagich    │
-│  Supabase → R2 → B2  │
-│  (almashtirsa bo'ladi)│
-└──────────────────────┘
+┌─────────────────────────────┐
+│  Vercel — Next.js frontend  │   ochiq katalog, kitob sahifasi,
+│  SSR/ISR, next-intl (3 til) │   PDF.js / epub.js o'quvchi
+└───────┬─────────────────────┘
+        │ REST (faqat o'qish, autentifikatsiyasiz)
+        ▼
+┌─────────────────────────────┐        ┌──────────────────────┐
+│  Northflank — Django + DRF  │───────►│ Northflank Postgres  │
+│  always-on, gunicorn        │  SQL   │ bepul addon          │
+│  + Django admin (staff)     │        └──────────────────────┘
+└───────┬─────────────────────┘
+        │ presigned URL beradi (fayl o'zi o'tmaydi)
+        ▼
+┌─────────────────────────────┐
+│  S3-mos saqlagich           │◄──── brauzer PDF'ni TO'G'RIDAN oladi
+│  Supabase 1GB → R2 10GB     │
+└─────────────────────────────┘
 ```
 
-| Qatlam | Xizmat | Bepul hajm | Karta kerakmi |
+| Qatlam | Xizmat | Bepul hajm | Karta |
 |---|---|---|---|
-| Compute | **Vercel Hobby** | 100 GB trafik/oy, cheksiz deploy | ❌ yo'q |
-| Ma'lumotlar bazasi | **Neon Postgres** | 0.5 GB, 100 compute-soat/oy | ❌ yo'q |
-| Fayl saqlash | **Supabase Storage** | 1 GB | ❌ yo'q |
-| Fayl saqlash (keyingi bosqich) | **Cloudflare R2** | 10 GB, chiqish trafigi bepul | ✅ ha |
+| Frontend | **Vercel Hobby** | 100 GB trafik/oy | ❌ |
+| Backend | **Northflank Sandbox** | 2 servis, always-on | ⚠️ tekshiriladi |
+| Baza | **Northflank Postgres** | 1 bepul addon | ⚠️ |
+| Fayllar | **Supabase Storage** | 1 GB (~120 PDF) | ❌ |
+| Fayllar (keyin) | **Cloudflare R2** | 10 GB, chiqish bepul | ✅ |
 
-**Umumiy narx: $0/oy.** Domen olsangiz ~$10/yil (`.uz` alohida).
+**Narx: $0/oy.**
 
 ---
 
-## 2. Nega aynan shu — muqobillar bilan solishtirish
+## 2. Nega shu tanlovlar
 
-### 2.1. Compute
+### 2.1. Backend — Northflank
 
-| Variant | Bepulmi | Muammo |
-|---|---|---|
-| **Vercel Hobby** ✅ | Ha, kartasiz | Funksiya 10 s cheklovi; faqat **notijorat** foydalanish |
-| Render Free | Ha, kartasiz | 15 daqiqa harakatsizlikdan keyin uxlaydi, **uyg'onishi ~50 soniya**. O'quvchi sahifani ochsa 1 daqiqa kutadi |
-| Fly.io | Qisman | Endi kartasiz ishlamaydi |
-| PythonAnywhere Free | Ha | 512 MB disk, o'z domeningiz yo'q, CPU qattiq cheklangan |
-| Oracle Always Free VPS | Ha, lekin | 4 yadro/24 GB RAM tekin — **eng kuchlisi**, ammo karta + akkaunt tasdiqlash kerak, O'zbekistondan ochish qiyin |
+| Variant | Muammo |
+|---|---|
+| **Northflank** ✅ | **Uxlamaydi**, vaqt cheklovi yo'q, to'liq konteyner → Django normal ishlaydi |
+| Render Free | 15 daq. uxlaydi, uyg'onishi ~50 s. Bepul Postgres 90 kunda o'chadi |
+| Vercel Hobby | Serverless, funksiya 10 s, faqat notijorat. Django uchun noqulay |
+| Fly.io | Kartasiz ishlamaydi |
 
-→ **Vercel**, chunki sovuq start muammosi yo'q va karta so'ramaydi.
-Maktab kutubxonasi notijorat — Hobby shartlariga mos.
+### 2.2. Baza — Northflank Postgres (Neon emas)
 
-### 2.2. Ma'lumotlar bazasi
+Neon bepul tarifi **100 compute-soat/oy** beradi. Northflank always-on
+bo'lgani uchun baza deyarli hech qachon uxlamaydi → oyiga 730 soat kerak
+bo'ladi va baza oy o'rtasida to'xtaydi.
 
-| Variant | Bepulmi | Muammo |
-|---|---|---|
-| **Neon** ✅ | Ha, kartasiz, **doimiy** | 100 compute-soat/oy |
-| Render Postgres Free | Ha | **90 kundan keyin o'chiriladi** — real kutubxona uchun yaroqsiz |
-| Supabase Postgres | Ha, kartasiz | 500 MB; 1 hafta harakatsizlikda to'xtaydi |
+Northflank Postgres shu muammodan xoli: always-on, soat hisobi yo'q, backend
+bilan bir tarmoqda (past kechikish). Bepul tarifning 1 ta addon slotini
+band qiladi — bu yagona narxi.
 
-→ **Neon**. Zaxira variant — Supabase.
+Ko'chish kerak bo'lsa `DATABASE_URL` ni almashtirish kifoya.
 
-### 2.3. Fayl saqlash (PDF/EPUB)
+### 2.3. Fayl saqlash
 
-| Variant | Bepul hajm | Karta | Izoh |
+| Variant | Hajm | Karta | Izoh |
 |---|---|---|---|
-| **Supabase Storage** ✅ | 1 GB | ❌ | Bugun boshlash uchun. ~100–150 PDF |
-| **Cloudflare R2** | 10 GB | ✅ | Chiqish trafigi **bepul** — o'qish serveri uchun ideal. ~1000–1500 PDF |
-| Backblaze B2 | 10 GB | ✅ | Saqlash arzonroq, lekin trafik cheklangan |
-| Internet Archive | cheksiz | ❌ | Faqat **ochiq/mualliflik huquqi ruxsat bergan** kitoblar uchun |
-| GitHub Releases | ~cheksiz | ❌ | Fayl ≤2 GB. Ishlaydi, lekin GitHub shartlariga to'liq mos emas |
+| **Supabase Storage** ✅ | 1 GB | ❌ | Bugun boshlash uchun |
+| **Cloudflare R2** | 10 GB | ✅ | Chiqish trafigi bepul — o'qish serveri uchun ideal |
+| Backblaze B2 | 10 GB | ✅ | Trafik cheklangan |
+| Internet Archive | cheksiz | ❌ | Faqat ochiq/ruxsat berilgan kitoblar |
 
-→ **Bugun Supabase (1 GB) bilan ishga tushiramiz, karta paydo bo'lsa R2 (10 GB) ga o'tamiz.**
-
-**Muhim:** uchalasi ham **S3-mos API**. Shuning uchun kodda bitta
-`django-storages` S3 backend ishlatiladi, provayder esa `.env` dagi 4 ta
-o'zgaruvchi bilan almashtiriladi. Ko'chish = 4 qator o'zgartirish + fayllarni
-`rclone sync` bilan ko'chirish. **Kod umuman o'zgarmaydi.**
+Uchalasi **S3-mos**. Kodda bitta `storage.py`, provayder `.env` dagi 4
+o'zgaruvchi bilan almashadi. R2'ga ko'chish = 4 qator + `rclone sync`,
+**kod o'zgarmaydi**.
 
 ---
 
-## 3. Komponentlar
+## 3. Eng muhim qaror: autentifikatsiya yo'q
 
-```
-config/            — Django sozlamalari, URL, WSGI
-catalog/
-  models.py        — Author, Form, Subject, Book, BookFile, Reader, LoanEntry
-  views.py         — bosh sahifa, katalog, kitob, o'quvchi (reader)
-  filters.py       — katalog filtri (tur × yo'nalish × til × yil)
-  admin.py         — kutubxonachi paneli
-  storage.py       — S3-mos saqlagich + presigned URL generatori
-journal/           — berish/qaytarish jurnali (staff)
-templates/         — Django shablonlari (HTMX bilan)
-static/            — Tailwind CSS chiqishi, PDF.js, epub.js
-locale/uz|ru|en/   — tarjimalar
-```
+Siz "hamma ochiq o'qiy oladi" dedingiz. Shuni oxirigacha ishlatamiz:
 
-Har modul bitta vazifa bajaradi va alohida test qilinadi.
-`storage.py` — provayder almashtirishning yagona nuqtasi; qolgan kod S3 haqida
-bilmaydi.
+- **Frontend 100% ochiq, faqat o'qish uchun.** Login yo'q, JWT yo'q,
+  sessiya yo'q, CORS'da `credentials` yo'q.
+- **Barcha yozish amallari Django admin orqali** (Northflank domenida,
+  `/admin/`). Kutubxonachi o'sha yerga kiradi.
+- **Jurnal (berish/qaytarish) ham Django admin ichida** — alohida sahifa
+  yozilmaydi.
+
+Bu loyihaning eng qimmat qismini (auth + rollar + xavfsizlik) butunlay
+yo'q qiladi. 4 haftalik ishning ~1 haftasi shu bilan tejaladi.
+
+Agar keyin o'quvchi login kerak bo'lsa — API'ga JWT qo'shiladi,
+frontend o'zgaradi. Hozir emas (YAGNI).
 
 ---
 
-## 4. Ma'lumot modeli
+## 4. Repo tuzilishi (monorepo)
+
+```
+kutubxona/
+├── backend/                  → Northflank'ga deploy
+│   ├── config/               Django sozlamalari, URL, WSGI
+│   ├── catalog/
+│   │   ├── models.py         Author, Form, Subject, Book, BookFile,
+│   │   │                     Reader, LoanEntry
+│   │   ├── serializers.py    DRF
+│   │   ├── api.py            faqat o'qish uchun ViewSet'lar
+│   │   ├── filters.py        tur × yo'nalish × til × yil
+│   │   ├── admin.py          kutubxonachi paneli + jurnal
+│   │   └── storage.py        S3-mos saqlagich, presigned URL
+│   ├── tests/
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend/                 → Vercel'ga deploy
+│   ├── app/[locale]/         Next.js App Router
+│   │   ├── page.tsx          bosh sahifa
+│   │   ├── katalog/          filtr + qidiruv
+│   │   └── kitob/[slug]/     kitob + o'qish
+│   ├── components/
+│   ├── lib/api.ts            backend bilan yagona aloqa nuqtasi
+│   └── messages/uz|ru|en.json
+└── docs/
+```
+
+Har modul bitta vazifa bajaradi. `storage.py` — provayder almashtirishning
+yagona nuqtasi; `lib/api.ts` — backend URL'ining yagona nuqtasi.
+
+---
+
+## 5. Ma'lumot modeli
 
 ```
 Author      ism
@@ -138,112 +164,130 @@ LoanEntry   kitob FK, oquvchi FK, berilgan_sana, qaytarilgan_sana,
 **Qoida:** kitobning qaytarilmagan yozuvi turganda uni qayta berib bo'lmaydi
 (`LoanEntry.clean()`).
 
-Faylning o'zi bazada saqlanmaydi — faqat `storage_key` (masalan
-`books/2026/yurak-kasalliklari.pdf`). Bu provayder almashganda bazani
-o'zgartirmaslikka imkon beradi.
+Fayl bazada saqlanmaydi — faqat `storage_key`
+(masalan `books/2026/yurak-kasalliklari.pdf`). Provayder almashganda baza
+o'zgarmaydi.
 
 **Ataylab yo'q (YAGNI):** nusxa soni, shtrix-kod, muddat, jarima,
 o'quvchi profili/login, reyting, izohlar.
 
 ---
 
-## 5. Asosiy oqimlar
+## 6. API
 
-### 5.1. Katalogni ko'rish
-```
-Brauzer → Vercel/Django → Neon (SELECT) → HTML
-```
-Filtr HTMX bilan — faqat ro'yxat qismi yangilanadi, sahifa qayta yuklanmaydi.
+Faqat `GET`. Hammasi ochiq.
 
-### 5.2. Kitobni o'qish  ← eng muhim oqim
 ```
-1. Brauzer  → Django: GET /kitob/<slug>/oqish/<file_id>/
-2. Django   → korishlar_soni += 1, presigned URL yaratadi (1 soat amal qiladi)
-3. Django   → Brauzer: PDF.js sahifasi + shu URL
-4. Brauzer  → Saqlagich (TO'G'RIDAN-TO'G'RI, CDN orqali)
+GET /api/kitoblar/?turi=&yonalish=&til=&yil=&q=&sahifa=
+GET /api/kitoblar/<slug>/
+GET /api/kitoblar/<slug>/oqish/<file_id>/   → {url, amal_qiladi}  presigned
+GET /api/turlar/
+GET /api/yonalishlar/        → ierarxik daraxt
 ```
-**Fayl hech qachon Django orqali o'tmaydi.** Shu sababli:
-- Vercel 10 s cheklovi ta'sir qilmaydi
+
+Toifalar uchalasi tilda qaytadi: `{"uz": "...", "ru": "...", "en": "..."}`.
+Frontend qaysi kerakligini o'zi tanlaydi — tilni backend bilmaydi.
+
+CORS: faqat Vercel domeni va `localhost:3000`. `credentials` yo'q.
+
+---
+
+## 7. Asosiy oqimlar
+
+### 7.1. Katalog
+```
+Brauzer → Vercel (SSR) → Northflank API → Postgres → JSON → HTML
+```
+Filtr o'zgarsa URL o'zgaradi (`?yonalish=kardiologiya`) → SSR qayta render.
+Kitob sahifalari ISR bilan keshlanadi → Google indekslaydi.
+
+### 7.2. Kitobni o'qish ← eng muhim oqim
+```
+1. Brauzer → API:      GET /api/kitoblar/<slug>/oqish/<id>/
+2. API     →           korishlar_soni += 1, presigned URL yaratadi (1 soat)
+3. API     → Brauzer:  {"url": "https://...", "amal_qiladi": "..."}
+4. Brauzer → Saqlagich: PDF'ni TO'G'RIDAN-TO'G'RI oladi (CDN)
+```
+**Fayl hech qachon Django yoki Vercel orqali o'tmaydi.** Natijada:
+- Northflank konteyneri band bo'lmaydi
 - Vercel trafigi sarflanmaydi
-- R2 da chiqish trafigi bepul → 1000 o'quvchi ham xarajat keltirmaydi
+- R2'da chiqish bepul → 1000 o'quvchi ham 0 so'm
 
-### 5.3. Kitob qo'shish (kutubxonachi)
+### 7.3. Kitob qo'shish (kutubxonachi, Django admin)
 ```
-1. Admin     → Django: presigned PUT URL so'raydi
-2. Brauzer   → Saqlagich: faylni TO'G'RIDAN-TO'G'RI yuklaydi
-3. Brauzer   → Django: "yuklandi, key = ..." → BookFile yoziladi
+1. Admin   → presigned PUT URL so'raydi
+2. Brauzer → Saqlagich: faylni TO'G'RIDAN yuklaydi
+3. Brauzer → Django: "key = ..." → BookFile yoziladi
 ```
-Katta PDF Django orqali o'tmagani uchun 10 s cheklovi buzilmaydi.
 
 ---
 
-## 6. Ko'p tillilik
+## 8. Ko'p tillilik
 
-- Interfeys matnlari: Django `gettext` → `locale/uz|ru|en/`
-- URL prefiksi: `/uz/katalog/`, `/ru/katalog/`, `/en/katalog/`
-- Toifa nomlari: `nomi_uz` / `nomi_ru` / `nomi_en` ustunlari.
-  Bo'sh bo'lsa o'zbekchaga qaytadi (`nomi()` metodi)
-- Kitob nomi tarjima qilinmaydi — qanday kiritilsa shunday qoladi
+- **Frontend:** `next-intl`, URL `/uz/`, `/ru/`, `/en/`. Interfeys matnlari
+  `messages/*.json` da
+- **Backend:** toifa nomlari uchta ustunda (`nomi_uz/ru/en`), API uchalasini
+  qaytaradi. Bo'sh bo'lsa o'zbekchaga qaytadi
+- **Django admin** o'zbekcha
+- Kitob nomi tarjima qilinmaydi
 
 ---
 
-## 7. Bepullikning chegaralari — nima qachon buziladi
+## 9. Bepullikning chegaralari
 
 | Chegara | Qachon uriladi | Nima qilamiz |
 |---|---|---|
-| **Neon 100 compute-soat/oy** ⚠️ | Kun bo'yi uzluksiz foydalanishda | Eng ehtimolli muammo. `CONN_MAX_AGE=0` + 5 daq. harakatsizlikda uxlash. Uriladigan bo'lsa → Supabase Postgres (soat cheklovi yo'q) |
-| Neon 0.5 GB baza | ~50 000 kitob | Yaqin emas (maqsad <1000) |
-| Supabase Storage 1 GB | ~120 PDF | **Birinchi uriladigan chegara.** → R2 (10 GB) |
+| **Supabase 1 GB** ⚠️ | ~120 PDF | **Birinchi uriladigan chegara.** → R2 (10 GB) |
+| Northflank 2 servis | 3-servis kerak bo'lsa | Frontend Vercel'da — 1 slot bo'sh turadi |
+| Northflank 1 addon | Redis kerak bo'lsa | Kesh Django locmem bilan; Redis kerak emas |
 | Vercel 100 GB trafik | Deyarli hech qachon | Fayllar Vercel orqali o'tmaydi |
-| Vercel 10 s funksiya | Og'ir hisobotda | Hisobot sahifasini keshlash |
-| Vercel Hobby "notijorat" | Pul ishlay boshlasangiz | Pro ($20/oy) |
+| Vercel Hobby notijorat | Pul ishlasangiz | Pro $20/oy |
 
-**Xulosa:** birinchi to'siq — **saqlash hajmi**, ikkinchisi — **Neon soatlari**.
-Ikkalasi ham kod o'zgartirmasdan hal bo'ladi.
+**Birinchi to'siq — saqlash hajmi.** Kod o'zgartirmasdan hal bo'ladi.
 
 ---
 
-## 8. Deploy
+## 10. Testlar
+
+**Backend** (`pytest-django`):
+- `LoanEntry` qaytarilmagan kitobni qayta berishga yo'l qo'ymaydi
+- `Subject` ierarxiyasi va `nomi()` tilga qarab to'g'ri qaytaradi
+- API filtri tur × yo'nalish bo'yicha to'g'ri kesadi
+- Kitob ochilganda `korishlar_soni` oshadi
+- Presigned URL yaratiladi va muddati bor
+- API `POST`/`PUT`/`DELETE` ni rad etadi (faqat o'qish)
+- CORS begona domenni kiritmaydi
+
+Saqlagich testlarda soxta backend bilan almashadi — testlar internetsiz ishlaydi.
+
+**Frontend** (Vitest + Playwright):
+- Katalog filtri URL'ga yoziladi va qayta yuklanganda saqlanadi
+- Uchala tilda sahifa ochiladi
+- PDF o'quvchi presigned URL bilan yuklaydi
+
+---
+
+## 11. Deploy
 
 ```
-GitHub repo  ──push──►  Vercel (avtomatik build va deploy)
-                          │
-                          ├── DATABASE_URL     → Neon
-                          ├── S3_ENDPOINT/KEY  → Supabase yoki R2
-                          └── SECRET_KEY, ALLOWED_HOSTS
+GitHub monorepo
+   ├── backend/   ──►  Northflank (Dockerfile, root: backend/)
+   │                   env: DATABASE_URL, SECRET_KEY, S3_*, CORS_ORIGINS
+   └── frontend/  ──►  Vercel (root: frontend/)
+                       env: NEXT_PUBLIC_API_URL
 ```
 
 Qadamlar:
-1. Neon'da loyiha ochish → `DATABASE_URL` nusxalash
-2. Supabase'da bucket ochish → S3 kalitlarini olish
-3. GitHub'ga push
-4. Vercel'da repo'ni ulash, env o'zgaruvchilarni kiritish
-5. `python manage.py migrate` (bir marta, lokal yoki Vercel build hook'da)
-6. `createsuperuser` → kutubxonachi akkaunti
-
-`vercel.json` va `requirements.txt` repo'da bo'ladi. Docker kerak emas.
+1. Northflank'da servis + Postgres addon yaratish
+2. Supabase'da bucket ochish → S3 kalitlari
+3. Northflank env'larini kiritish → deploy → `migrate` → `createsuperuser`
+4. Vercel'da `frontend/` ni ulash → `NEXT_PUBLIC_API_URL` = Northflank domeni
+5. Backend `CORS_ORIGINS` ga Vercel domenini qo'shish
 
 ---
 
-## 9. Testlar
+## 12. Eslatma: mualliflik huquqi
 
-`pytest-django`:
-- `LoanEntry` qaytarilmagan kitobni qayta berishga yo'l qo'ymaydi
-- `Subject` ierarxiyasi va `nomi()` tilga qarab to'g'ri qaytaradi
-- Katalog filtri tur × yo'nalish bo'yicha to'g'ri kesadi
-- `/jurnal/` mehmonni kiritmaydi, staff'ni kiritadi
-- Kitob ochilganda `korishlar_soni` oshadi
-- Presigned URL yaratiladi va muddati bor
-- Uchala tilda sahifa 200 qaytaradi
-
-Saqlagich testlarda soxta (fake) backend bilan almashtiriladi — testlar
-internetsiz ishlaydi.
-
----
-
-## 10. Eslatma: mualliflik huquqi
-
-"Hamma ochiq o'qiy oladi" degan qaror tibbiy darsliklar uchun huquqiy savol
-tug'diradi. Texnik jihatdan tizim ikkalasini ham qo'llab-quvvatlaydi —
-`Book.ochiq` maydoni qo'shilsa, ayrim kitoblarni faqat maktab ichida
-ko'rsatish mumkin. Hozircha hammasi ochiq; keraklisini keyin cheklaymiz.
+Tibbiy darsliklarni hamma uchun ochiq qilish huquqiy savol tug'diradi.
+Tizim ikkalasini ham qo'llaydi — `Book.ochiq` maydoni qo'shilsa, ayrim
+kitoblarni cheklash mumkin. Hozircha hammasi ochiq.
