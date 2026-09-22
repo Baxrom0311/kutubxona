@@ -31,7 +31,7 @@ export default function PdfViewerClient({ url, format }: PdfViewerClientProps) {
         <iframe
           src={`${url}#toolbar=1&navpanes=0`}
           className="w-full h-full border-0 bg-slate-900"
-          title="PDF O'quvchi"
+          title={t("pdfOquvchi")}
         />
       ) : (
         <div className="text-center p-8 text-slate-300 max-w-md bg-slate-800/80 rounded-2xl border border-slate-700">

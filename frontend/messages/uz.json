@@ -6,7 +6,8 @@
     "aiMaslahatchi": "AI Maslahatchi",
     "til": "Til",
     "qorongu": "Tungi rejim",
-    "yorug": "Kunduzgi rejim"
+    "yorug": "Kunduzgi rejim",
+    "subtitr": "Malaka Oshirish Portali"
   },
   "home": {
     "sarlavha": "Hamshiralik ishi va klinik amaliyot bo‘yicha zamonaviy bilimlar xazinasi",
@@ -60,7 +61,8 @@
     "topilmadi": "Hech qanday darslik topilmadi",
     "topilmadiTavsif": "Qidiruv so'zini o'zgartirib ko'ring yoki filtrlarni tozalab qayta qidiring.",
     "oldingi": "Oldingi",
-    "keyingi": "Keyingi"
+    "keyingi": "Keyingi",
+    "barchaYonalishlar": "Barcha yo'nalishlar"
   },
   "kitob": {
     "onlaynMutolaa": "Onlayn mutolaa uchun tayyor",
@@ -79,7 +81,8 @@
     "oxshash": "Mavzuga oid boshqa darsliklar",
     "yonalishdagiBarchasi": "Yo'nalishdagi barchasi",
     "korish": "Ko‘rish",
-    "nomalum": "Noma'lum"
+    "nomalum": "Noma'lum",
+    "defaultTavsif": "Ushbu darslik tibbiyot va hamshiralik ishi bo‘yicha talabalar hamda mutaxassislar uchun mo‘ljallangan ilmiy-amaliy qo‘llanma hisoblanadi."
   },
   "ai": {
     "tugma": "AI Maslahatchi",
@@ -104,7 +107,8 @@
     "tolikEkran": "To'liq ekran",
     "epubSarlavha": "EPUB Formati",
     "epubTavsif": "Ushbu EPUB kitobini to'g'ridan-to'g'ri o'qish yoki yuklab olishingiz mumkin.",
-    "epubYuklabOlish": "EPUB faylni yuklab olish"
+    "epubYuklabOlish": "EPUB faylni yuklab olish",
+    "pdfOquvchi": "PDF O'quvchi"
   },
   "footer": {
     "tavsif": "Tibbiyot va hamshiralik ishi bo'yicha klinik darsliklar hamda yo'nalishlar bo'yicha elektron adabiyotlar fondi.",
@@ -120,6 +124,11 @@
     "darsliklar": "Darsliklar",
     "ommabop": "Ommabop darsliklar",
     "ijtimoiyTarmoqlar": "Biz ijtimoiy tarmoqlarda",
-    "huquqlar": "Barcha huquqlar himoyalangan."
+    "huquqlar": "Barcha huquqlar himoyalangan.",
+    "ochiqPortal": "Tibbiy va klinik ta'lim uchun ochiq portal"
+  },
+  "metadata": {
+    "title": "Elektron Kutubxona — Tibbiyot va Darsliklar Portali",
+    "description": "Tibbiyot va hamshiralik ishi bo'yicha klinik darsliklar hamda yo'nalishlar bo'yicha elektron adabiyotlar portali."
   }
 }

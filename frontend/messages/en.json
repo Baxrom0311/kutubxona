@@ -6,7 +6,8 @@
     "aiMaslahatchi": "AI Assistant",
     "til": "Language",
     "qorongu": "Dark theme",
-    "yorug": "Light theme"
+    "yorug": "Light theme",
+    "subtitr": "Professional Training Portal"
   },
   "home": {
     "sarlavha": "A Modern Treasury of Knowledge in Nursing & Clinical Practice",
@@ -80,7 +81,8 @@
     "oxshash": "Related Textbooks",
     "yonalishdagiBarchasi": "View all in specialty",
     "korish": "View",
-    "nomalum": "Unknown"
+    "nomalum": "Unknown",
+    "defaultTavsif": "This textbook is a scientific and practical guide intended for medical and nursing students and professionals."
   },
   "ai": {
     "tugma": "AI Assistant",
@@ -105,7 +107,8 @@
     "tolikEkran": "Full screen",
     "epubSarlavha": "EPUB Format",
     "epubTavsif": "You can read this EPUB book online or download the file.",
-    "epubYuklabOlish": "Download EPUB file"
+    "epubYuklabOlish": "Download EPUB file",
+    "pdfOquvchi": "PDF Reader"
   },
   "footer": {
     "tavsif": "Open digital library of clinical textbooks and intelligent AI literature search assistant for medical education.",
@@ -121,6 +124,11 @@
     "darsliklar": "Textbooks",
     "ommabop": "Popular Books",
     "ijtimoiyTarmoqlar": "Follow Us",
-    "huquqlar": "All rights reserved."
+    "huquqlar": "All rights reserved.",
+    "ochiqPortal": "Open portal for medical and clinical education"
+  },
+  "metadata": {
+    "title": "Digital Library — Medical & Clinical Textbook Portal",
+    "description": "Portal of clinical textbooks and digital resources for nursing and medical education."
   }
 }

@@ -90,6 +90,19 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
     });
   }
 
+  const buildPageUrl = (p: number) => {
+    const q = new URLSearchParams();
+    if (search.turi) q.set("turi", search.turi);
+    if (search.yonalish) q.set("yonalish", search.yonalish);
+    if (search.til) q.set("til", search.til);
+    if (search.yil_dan) q.set("yil_dan", search.yil_dan);
+    if (search.yil_gacha) q.set("yil_gacha", search.yil_gacha);
+    if (search.q) q.set("q", search.q);
+    if (search.saralash) q.set("saralash", search.saralash);
+    q.set("sahifa", p.toString());
+    return `/katalog?${q.toString()}`;
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
       {/* 1. Breadcrumbs */}
@@ -244,7 +257,7 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
             <div className="flex items-center justify-center gap-2 pt-8 pb-12">
               {sahifaRaqam > 1 && (
                 <Link
-                  href={`/katalog?sahifa=${sahifaRaqam - 1}`}
+                  href={buildPageUrl(sahifaRaqam - 1)}
                   className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                 >
                   <span className="material-symbols-outlined text-[16px]">
@@ -258,7 +271,7 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
                 (num) => (
                   <Link
                     key={num}
-                    href={`/katalog?sahifa=${num}`}
+                    href={buildPageUrl(num)}
                     className={`w-9 h-9 rounded-xl text-xs font-bold flex items-center justify-center transition-colors ${
                       sahifaRaqam === num
                         ? "bg-sky-800 text-white shadow-xs"
@@ -272,7 +285,7 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
 
               {sahifaRaqam < jamiSahifalar && (
                 <Link
-                  href={`/katalog?sahifa=${sahifaRaqam + 1}`}
+                  href={buildPageUrl(sahifaRaqam + 1)}
                   className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                 >
                   <span>{t("keyingi")}</span>

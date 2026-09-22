@@ -33,7 +33,7 @@ export default function AiChatWidget({
   // Set initial welcome message translated to current locale
   useEffect(() => {
     setXabarlar((prev) => {
-      if (prev.length === 0) {
+      if (prev.length === 0 || (prev.length === 1 && prev[0].rol === "assistant")) {
         return [
           {
             rol: "assistant",

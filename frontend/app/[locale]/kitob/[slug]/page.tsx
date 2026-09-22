@@ -238,8 +238,7 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
                 {t("haqida")}
               </h2>
               <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed space-y-3 whitespace-pre-line">
-                {kitob.tavsif ||
-                  "Ushbu darslik tibbiyot va hamshiralik ishi bo‘yicha talabalar hamda mutaxassislar uchun mo‘ljallangan ilmiy-amaliy qo‘llanma hisoblanadi."}
+                {kitob.tavsif || t("defaultTavsif")}
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "./ThemeProvider";
 
@@ -10,6 +11,7 @@ export default function Navbar() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -21,7 +23,9 @@ export default function Navbar() {
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const nextLocale = e.target.value as "uz" | "ru" | "en";
     document.cookie = `NEXT_LOCALE=${nextLocale}; path=/; max-age=31536000; SameSite=Lax`;
-    router.replace(pathname, { locale: nextLocale });
+    const search = searchParams ? searchParams.toString() : "";
+    const target = search ? `${pathname}?${search}` : pathname;
+    router.replace(target, { locale: nextLocale });
   };
 
   return (
@@ -38,7 +42,7 @@ export default function Navbar() {
                 Kutubxona
               </span>
               <span className="hidden xs:block text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
-                Malaka Oshirish Portali
+                {t("subtitr")}
               </span>
             </div>
           </Link>
