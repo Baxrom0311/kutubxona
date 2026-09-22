@@ -4,7 +4,7 @@ import KitobKartochka from "@/components/KitobKartochka";
 import OpenAiChatButton from "@/components/OpenAiChatButton";
 import { getTranslations } from "next-intl/server";
 
-export const revalidate = 3600; // ISR: 1 soat
+export const dynamic = "force-dynamic";
 
 interface HomePageProps {
   params: Promise<{
@@ -193,7 +193,9 @@ export default async function HomePage({ params }: HomePageProps) {
               <span className="material-symbols-outlined text-[26px]">bolt</span>
             </div>
             <div>
-              <span className="block font-bold text-xl text-slate-900 dark:text-white font-display">Tezkor</span>
+              <span className="block font-bold text-xl text-slate-900 dark:text-white font-display">
+                {t("statTezkorSarlavha")}
+              </span>
               <span className="text-xs text-slate-500 dark:text-slate-400">{t("statTezkor")}</span>
             </div>
           </div>

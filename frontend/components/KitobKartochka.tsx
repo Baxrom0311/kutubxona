@@ -89,9 +89,11 @@ export default function KitobKartochka({ kitob }: KitobKartochkaProps) {
       <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-2">
           {kitob.yil && <span>{kitob.yil}</span>}
-          <span className="uppercase font-semibold text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">
-            {kitob.til}
-          </span>
+          {kitob.til && (
+            <span className="font-semibold text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">
+              {t(`tillar.${kitob.til}`) || kitob.til.toUpperCase()}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
           <span className="material-symbols-outlined text-[15px]">visibility</span>

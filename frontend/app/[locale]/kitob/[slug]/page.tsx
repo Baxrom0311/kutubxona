@@ -11,7 +11,7 @@ interface KitobDetailPageProps {
   }>;
 }
 
-export const revalidate = 3600; // ISR: 1 hour
+export const dynamic = "force-dynamic";
 
 export default async function KitobDetailPage({ params }: KitobDetailPageProps) {
   const { slug, locale } = await params;
@@ -217,8 +217,8 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
                   {t("tili")}
                 </span>
-                <span className="font-bold text-xs text-slate-800 dark:text-slate-200 uppercase">
-                  {kitob.til}
+                <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
+                  {kitob.til ? (t(`tillar.${kitob.til}`) || kitob.til.toUpperCase()) : t("nomalum")}
                 </span>
               </div>
 

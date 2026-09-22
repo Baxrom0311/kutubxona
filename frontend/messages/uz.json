@@ -30,7 +30,8 @@
     "aiBannerBadge": "Aqlli AI Maslahatchisi",
     "aiBannerSarlavha": "Kerakli darslik yoki klinik protokolni topa olmadingizmi?",
     "aiBannerTavsif": "Sun'iy intellekt yordamchisiga kasallik alomati, muolaja nomi yoki dars mavzusini ayting — u kutubxona fondidagi eng mos darsliklarni tavsiya qiladi.",
-    "aiBannerBtn": "AI Maslahatchi bilan suhbat"
+    "aiBannerBtn": "AI Maslahatchi bilan suhbat",
+    "statTezkorSarlavha": "Tezkor"
   },
   "katalog": {
     "sarlavha": "Katalog va Qidiruv",
@@ -82,7 +83,13 @@
     "yonalishdagiBarchasi": "Yo'nalishdagi barchasi",
     "korish": "Ko‘rish",
     "nomalum": "Noma'lum",
-    "defaultTavsif": "Ushbu darslik tibbiyot va hamshiralik ishi bo‘yicha talabalar hamda mutaxassislar uchun mo‘ljallangan ilmiy-amaliy qo‘llanma hisoblanadi."
+    "defaultTavsif": "Ushbu darslik tibbiyot va hamshiralik ishi bo‘yicha talabalar hamda mutaxassislar uchun mo‘ljallangan ilmiy-amaliy qo‘llanma hisoblanadi.",
+    "tillar": {
+      "uz": "O'zbekcha",
+      "ru": "Ruscha",
+      "en": "Inglizcha",
+      "kaa": "Qoraqalpoqcha"
+    }
   },
   "ai": {
     "tugma": "AI Maslahatchi",

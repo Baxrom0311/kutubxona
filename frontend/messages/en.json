@@ -30,7 +30,8 @@
     "aiBannerBadge": "Smart AI Assistant",
     "aiBannerSarlavha": "Can't find the clinical guide or textbook you need?",
     "aiBannerTavsif": "Describe a medical symptom, treatment protocol, or study subject to our AI — it will instantly recommend matching literature from the library catalog.",
-    "aiBannerBtn": "Chat with AI Assistant"
+    "aiBannerBtn": "Chat with AI Assistant",
+    "statTezkorSarlavha": "Instant"
   },
   "katalog": {
     "sarlavha": "Catalog & Search",
@@ -82,7 +83,13 @@
     "yonalishdagiBarchasi": "View all in specialty",
     "korish": "View",
     "nomalum": "Unknown",
-    "defaultTavsif": "This textbook is a scientific and practical guide intended for medical and nursing students and professionals."
+    "defaultTavsif": "This textbook is a scientific and practical guide intended for medical and nursing students and professionals.",
+    "tillar": {
+      "uz": "Uzbek",
+      "ru": "Russian",
+      "en": "English",
+      "kaa": "Karakalpak"
+    }
   },
   "ai": {
     "tugma": "AI Assistant",
@@ -111,7 +118,7 @@
     "pdfOquvchi": "PDF Reader"
   },
   "footer": {
-    "tavsif": "Open digital library of clinical textbooks and intelligent AI literature search assistant for medical education.",
+    "tavsif": "Repository of clinical textbooks and digital resources in nursing and medical specialties.",
     "manzilSarlavha": "Address & Contact",
     "manzil": "Tashkent city, Chilanzar district, Bunyodkor avenue, building 1",
     "telefon": "+998 (71) 200-00-00",

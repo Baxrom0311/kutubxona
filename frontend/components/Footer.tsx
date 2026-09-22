@@ -184,7 +184,7 @@ export default function Footer() {
 
         {/* Bottom copyright row */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 text-center sm:text-left">
-          <p>© {new Date().getFullYear()} Elektron Kutubxona. {t("huquqlar")}</p>
+          <p>© {new Date().getFullYear()} Kutubxona. {t("huquqlar")}</p>
           <span className="text-slate-400 dark:text-slate-600 text-[11px]">
             {t("ochiqPortal")}
           </span>
