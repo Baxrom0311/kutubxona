@@ -57,22 +57,24 @@ reyting, izohlar.
 | `/hisobot/` | Eng ko'p o'qilganlar, yo'nalish statistikasi | staff |
 | `/admin/` | Django admin | staff |
 
-Fayl `/media/` orqali ko'rsatiladi, `Content-Disposition: inline` —
-yuklab olish tugmasi berilmaydi (lekin texnik jihatdan to'siq emas).
+Fayl saqlagichdan presigned URL (1 soat) orqali to'g'ridan-to'g'ri
+ko'rsatiladi. Yuklab olish tugmasi berilmaydi (texnik to'siq emas).
 
 ## 5. Texnologiya
 
 - Python 3.14, Django 6.1
-- SQLite (standart), `DATABASE_URL` orqali PostgreSQL'ga o'tish mumkin
+- **Neon PostgreSQL** (bepul, kartasiz) — `DATABASE_URL` orqali
+- **S3-mos obyekt saqlagich** fayllar uchun: Supabase Storage (1 GB, kartasiz)
+  → keyin Cloudflare R2 (10 GB). Provayder `.env` bilan almashtiriladi
 - Tailwind CSS (standalone CLI, Node.js kerak emas) + HTMX
 - PDF.js (PDF), epub.js (EPUB) — brauzerda o'qish
-- WhiteNoise (statik), Gunicorn + Nginx (VPS)
+- WhiteNoise (statik), Vercel Fluid Compute (bepul Hobby)
 - i18n: `uz` (asosiy), `ru`, `en` — URL prefiksi bilan
 
 ## 6. Katalog o'lchami
 
-<1000 kitob, <500 o'quvchi. SQLite mutlaqo yetarli.
-Qidiruv: `icontains` + SQLite FTS kerak emas shu hajmda.
+<1000 kitob, <500 o'quvchi. Neon bepul tarifi (0.5 GB) yetarli.
+Qidiruv: PostgreSQL `icontains` + indeks; FTS shu hajmda kerak emas.
 
 ## 7. Testlar
 
@@ -86,5 +88,9 @@ Qidiruv: `icontains` + SQLite FTS kerak emas shu hajmda.
 
 ## 8. Deploy
 
-`docker compose up -d` → gunicorn + nginx + certbot.
-Media va SQLite fayli volume'da saqlanadi.
+GitHub → Vercel (avtomatik). Docker kerak emas.
+Batafsil: [ARCHITECTURE.md](../../ARCHITECTURE.md) — bepul stek, uning
+cheklovlari va o'sish yo'li shu yerda.
+
+Fayllar Django orqali o'tmaydi: o'qish ham, yuklash ham brauzerdan
+to'g'ridan-to'g'ri saqlagichga presigned URL bilan bajariladi.
