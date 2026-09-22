@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/routing";
 import { kitoblarniOlish, yonalishlarniOlish } from "@/lib/api";
 import KitobKartochka from "@/components/KitobKartochka";
+import OpenAiChatButton from "@/components/OpenAiChatButton";
 import { getTranslations } from "next-intl/server";
 
 export const revalidate = 3600; // ISR: 1 soat
@@ -294,13 +295,12 @@ export default async function HomePage({ params }: HomePageProps) {
             <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-8">
               {t("aiBannerTavsif")}
             </p>
-            <Link
-              href="/katalog"
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 active:scale-95 text-slate-950 text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+            <OpenAiChatButton
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 active:scale-95 text-slate-950 text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[20px]">smart_toy</span>
               <span>{t("aiBannerBtn")}</span>
-            </Link>
+            </OpenAiChatButton>
           </div>
         </div>
       </section>

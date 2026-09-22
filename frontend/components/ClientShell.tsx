@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import AiChatWidget from "./AiChatWidget";
@@ -12,6 +12,12 @@ export default function ClientShell({
   children: React.ReactNode;
 }) {
   const [aiChatOpen, setAiChatOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenAi = () => setAiChatOpen(true);
+    window.addEventListener("open-ai-chat", handleOpenAi);
+    return () => window.removeEventListener("open-ai-chat", handleOpenAi);
+  }, []);
 
   return (
     <ThemeProvider>
