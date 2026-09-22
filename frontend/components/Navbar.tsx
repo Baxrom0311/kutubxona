@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "./ThemeProvider";
@@ -35,15 +34,8 @@ export default function Navbar({ onOpenAiChat }: NavbarProps) {
         <div className="h-16 sm:h-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between gap-3 sm:gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0 group">
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-200">
-              <Image
-                src="/logo_neww.png"
-                alt="Kutubxona"
-                width={40}
-                height={40}
-                priority
-                className="object-contain w-full h-full"
-              />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-800 dark:bg-sky-600 flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform duration-200">
+              <span className="material-symbols-outlined text-[22px] sm:text-[24px]">local_library</span>
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold text-base sm:text-xl text-slate-900 dark:text-white tracking-tight leading-tight font-display">
