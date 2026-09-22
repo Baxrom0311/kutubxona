@@ -82,7 +82,7 @@ export default async function HomePage({ params }: HomePageProps) {
   return (
     <div className="w-full flex flex-col items-center">
       {/* 1. Hero Section (Stitch Design) */}
-      <section className="relative w-full overflow-hidden py-16 lg:py-24">
+      <section className="relative w-full overflow-hidden pt-6 sm:pt-8 lg:pt-12 pb-14 lg:pb-20">
         {/* Ambient Glows */}
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[850px] h-[450px] bg-sky-200/40 dark:bg-sky-950/30 rounded-full blur-[110px] pointer-events-none" />
         <div className="absolute top-1/3 -right-24 w-[420px] h-[420px] bg-teal-200/40 dark:bg-teal-950/30 rounded-full blur-[90px] pointer-events-none" />
