@@ -23,7 +23,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Elektron Kutubxona — Darsliklar va AI Maslahatchisi</title>
@@ -38,7 +38,7 @@ export default async function LocaleLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased min-h-screen flex flex-col bg-[#faf8ff] text-[#131b2e]">
+      <body className="antialiased min-h-screen flex flex-col bg-[#faf8ff] dark:bg-slate-950 text-[#131b2e] dark:text-slate-100 transition-colors duration-150">
         <NextIntlClientProvider messages={messages}>
           <ClientShell>{children}</ClientShell>
         </NextIntlClientProvider>

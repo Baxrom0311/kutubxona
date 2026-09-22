@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface PdfViewerClientProps {
   url: string;
@@ -8,6 +9,7 @@ interface PdfViewerClientProps {
 }
 
 export default function PdfViewerClient({ url, format }: PdfViewerClientProps) {
+  const t = useTranslations("oquvchi");
   const [fullscreen, setFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
@@ -36,9 +38,9 @@ export default function PdfViewerClient({ url, format }: PdfViewerClientProps) {
           <span className="material-symbols-outlined text-5xl text-teal-400 mb-4">
             menu_book
           </span>
-          <h3 className="font-bold text-lg text-white mb-2">EPUB Formati</h3>
+          <h3 className="font-bold text-lg text-white mb-2">{t("epubSarlavha")}</h3>
           <p className="text-xs text-slate-400 mb-6">
-            Ushbu EPUB kitobini to'g'ridan-to'g'ri o'qish yoki yuklab olishingiz mumkin.
+            {t("epubTavsif")}
           </p>
           <a
             href={url}
@@ -46,7 +48,7 @@ export default function PdfViewerClient({ url, format }: PdfViewerClientProps) {
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">download</span>
-            <span>EPUB faylni yuklab olish</span>
+            <span>{t("epubYuklabOlish")}</span>
           </a>
         </div>
       )}
@@ -55,7 +57,7 @@ export default function PdfViewerClient({ url, format }: PdfViewerClientProps) {
       <button
         onClick={toggleFullscreen}
         type="button"
-        title="To'liq ekran"
+        title={t("tolikEkran")}
         className="absolute bottom-4 right-4 p-3 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-white backdrop-blur-md border border-slate-700 shadow-xl transition-all"
       >
         <span className="material-symbols-outlined text-[20px]">

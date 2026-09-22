@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, usePathname } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { Turi, Yonalish } from "@/lib/types";
+import { useLocale, useTranslations } from "next-intl";
 
 interface FiltrSidebarProps {
   turlar: Turi[];
@@ -14,6 +15,8 @@ export default function FiltrSidebar({
   turlar,
   yonalishlar,
 }: FiltrSidebarProps) {
+  const t = useTranslations("katalog");
+  const locale = useLocale() as "uz" | "ru" | "en";
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -36,7 +39,7 @@ export default function FiltrSidebar({
     } else {
       params.delete(key);
     }
-    params.delete("sahifa"); // Filter o'zgarsa 1-sahifaga qaytadi
+    params.delete("sahifa");
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -59,26 +62,26 @@ export default function FiltrSidebar({
   };
 
   return (
-    <div className="w-full bg-white rounded-3xl p-5 border border-slate-100 shadow-sm space-y-6">
+    <div className="w-full bg-white dark:bg-slate-850 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-6 transition-colors">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div className="flex items-center gap-2 text-sky-900">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-2 text-sky-900 dark:text-sky-300">
           <span className="material-symbols-outlined text-[22px]">tune</span>
-          <h2 className="font-bold text-lg">Filtrlar</h2>
+          <h2 className="font-bold text-lg">{t("filtrlar")}</h2>
         </div>
         <button
           onClick={tozalash}
           type="button"
-          className="text-xs font-semibold text-teal-700 hover:text-sky-900 transition-colors"
+          className="text-xs font-semibold text-teal-700 dark:text-teal-400 hover:underline transition-colors"
         >
-          Tozalash
+          {t("tozalash")}
         </button>
       </div>
 
       {/* 1. Kitob turi */}
       <div className="space-y-2">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
-          Kitob turi
+        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {t("kitobTuri")}
         </label>
         <div className="space-y-1">
           <button
@@ -86,38 +89,41 @@ export default function FiltrSidebar({
             type="button"
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
               !tanlanganTur
-                ? "bg-sky-50 text-sky-900 font-bold"
-                : "text-slate-600 hover:bg-slate-50"
+                ? "bg-sky-50 dark:bg-sky-900/40 text-sky-900 dark:text-sky-200 font-bold"
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
-            <span>Barchasi</span>
+            <span>{t("barchasi")}</span>
           </button>
-          {turlar.map((tur) => (
-            <button
-              key={tur.slug}
-              onClick={() => updateParam("turi", tur.slug)}
-              type="button"
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
-                tanlanganTur === tur.slug
-                  ? "bg-sky-50 text-sky-900 font-bold"
-                  : "text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              <span>{tur.nomi.uz}</span>
-              {tur.kitoblar_soni !== undefined && (
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold">
-                  {tur.kitoblar_soni}
-                </span>
-              )}
-            </button>
-          ))}
+          {turlar.map((tur) => {
+            const nomi = tur.nomi?.[locale] || tur.nomi?.uz;
+            return (
+              <button
+                key={tur.slug}
+                onClick={() => updateParam("turi", tur.slug)}
+                type="button"
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                  tanlanganTur === tur.slug
+                    ? "bg-sky-50 dark:bg-sky-900/40 text-sky-900 dark:text-sky-200 font-bold"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                }`}
+              >
+                <span>{nomi}</span>
+                {tur.kitoblar_soni !== undefined && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-semibold">
+                    {tur.kitoblar_soni}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* 2. Yo'nalishlar (Ierarxik daraxt) */}
       <div className="space-y-2">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
-          Yo'nalishlar
+        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {t("yonalishlar")}
         </label>
         <div className="space-y-1">
           <button
@@ -125,24 +131,25 @@ export default function FiltrSidebar({
             type="button"
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
               !tanlanganYonalish
-                ? "bg-teal-50 text-teal-900 font-bold"
-                : "text-slate-600 hover:bg-slate-50"
+                ? "bg-teal-50 dark:bg-teal-950/40 text-teal-900 dark:text-teal-200 font-bold"
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
-            <span>Barcha yo'nalishlar</span>
+            <span>{t("barchaYonalishlar")}</span>
           </button>
           {yonalishlar.map((yon) => {
             const hasChildren = yon.bolalar && yon.bolalar.length > 0;
             const isOchiq = ochiqOta[yon.slug];
             const isSelected = tanlanganYonalish === yon.slug;
+            const nomi = yon.nomi?.[locale] || yon.nomi?.uz;
 
             return (
               <div key={yon.slug} className="space-y-1">
                 <div
                   className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors ${
                     isSelected
-                      ? "bg-teal-50 text-teal-900 font-bold"
-                      : "text-slate-700 hover:bg-slate-50"
+                      ? "bg-teal-50 dark:bg-teal-950/40 text-teal-900 dark:text-teal-200 font-bold"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                 >
                   <button
@@ -150,17 +157,17 @@ export default function FiltrSidebar({
                     type="button"
                     className="flex-1 text-left truncate"
                   >
-                    {yon.nomi.uz}
+                    {nomi}
                   </button>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                       {yon.kitoblar_soni}
                     </span>
                     {hasChildren && (
                       <button
                         onClick={() => toggleOta(yon.slug)}
                         type="button"
-                        className="p-0.5 text-slate-400 hover:text-slate-700"
+                        className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-white"
                       >
                         <span className="material-symbols-outlined text-[16px]">
                           {isOchiq ? "expand_less" : "expand_more"}
@@ -172,24 +179,27 @@ export default function FiltrSidebar({
 
                 {/* Sub-items */}
                 {hasChildren && isOchiq && (
-                  <div className="pl-4 space-y-1 border-l-2 border-slate-100 ml-2">
-                    {yon.bolalar.map((bola) => (
-                      <button
-                        key={bola.slug}
-                        onClick={() => updateParam("yonalish", bola.slug)}
-                        type="button"
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
-                          tanlanganYonalish === bola.slug
-                            ? "bg-teal-100/70 text-teal-900 font-bold"
-                            : "text-slate-600 hover:bg-slate-50"
-                        }`}
-                      >
-                        <span className="truncate">{bola.nomi.uz}</span>
-                        <span className="text-[10px] text-slate-400">
-                          {bola.kitoblar_soni}
-                        </span>
-                      </button>
-                    ))}
+                  <div className="pl-4 space-y-1 border-l-2 border-slate-100 dark:border-slate-800 ml-2">
+                    {yon.bolalar.map((bola) => {
+                      const bolaNomi = bola.nomi?.[locale] || bola.nomi?.uz;
+                      return (
+                        <button
+                          key={bola.slug}
+                          onClick={() => updateParam("yonalish", bola.slug)}
+                          type="button"
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
+                            tanlanganYonalish === bola.slug
+                              ? "bg-teal-100/70 dark:bg-teal-900/50 text-teal-900 dark:text-teal-100 font-bold"
+                              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                          }`}
+                        >
+                          <span className="truncate">{bolaNomi}</span>
+                          <span className="text-[10px] text-slate-400">
+                            {bola.kitoblar_soni}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -200,15 +210,15 @@ export default function FiltrSidebar({
 
       {/* 3. Tillar */}
       <div className="space-y-2">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
-          Kitob tili
+        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {t("kitobTili")}
         </label>
         <div className="grid grid-cols-3 gap-1.5">
           {[
-            { kod: "", nom: "Barchasi" },
+            { kod: "", nom: t("barchasi") },
             { kod: "uz", nom: "O'zbek" },
-            { kod: "ru", nom: "Rus" },
-            { kod: "en", nom: "Ingliz" },
+            { kod: "ru", nom: "Рус" },
+            { kod: "en", nom: "Eng" },
           ].map((item) => (
             <button
               key={item.kod}
@@ -216,8 +226,8 @@ export default function FiltrSidebar({
               type="button"
               className={`py-2 rounded-xl text-xs font-medium text-center transition-all ${
                 tanlanganTil === item.kod
-                  ? "bg-sky-800 text-white shadow-xs font-bold"
-                  : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  ? "bg-sky-800 dark:bg-sky-600 text-white shadow-xs font-bold"
+                  : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
               }`}
             >
               {item.nom}
@@ -228,32 +238,32 @@ export default function FiltrSidebar({
 
       {/* 4. Nashr yili */}
       <div className="space-y-2">
-        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
-          Nashr yili
+        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          {t("nashrYili")}
         </label>
         <div className="flex items-center gap-2">
           <input
             type="number"
-            placeholder="Dan"
+            placeholder={t("yilDan")}
             value={yilDan}
             onChange={(e) => setYilDan(e.target.value)}
-            className="w-1/2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-sky-600"
+            className="w-1/2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-sky-600"
           />
           <span className="text-slate-400 text-xs">—</span>
           <input
             type="number"
-            placeholder="Gacha"
+            placeholder={t("yilGacha")}
             value={yilGacha}
             onChange={(e) => setYilGacha(e.target.value)}
-            className="w-1/2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-sky-600"
+            className="w-1/2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-sky-600"
           />
         </div>
         <button
           onClick={yilFilterQollash}
           type="button"
-          className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors mt-1"
+          className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors mt-1"
         >
-          Yilni qo'llash
+          {t("yilQollash")}
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { Link } from "@/i18n/routing";
 import { kitobniOlish, oqishUrlOlish } from "@/lib/api";
 import { notFound } from "next/navigation";
 import PdfViewerClient from "@/components/PdfViewerClient";
+import { getTranslations } from "next-intl/server";
 
 interface OqishPageProps {
   params: Promise<{
@@ -12,8 +13,10 @@ interface OqishPageProps {
 }
 
 export default async function OqishPage({ params }: OqishPageProps) {
-  const { slug, id } = await params;
+  const { slug, id, locale } = await params;
   const faylId = parseInt(id, 10);
+
+  const t = await getTranslations({ locale, namespace: "oquvchi" });
 
   const [kitob, oqishData] = await Promise.all([
     kitobniOlish(slug),
@@ -33,8 +36,10 @@ export default async function OqishPage({ params }: OqishPageProps) {
             href={`/kitob/${kitob.slug}`}
             className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold"
           >
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-            <span className="hidden sm:inline">Kitobga qaytish</span>
+            <span className="material-symbols-outlined text-[18px]">
+              arrow_back
+            </span>
+            <span className="hidden sm:inline">{t("kitobgaQaytish")}</span>
           </Link>
 
           <div className="truncate">
@@ -54,8 +59,10 @@ export default async function OqishPage({ params }: OqishPageProps) {
             rel="noopener noreferrer"
             className="p-2 rounded-xl bg-sky-800 hover:bg-sky-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
           >
-            <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-            <span className="hidden sm:inline">Yangi oynada</span>
+            <span className="material-symbols-outlined text-[18px]">
+              open_in_new
+            </span>
+            <span className="hidden sm:inline">{t("yangiOynada")}</span>
           </a>
         </div>
       </header>

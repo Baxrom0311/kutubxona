@@ -4,6 +4,7 @@ import { useState } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import AiChatWidget from "./AiChatWidget";
+import { ThemeProvider } from "./ThemeProvider";
 
 export default function ClientShell({
   children,
@@ -13,7 +14,7 @@ export default function ClientShell({
   const [aiChatOpen, setAiChatOpen] = useState(false);
 
   return (
-    <>
+    <ThemeProvider>
       <Navbar onOpenAiChat={() => setAiChatOpen(true)} />
       <main className="flex-1 pt-20">{children}</main>
       <Footer />
@@ -22,6 +23,6 @@ export default function ClientShell({
         onClose={() => setAiChatOpen(false)}
         onToggle={() => setAiChatOpen((prev) => !prev)}
       />
-    </>
+    </ThemeProvider>
   );
 }

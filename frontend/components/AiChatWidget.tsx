@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 interface Xabar {
   rol: "user" | "assistant";
@@ -20,17 +21,29 @@ export default function AiChatWidget({
   onClose,
   onToggle,
 }: AiChatWidgetProps) {
-  const [xabarlar, setXabarlar] = useState<Xabar[]>([
-    {
-      rol: "assistant",
-      matn: "Assalomu alaykum! Men kutubxonaning aqlli AI maslahatchisiman. Qaysi soha yoki mavzu bo'yicha darslik qidiryapsiz? Sizga kutubxonadagi eng yaxshi kitoblarni topib bera olaman.",
-    },
-  ]);
+  const t = useTranslations("ai");
+
+  const [xabarlar, setXabarlar] = useState<Xabar[]>([]);
   const [kirishMatni, setKirishMatni] = useState("");
   const [yuklanmoqda, setYuklanmoqda] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const xabarlarOxiriRef = useRef<HTMLDivElement>(null);
+
+  // Set initial welcome message translated to current locale
+  useEffect(() => {
+    setXabarlar((prev) => {
+      if (prev.length === 0) {
+        return [
+          {
+            rol: "assistant",
+            matn: t("salom"),
+          },
+        ];
+      }
+      return prev;
+    });
+  }, [t]);
 
   useEffect(() => {
     xabarlarOxiriRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -70,7 +83,7 @@ export default function AiChatWidget({
           ...prev,
           {
             rol: "assistant",
-            matn: "Kechirasiz, sun'iy intellekt xizmati bilan vaqtincha aloqa uzildi. Qayta urinib ko'ring.",
+            matn: t("xato"),
           },
         ]);
       }
@@ -79,7 +92,7 @@ export default function AiChatWidget({
         ...prev,
         {
           rol: "assistant",
-          matn: "Aloqa xatosi. Iltimos, server ishlayotganini tekshiring.",
+          matn: t("aloqaXatosi"),
         },
       ]);
     } finally {
@@ -87,11 +100,7 @@ export default function AiChatWidget({
     }
   };
 
-  const tezkorTakliflar = [
-    "Kardiologiya bo'yicha kitoblar",
-    "Anatomiya va EKG tahlili",
-    "Yangi qo'shilgan darsliklar",
-  ];
+  const tezkorTakliflar = [t("taklif1"), t("taklif2"), t("taklif3")];
 
   return (
     <>
@@ -99,28 +108,28 @@ export default function AiChatWidget({
       <button
         onClick={onToggle}
         type="button"
-        aria-label="AI Maslahatchi"
-        className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-teal-600 hover:bg-sky-700 text-white shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center gap-2 group"
+        aria-label={t("tugma")}
+        className="fixed bottom-6 right-6 z-50 p-4 rounded-full bg-teal-600 hover:bg-sky-700 text-white shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group"
       >
         <span className="material-symbols-outlined text-[26px]">smart_toy</span>
         <span className="hidden sm:inline-block font-semibold text-sm pr-1">
-          AI Maslahatchi
+          {t("tugma")}
         </span>
         <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping" />
-        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
       </button>
 
       {/* Slide-over Drawer Backdrop */}
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 transition-opacity"
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 transition-opacity"
         />
       )}
 
       {/* Slide-over Drawer Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-[440px] bg-white z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-[440px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -134,11 +143,11 @@ export default function AiChatWidget({
             </div>
             <div>
               <h3 className="font-bold text-base leading-tight">
-                Kutubxona AI Maslahatchisi
+                {t("sarlavha")}
               </h3>
               <div className="flex items-center gap-1.5 text-xs text-teal-200">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
-                <span>DeepSeek AI • Onlayn</span>
+                <span>{t("onlayn")}</span>
               </div>
             </div>
           </div>
@@ -152,11 +161,11 @@ export default function AiChatWidget({
         </div>
 
         {/* Message Stream */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50 dark:bg-slate-950/60">
           {/* Quick starter chips */}
           <div className="mb-2">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
-              Tezkor so'rovlar:
+            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-2">
+              {t("tezkor")}
             </span>
             <div className="flex flex-wrap gap-1.5">
               {tezkorTakliflar.map((taklif) => (
@@ -164,7 +173,7 @@ export default function AiChatWidget({
                   key={taklif}
                   onClick={() => xabarYuborish(taklif)}
                   type="button"
-                  className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-teal-500 hover:text-teal-700 text-xs text-slate-600 transition-all text-left shadow-2xs"
+                  className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-teal-500 text-xs text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-400 transition-all text-left shadow-2xs"
                 >
                   {taklif}
                 </button>
@@ -181,32 +190,32 @@ export default function AiChatWidget({
               }`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-xs ${
                   x.rol === "user"
-                    ? "bg-sky-700 text-white rounded-tr-none"
-                    : "bg-white text-slate-800 border border-slate-200 rounded-tl-none"
+                    ? "bg-sky-800 text-white rounded-tr-none"
+                    : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-tl-none"
                 }`}
               >
                 <p className="whitespace-pre-wrap">{x.matn}</p>
 
                 {/* Recommended books */}
                 {x.tavsiyalar && x.tavsiyalar.length > 0 && (
-                  <div className="mt-3 pt-2.5 border-t border-slate-100">
-                    <span className="text-[11px] font-bold text-teal-700 uppercase tracking-wider block mb-1.5">
-                      Tavsiya etilgan kitoblar:
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-700">
+                    <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider block mb-1.5">
+                      {t("tavsiyalar")}
                     </span>
                     <div className="space-y-1.5">
-                      {x.tavsiyalar.map((t) => (
+                      {x.tavsiyalar.map((tItem) => (
                         <Link
-                          key={t.slug}
-                          href={`/kitob/${t.slug}`}
+                          key={tItem.slug}
+                          href={`/kitob/${tItem.slug}`}
                           onClick={onClose}
-                          className="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-teal-50 border border-slate-100 text-slate-800 hover:text-teal-900 transition-colors group"
+                          className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-900 hover:bg-teal-50 dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:text-teal-900 dark:hover:text-teal-300 transition-colors group"
                         >
                           <span className="text-xs font-semibold truncate pr-2">
-                            {t.nomi}
+                            {tItem.nomi}
                           </span>
-                          <span className="material-symbols-outlined text-[16px] text-teal-600 group-hover:translate-x-0.5 transition-transform flex-shrink-0">
+                          <span className="material-symbols-outlined text-[16px] text-teal-600 dark:text-teal-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0">
                             arrow_forward
                           </span>
                         </Link>
@@ -220,11 +229,11 @@ export default function AiChatWidget({
 
           {/* Loading Indicator */}
           {yuklanmoqda && (
-            <div className="flex items-center gap-2 text-xs text-slate-500 italic p-2">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 italic p-2">
               <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce" />
               <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce [animation-delay:0.2s]" />
               <span className="w-2 h-2 rounded-full bg-teal-600 animate-bounce [animation-delay:0.4s]" />
-              <span>AI javob tayyorlamoqda...</span>
+              <span>{t("tayyorlanmoqda")}</span>
             </div>
           )}
 
@@ -232,7 +241,7 @@ export default function AiChatWidget({
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 bg-white border-t border-slate-200 flex-shrink-0">
+        <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -244,8 +253,8 @@ export default function AiChatWidget({
               type="text"
               value={kirishMatni}
               onChange={(e) => setKirishMatni(e.target.value)}
-              placeholder="Kitob yoki mavzu bo'yicha savol bering..."
-              className="flex-1 px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-teal-600 focus:bg-white transition-all"
+              placeholder={t("placeholder")}
+              className="flex-1 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-slate-900 transition-all"
             />
             <button
               type="submit"
@@ -257,8 +266,8 @@ export default function AiChatWidget({
               </span>
             </button>
           </form>
-          <span className="text-[10px] text-slate-400 text-center block mt-2">
-            AI javoblari rasmiy kutubxona katalogi asosida beriladi
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 text-center block mt-2">
+            {t("disclaimer")}
           </span>
         </div>
       </div>
