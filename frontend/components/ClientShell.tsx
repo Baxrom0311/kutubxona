@@ -8,8 +8,10 @@ import { ThemeProvider } from "./ThemeProvider";
 
 export default function ClientShell({
   children,
+  initialTheme,
 }: {
   children: React.ReactNode;
+  initialTheme?: "light" | "dark";
 }) {
   const [aiChatOpen, setAiChatOpen] = useState(false);
 
@@ -20,7 +22,7 @@ export default function ClientShell({
   }, []);
 
   return (
-    <ThemeProvider>
+    <ThemeProvider initialTheme={initialTheme}>
       <Navbar />
       <main className="flex-1 pt-16 sm:pt-20">{children}</main>
       <Footer />

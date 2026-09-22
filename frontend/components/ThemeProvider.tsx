@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
@@ -14,19 +14,57 @@ const ThemeContext = createContext<ThemeContextType>({
   toggleTheme: () => {},
 });
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+export function ThemeProvider({
+  children,
+  initialTheme = "light",
+}: {
+  children: React.ReactNode;
+  initialTheme?: Theme;
+}) {
+  const [theme, setTheme] = useState<Theme>(initialTheme);
 
+  // Sync theme on mount and whenever initialTheme/route changes
   useEffect(() => {
-    // Check what class is currently on <html> (already initialized by head script)
-    const isDark = document.documentElement.classList.contains("dark");
-    setTheme(isDark ? "dark" : "light");
-  }, []);
+    try {
+      const savedLocal = localStorage.getItem("theme") as Theme | null;
+      const cookieMatch = document.cookie.match(/(?:^|;\s*)theme=([^;]+)/);
+      const savedCookie = cookieMatch ? (cookieMatch[1] as Theme) : null;
+      const effectiveTheme = savedLocal || savedCookie || initialTheme;
+
+      if (effectiveTheme === "dark" || effectiveTheme === "light") {
+        setTheme(effectiveTheme);
+        if (effectiveTheme === "dark") {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+        if (savedCookie !== effectiveTheme) {
+          document.cookie = `theme=${effectiveTheme}; path=/; max-age=31536000; SameSite=Lax`;
+        }
+      }
+    } catch {
+      // Ignore in restricted environments
+    }
+  }, [initialTheme]);
+
+  // Ensure <html> always has the right class whenever state changes
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
 
   const toggleTheme = () => {
     const next: Theme = theme === "light" ? "dark" : "light";
     setTheme(next);
-    localStorage.setItem("theme", next);
+    try {
+      localStorage.setItem("theme", next);
+      document.cookie = `theme=${next}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch {
+      // Ignore
+    }
     if (next === "dark") {
       document.documentElement.classList.add("dark");
     } else {

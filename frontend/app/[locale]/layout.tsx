@@ -4,6 +4,7 @@ import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import ClientShell from "@/components/ClientShell";
 import { Metadata } from "next";
+import { cookies } from "next/headers";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -38,9 +39,11 @@ export default async function LocaleLayout({
     notFound();
   }
   const messages = await getMessages();
+  const cookieStore = await cookies();
+  const isDark = cookieStore.get("theme")?.value === "dark";
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} className={isDark ? "dark" : ""} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -59,6 +62,10 @@ export default async function LocaleLayout({
               (function() {
                 try {
                   var saved = localStorage.getItem('theme');
+                  if (!saved) {
+                    var match = document.cookie.match(/(?:^|;\\s*)theme=([^;]+)/);
+                    if (match) saved = match[1];
+                  }
                   if (saved === 'dark') {
                     document.documentElement.classList.add('dark');
                   } else if (saved === 'light') {
@@ -74,7 +81,7 @@ export default async function LocaleLayout({
       </head>
       <body className="antialiased min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-150">
         <NextIntlClientProvider messages={messages}>
-          <ClientShell>{children}</ClientShell>
+          <ClientShell initialTheme={isDark ? "dark" : "light"}>{children}</ClientShell>
         </NextIntlClientProvider>
       </body>
     </html>
