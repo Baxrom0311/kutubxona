@@ -86,12 +86,12 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
       </nav>
 
       {/* 2. Main Showcase */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-100 dark:border-slate-800 shadow-sm mb-12">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-200 dark:border-slate-800 shadow-xs mb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Left Column: 3D Cover & Action buttons (5 cols) */}
           <div className="lg:col-span-5 flex flex-col items-center">
             {/* 3D Book Cover */}
-            <div className="relative w-full max-w-[320px] aspect-[3/4] rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-sky-50 dark:from-slate-800 dark:to-slate-900 shadow-2xl mb-6 group border border-slate-100 dark:border-slate-800">
+            <div className="relative w-full max-w-[320px] aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-xl mb-6 group border border-slate-200 dark:border-slate-800">
               {kitob.muqova ? (
                 <Image
                   src={kitob.muqova}
@@ -195,7 +195,7 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
 
             {/* 4-Box Metadata Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
                   {t("nashriyot")}
                 </span>
@@ -204,7 +204,7 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
                   {t("chiqarilganYili")}
                 </span>
@@ -213,7 +213,7 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
                   {t("tili")}
                 </span>
@@ -222,7 +222,7 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/60">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
                   {t("korishlar")}
                 </span>

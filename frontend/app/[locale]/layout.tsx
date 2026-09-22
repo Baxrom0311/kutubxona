@@ -26,7 +26,7 @@ export default async function LocaleLayout({
     <html lang={locale} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Elektron Kutubxona — Darsliklar va AI Maslahatchisi</title>
+        <title>Elektron Kutubxona — Tibbiyot va Darsliklar Portali</title>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -37,8 +37,26 @@ export default async function LocaleLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
           rel="stylesheet"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('theme');
+                  if (saved === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else if (saved === 'light') {
+                    document.documentElement.classList.remove('dark');
+                  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="antialiased min-h-screen flex flex-col bg-[#faf8ff] dark:bg-slate-950 text-[#131b2e] dark:text-slate-100 transition-colors duration-150">
+      <body className="antialiased min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-150">
         <NextIntlClientProvider messages={messages}>
           <ClientShell>{children}</ClientShell>
         </NextIntlClientProvider>

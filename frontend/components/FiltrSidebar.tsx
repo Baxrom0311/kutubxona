@@ -62,7 +62,7 @@ export default function FiltrSidebar({
   };
 
   return (
-    <div className="w-full bg-white dark:bg-slate-850 rounded-3xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-6 transition-colors">
+    <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2 text-sky-900 dark:text-sky-300">

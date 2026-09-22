@@ -25,12 +25,12 @@ export default function KitobKartochka({ kitob }: KitobKartochkaProps) {
       : turNomi;
 
   return (
-    <div className="group bg-white dark:bg-slate-850 rounded-2xl p-3 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+    <div className="group bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between">
       <div>
         {/* Cover Container (3:4 ratio) */}
         <Link
           href={`/kitob/${kitob.slug}`}
-          className="relative block w-full aspect-[3/4] rounded-xl overflow-hidden bg-gradient-to-br from-slate-100 to-sky-50 dark:from-slate-800 dark:to-slate-900 shadow-inner mb-3"
+          className="relative block w-full aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner mb-3 border border-slate-100 dark:border-slate-800/80"
         >
           {kitob.muqova ? (
             <Image
@@ -41,11 +41,11 @@ export default function KitobKartochka({ kitob }: KitobKartochkaProps) {
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-slate-400">
-              <span className="material-symbols-outlined text-4xl text-sky-400 dark:text-sky-500 mb-2">
+            <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-slate-400 dark:text-slate-500">
+              <span className="material-symbols-outlined text-4xl text-sky-500 dark:text-sky-400 mb-2">
                 menu_book
               </span>
-              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 line-clamp-3">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 line-clamp-3">
                 {kitob.nomi}
               </span>
             </div>
@@ -57,7 +57,7 @@ export default function KitobKartochka({ kitob }: KitobKartochkaProps) {
               kitob.formatlar.map((fmt) => (
                 <span
                   key={fmt}
-                  className="px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-900/80 backdrop-blur-sm text-white shadow-sm"
+                  className="px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase bg-slate-900/80 backdrop-blur-sm text-white shadow-xs"
                 >
                   {fmt}
                 </span>
@@ -66,7 +66,7 @@ export default function KitobKartochka({ kitob }: KitobKartochkaProps) {
 
           {/* Specialty tag */}
           <div className="absolute bottom-2 left-2 right-2">
-            <span className="inline-block max-w-full px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-900/85 dark:bg-slate-900/90 backdrop-blur-sm text-sky-100 truncate shadow-sm">
+            <span className="inline-block max-w-full px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-900/90 dark:bg-slate-950/90 backdrop-blur-sm text-sky-100 truncate shadow-xs">
               {yonalishNomi}
             </span>
           </div>
@@ -86,10 +86,10 @@ export default function KitobKartochka({ kitob }: KitobKartochkaProps) {
       </div>
 
       {/* Meta Footer */}
-      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+      <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <div className="flex items-center gap-2">
           {kitob.yil && <span>{kitob.yil}</span>}
-          <span className="uppercase font-semibold text-[10px] px-1.5 py-0.2 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">
+          <span className="uppercase font-semibold text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-300">
             {kitob.til}
           </span>
         </div>
@@ -102,7 +102,7 @@ export default function KitobKartochka({ kitob }: KitobKartochkaProps) {
       {/* Action Button */}
       <Link
         href={`/kitob/${kitob.slug}`}
-        className="mt-3 w-full py-2 rounded-xl bg-sky-50 dark:bg-slate-800 group-hover:bg-sky-700 dark:group-hover:bg-teal-600 text-sky-800 dark:text-sky-300 group-hover:text-white text-xs font-semibold text-center transition-all flex items-center justify-center gap-1.5"
+        className="mt-3 w-full py-2 rounded-xl bg-sky-50 dark:bg-slate-800 hover:bg-sky-800 hover:text-white dark:hover:bg-teal-600 dark:hover:text-white text-sky-800 dark:text-teal-300 text-xs font-semibold text-center transition-all flex items-center justify-center gap-1.5 border border-sky-100 dark:border-slate-700"
       >
         <span className="material-symbols-outlined text-[16px]">menu_book</span>
         <span>{t("mutolaaQilish")}</span>
