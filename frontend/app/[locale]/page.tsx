@@ -88,16 +88,6 @@ export default async function HomePage({ params }: HomePageProps) {
         <div className="absolute top-1/3 -right-24 w-[420px] h-[420px] bg-teal-200/40 dark:bg-teal-950/30 rounded-full blur-[90px] pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto px-6 lg:px-12 flex flex-col items-center text-center animate-fade-in">
-          {/* Verified Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-900 shadow-2xs mb-6 border border-slate-200 dark:border-slate-800 hover:scale-102 transition-transform">
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-teal-600 text-white">
-              <span className="material-symbols-outlined text-[12px]">check</span>
-            </span>
-            <span className="text-xs font-bold text-sky-900 dark:text-sky-300 tracking-wide uppercase">
-              {t("badge")}
-            </span>
-          </div>
-
           {/* Main Headline */}
           <h1 className="font-extrabold text-3xl sm:text-5xl lg:text-6xl max-w-4xl text-slate-900 dark:text-white tracking-tight leading-tight mb-4 font-display">
             {t("sarlavha")}
