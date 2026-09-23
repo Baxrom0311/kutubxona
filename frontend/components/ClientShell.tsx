@@ -17,8 +17,8 @@ export default function ClientShell({
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const pathname = usePathname();
 
-  // O'qish oynasi butun ekranni egallaydi — menyu, footer va AI tugmasi
-  // o'qishga xalaqit bermasligi uchun ko'rsatilmaydi.
+  // O'qish oynasi butun ekranni egallaydi — menyu va footer yashiriladi.
+  // AI maslahatchi esa kitob o'qiyotganda savol berish uchun ham kerak.
   const oqishRejimi = pathname.includes("/oqish/");
 
   useEffect(() => {
@@ -28,7 +28,17 @@ export default function ClientShell({
   }, []);
 
   if (oqishRejimi) {
-    return <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>;
+    return (
+      <ThemeProvider initialTheme={initialTheme}>
+        {children}
+        <AiChatWidget
+          isOpen={aiChatOpen}
+          onClose={() => setAiChatOpen(false)}
+          onToggle={() => setAiChatOpen((prev) => !prev)}
+          readerMode
+        />
+      </ThemeProvider>
+    );
   }
 
   return (

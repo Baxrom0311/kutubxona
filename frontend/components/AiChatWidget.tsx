@@ -16,9 +16,15 @@ interface AiChatWidgetProps {
   isOpen: boolean;
   onClose: () => void;
   onToggle: () => void;
+  readerMode?: boolean;
 }
 
-export default function AiChatWidget({ isOpen, onClose, onToggle }: AiChatWidgetProps) {
+export default function AiChatWidget({
+  isOpen,
+  onClose,
+  onToggle,
+  readerMode = false,
+}: AiChatWidgetProps) {
   const t = useTranslations("ai");
 
   const [xabarlar, setXabarlar] = useState<Xabar[]>([]);
@@ -82,7 +88,9 @@ export default function AiChatWidget({ isOpen, onClose, onToggle }: AiChatWidget
         type="button"
         aria-label={t("sarlavha")}
         aria-expanded={isOpen}
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-brand hover:bg-brand-strong text-on-brand shadow-lift flex items-center justify-center transition-colors"
+        className={`fixed right-5 z-50 w-14 h-14 rounded-full bg-brand hover:bg-brand-strong text-on-brand shadow-lift flex items-center justify-center transition-colors ${
+          readerMode ? "bottom-20" : "bottom-5"
+        }`}
       >
         {isOpen ? <X size={22} /> : <Sparkles size={22} strokeWidth={1.75} />}
       </button>
@@ -91,7 +99,13 @@ export default function AiChatWidget({ isOpen, onClose, onToggle }: AiChatWidget
         <>
           <div onClick={onClose} className="sm:hidden fixed inset-0 bg-black/40 z-50" />
 
-          <div className="fixed inset-x-3 bottom-20 sm:inset-x-auto sm:right-5 sm:w-[380px] h-[540px] max-h-[calc(100dvh-110px)] bg-surface border border-line rounded-2xl shadow-lift z-50 flex flex-col overflow-hidden">
+          <div
+            className={`fixed inset-x-3 sm:inset-x-auto sm:right-5 sm:w-[380px] h-[540px] bg-surface border border-line rounded-2xl shadow-lift z-50 flex flex-col overflow-hidden ${
+              readerMode
+                ? "bottom-36 max-h-[calc(100dvh-170px)]"
+                : "bottom-20 max-h-[calc(100dvh-110px)]"
+            }`}
+          >
             <header className="h-14 px-4 border-b border-line flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2.5">
                 <Sparkles size={17} strokeWidth={1.75} className="text-brand" />
