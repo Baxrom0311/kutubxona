@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { ArrowUp, ChevronRight, Sparkles, X } from "lucide-react";
+import Matn from "./Matn";
 
 interface Xabar {
   rol: "user" | "assistant";
@@ -116,7 +117,13 @@ export default function AiChatWidget({ isOpen, onClose, onToggle }: AiChatWidget
                         : "bg-surface-2 text-ink rounded-bl-md"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{x.matn}</p>
+                    {/* AI javobi Markdown'da keladi, foydalanuvchi xabari
+                        esa oddiy matn — uni o'zgartirmay ko'rsatamiz. */}
+                    {x.rol === "assistant" ? (
+                      <Matn manba={x.matn} />
+                    ) : (
+                      <p className="whitespace-pre-wrap">{x.matn}</p>
+                    )}
 
                     {x.tavsiyalar && x.tavsiyalar.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-line space-y-0.5">
