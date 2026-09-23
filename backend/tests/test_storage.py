@@ -53,6 +53,19 @@ def test_soxta_saqlagich_yuklash_fayl_obyektidan():
     assert storage.hajm(key) == 8
 
 
+def test_soxta_saqlagich_muqova_yuklash():
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    storage = SoxtaSaqlagich()
+    key = "covers/demo.png"
+    uploaded = SimpleUploadedFile("demo.png", b"png")
+
+    storage.muqova_yuklash(key, uploaded, content_type="image/png")
+
+    assert storage.mavjudmi(key)
+    assert storage.ochiq_url(key).endswith(key)
+
+
 def test_get_saqlagich_standart():
     storage = get_saqlagich()
     assert isinstance(storage, SoxtaSaqlagich)
@@ -91,3 +104,21 @@ def test_r2_saqlagich_yuklash_upload_fileobj_ishlatadi(mock_boto_client):
     assert args[1] == r2.bucket_kitoblar
     assert args[2] == "kitoblar/demo.pdf"
     assert kwargs["ExtraArgs"] == {"ContentType": "application/pdf"}
+
+
+@patch("boto3.client")
+def test_r2_saqlagich_muqova_yuklash_muqova_bucketga(mock_boto_client):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    mock_s3 = MagicMock()
+    mock_boto_client.return_value = mock_s3
+
+    r2 = R2Saqlagich()
+    uploaded = SimpleUploadedFile("demo.png", b"png")
+    r2.muqova_yuklash("covers/demo.png", uploaded, content_type="image/png")
+
+    mock_s3.upload_fileobj.assert_called_once()
+    args, kwargs = mock_s3.upload_fileobj.call_args
+    assert args[1] == r2.bucket_muqovalar
+    assert args[2] == "covers/demo.png"
+    assert kwargs["ExtraArgs"] == {"ContentType": "image/png"}

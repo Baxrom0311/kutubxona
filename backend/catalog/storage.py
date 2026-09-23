@@ -27,6 +27,11 @@ class Saqlagich(ABC):
         pass
 
     @abstractmethod
+    def muqova_yuklash(self, key: str, fayl, content_type: str = "image/png") -> None:
+        """Muqova faylini ochiq bucketga yuklash."""
+        pass
+
+    @abstractmethod
     def ochiq_url(self, key: str) -> str:
         """Ochiq bucket uchun oddiy URL, imzosiz."""
         pass
@@ -99,6 +104,16 @@ class R2Saqlagich(Saqlagich):
             ExtraArgs={"ContentType": content_type},
         )
 
+    def muqova_yuklash(self, key: str, fayl, content_type: str = "image/png") -> None:
+        if hasattr(fayl, "seek") and (not hasattr(fayl, "seekable") or fayl.seekable()):
+            fayl.seek(0)
+        self._client.upload_fileobj(
+            fayl,
+            self.bucket_muqovalar,
+            key,
+            ExtraArgs={"ContentType": content_type},
+        )
+
     def ochiq_url(self, key: str) -> str:
         if not key:
             return ""
@@ -142,6 +157,11 @@ class SoxtaSaqlagich(Saqlagich):
         return f"https://r2.mock.local/{self.bucket_kitoblar}/{key.lstrip('/')}?content_type={content_type}&muddat={muddat}"
 
     def yuklash(self, key: str, fayl, content_type: str = "application/octet-stream") -> None:
+        if hasattr(fayl, "seek") and (not hasattr(fayl, "seekable") or fayl.seekable()):
+            fayl.seek(0)
+        self._fayllar[key] = fayl.read()
+
+    def muqova_yuklash(self, key: str, fayl, content_type: str = "image/png") -> None:
         if hasattr(fayl, "seek") and (not hasattr(fayl, "seekable") or fayl.seekable()):
             fayl.seek(0)
         self._fayllar[key] = fayl.read()
