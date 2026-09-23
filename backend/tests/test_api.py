@@ -199,6 +199,16 @@ def test_cors_ruxsat_berilgan_origin(api_client):
     assert res.headers.get("Access-Control-Allow-Origin") == "http://localhost:3000"
 
 
+def test_cors_vercel_preview_origin_ruxsat(api_client):
+    origin = "https://kutubxona-git-main-baxrom0311.vercel.app"
+    res = api_client.get(
+        "/api/kitoblar/",
+        HTTP_ORIGIN=origin,
+    )
+    assert res.status_code == 200
+    assert res.headers.get("Access-Control-Allow-Origin") == origin
+
+
 def test_cors_begona_origin_bloklash(api_client):
     res = api_client.get(
         "/api/kitoblar/",

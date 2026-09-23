@@ -139,6 +139,12 @@ CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     default=["http://localhost:3000", "http://127.0.0.1:3000"],
 )
+CORS_ALLOWED_ORIGIN_REGEXES = env.list(
+    "CORS_ALLOWED_ORIGIN_REGEXES",
+    default=[
+        r"^https://.*\.vercel\.app$",
+    ],
+)
 CORS_ALLOW_CREDENTIALS = False
 
 # PDF o'quvchisi (pdf.js) faylni bo'laklab so'raydi: `Range` sarlavhasiga
@@ -245,4 +251,3 @@ LOGGING = {
         },
     },
 }
-
