@@ -2,6 +2,7 @@
 
 from io import BytesIO
 from pathlib import Path
+import random
 import textwrap
 
 from PIL import Image, ImageDraw, ImageFont
@@ -16,7 +17,9 @@ PALETTES = [
     ((127, 29, 29), (245, 158, 11), (255, 255, 255)),
     ((20, 83, 45), (132, 204, 22), (255, 255, 255)),
     ((51, 65, 85), (14, 165, 233), (255, 255, 255)),
+    ((63, 48, 18), (217, 119, 6), (255, 255, 255)),
 ]
+_palette_bag: list[int] = []
 
 
 def cover_key(book: Book) -> str:
@@ -33,7 +36,7 @@ def render_cover_png(book: Book) -> BytesIO:
 
 def render_cover(book: Book) -> Image.Image:
     width, height = 900, 1200
-    primary, accent, text = PALETTES[sum(ord(c) for c in book.slug) % len(PALETTES)]
+    primary, accent, text = _next_palette()
     image = Image.new("RGB", (width, height), primary)
     draw = ImageDraw.Draw(image)
 
@@ -78,6 +81,13 @@ def render_cover(book: Book) -> Image.Image:
     draw.text((80, height - 118), meta, font=small_font, fill=(180, 235, 230))
 
     return image
+
+
+def _next_palette():
+    if not _palette_bag:
+        _palette_bag.extend(range(len(PALETTES)))
+        random.shuffle(_palette_bag)
+    return PALETTES[_palette_bag.pop()]
 
 
 def _font(size: int, bold: bool = False):

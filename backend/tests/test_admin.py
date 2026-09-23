@@ -3,8 +3,8 @@ from django.contrib.admin.sites import site
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.exceptions import ValidationError
 
-from catalog.admin import LoanEntryAdmin, QaytarilganFilter
-from catalog.models import LoanEntry
+from catalog.admin import BookAdmin, LoanEntryAdmin, QaytarilganFilter
+from catalog.models import Book, LoanEntry
 
 pytestmark = pytest.mark.django_db
 
@@ -81,22 +81,8 @@ def test_axes_brute_force_qayd_qilish(client):
         client.post("/admin/login/", {"username": "hacker", "password": "wrongpassword"})
     assert AccessAttempt.objects.filter(username="hacker").exists()
 
-
-
-def _kichik_png() -> bytes:
-    """Django ImageField tekshiruvidan o'tadigan eng kichik haqiqiy PNG."""
-    import base64
-
-    return base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk"
-        "YPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-    )
-
-
-def test_admin_muqova_yuklaydi(client, kitob, kutubxonachi):
-    """Admin panelidan muqova rasmi yuklanib, muqova_key to'ldirilsin."""
-    from django.core.files.uploadedfile import SimpleUploadedFile
-
+def test_admin_muqova_avtomatik_generatsiya_qiladi(client, kitob, kutubxonachi):
+    """Admin kitob saqlaganda muqova yagona shablonda avtomatik yaratilsin."""
     from catalog.storage import get_saqlagich
 
     kutubxonachi.is_superuser = True
@@ -118,7 +104,6 @@ def test_admin_muqova_yuklaydi(client, kitob, kutubxonachi):
             "mualliflar": [m.pk for m in kitob.mualliflar.all()],
             "yonalishlar": [y.pk for y in kitob.yonalishlar.all()],
             "muqova_key": "",
-            "muqova_fayl": SimpleUploadedFile("muqova.png", _kichik_png(), "image/png"),
             "fayllar-TOTAL_FORMS": "0",
             "fayllar-INITIAL_FORMS": "0",
             "fayllar-MIN_NUM_FORMS": "0",
@@ -129,23 +114,19 @@ def test_admin_muqova_yuklaydi(client, kitob, kutubxonachi):
     assert response.status_code == 200
 
     kitob.refresh_from_db()
-    assert kitob.muqova_key.startswith("muqovalar/")
+    assert kitob.muqova_key == f"covers/{kitob.slug}.png"
     assert kitob.muqova_key.endswith(".png")
     assert get_saqlagich().mavjudmi(kitob.muqova_key)
 
 
-def test_admin_muqova_notogri_format_rad_etadi():
-    """PDF ni muqova sifatida yuklashga urinish forma darajasida to'xtatilsin."""
-    from django.core.files.uploadedfile import SimpleUploadedFile
+def test_admin_muqova_yuklash_maydoni_yoq(rf):
+    """Muqova qo'lda yuklanmaydi; admin form faqat generatsiyadan foydalanadi."""
+    model_admin = BookAdmin(Book, site)
+    request = rf.get("/admin/catalog/book/add/")
+    request.user = type("User", (), {"has_perm": lambda self, perm: True})()
+    form_class = model_admin.get_form(request)
 
-    from catalog.admin import BookAdminForm
-
-    form = BookAdminForm()
-    form.cleaned_data = {
-        "muqova_fayl": SimpleUploadedFile("kitob.pdf", b"%PDF-1.4", "application/pdf")
-    }
-    with pytest.raises(ValidationError):
-        form.clean_muqova_fayl()
+    assert "muqova_fayl" not in form_class.base_fields
 
 
 def test_admin_pdf_fayl_yuklaydi(client, kitob, kutubxonachi):

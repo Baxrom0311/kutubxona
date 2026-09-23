@@ -31,13 +31,6 @@ BOOK_CONTENT_TYPES = {
     "epub": "application/epub+zip",
 }
 
-COVER_CONTENT_TYPES = {
-    "jpg": "image/jpeg",
-    "jpeg": "image/jpeg",
-    "png": "image/png",
-    "webp": "image/webp",
-}
-
 
 class QaytarilganFilter(admin.SimpleListFilter):
     """Jurnalda qaytarilgan yoki qaytarilmagan kitoblarni ajratish filtri."""
@@ -128,47 +121,13 @@ class BookFileInline(admin.TabularInline):
     readonly_fields = ("storage_key", "hajm")
 
 
-class BookAdminForm(forms.ModelForm):
-    """Kitob formasi — muqova avtomatik generatsiya qilinadi."""
-
-    muqova_fayl = forms.ImageField(
-        required=False,
-        label="Muqova rasmi (ixtiyoriy)",
-        help_text=(
-            "Odatda bo'sh qoldiring: tizim kitob ma'lumotlaridan yagona shablonda muqova yaratadi. "
-            "Faqat maxsus muqova kerak bo'lsa JPG, PNG yoki WEBP yuklang."
-        ),
-    )
-
-    class Meta:
-        model = Book
-        fields = "__all__"
-
-    def clean_muqova_fayl(self):
-        fayl = self.cleaned_data.get("muqova_fayl")
-        if not fayl:
-            return fayl
-
-        ext = Path(fayl.name).suffix.lower().lstrip(".")
-        allowed = getattr(settings, "ALLOWED_COVER_EXTENSIONS", ["jpg", "jpeg", "png", "webp"])
-        if ext not in allowed:
-            raise forms.ValidationError(f"Faqat {', '.join(allowed).upper()} formatdagi rasm.")
-
-        max_mb = getattr(settings, "MAX_COVER_FILE_MB", 8)
-        if fayl.size > max_mb * 1024 * 1024:
-            raise forms.ValidationError(f"Rasm hajmi {max_mb} MB dan oshmasligi kerak.")
-
-        return fayl
-
-
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    form = BookAdminForm
     list_display = ("nomi", "turi", "mavjudlik_belgisi", "til", "yil", "korishlar_soni")
     list_filter = ("mavjudlik", "turi", "til", "yil", "yonalishlar")
     search_fields = ("nomi", "mualliflar__ism", "slug", "nashriyot")
     filter_horizontal = ("mualliflar", "yonalishlar")
-    readonly_fields = ("slug", "korishlar_soni", "qoshilgan_sana", "muqova_korinishi")
+    readonly_fields = ("slug", "korishlar_soni", "qoshilgan_sana", "muqova_korinishi", "muqova_key")
     inlines = [BookFileInline]
     fieldsets = (
         (
@@ -194,16 +153,16 @@ class BookAdmin(admin.ModelAdmin):
         (
             _("Muqova"),
             {
-                "fields": ("muqova_korinishi", "muqova_fayl", "muqova_key"),
+                "fields": ("muqova_korinishi",),
                 "description": _(
-                    "Muqova avtomatik generatsiya qilinadi. Qo'lda rasm yuklash shart emas."
+                    "Muqova kitob saqlanganda avtomatik generatsiya qilinadi. Qo'lda rasm yuklash kerak emas."
                 ),
             },
         ),
         (
             _("Tizim ma'lumotlari"),
             {
-                "fields": ("slug", "korishlar_soni", "qoshilgan_sana"),
+                "fields": ("slug", "muqova_key", "korishlar_soni", "qoshilgan_sana"),
                 "classes": ("collapse",),
             },
         ),
@@ -229,36 +188,9 @@ class BookAdmin(admin.ModelAdmin):
         )
 
     def save_model(self, request, obj, form, change):
-        muqova = form.cleaned_data.get("muqova_fayl")
-        saqlagich = get_saqlagich()
-        if muqova:
-            eski_key = obj.muqova_key
-            # slug save() ichida yaratiladi, shuning uchun avval saqlaymiz
-            super().save_model(request, obj, form, change)
-            ext = Path(muqova.name).suffix.lower().lstrip(".")
-            obj.muqova_key = self._muqova_key(obj, ext)
-            saqlagich.muqova_yuklash(
-                obj.muqova_key,
-                muqova,
-                content_type=COVER_CONTENT_TYPES.get(ext, "image/jpeg"),
-            )
-            obj.save(update_fields=["muqova_key"])
-            if eski_key and eski_key != obj.muqova_key:
-                try:
-                    saqlagich.ochirish(eski_key)
-                except Exception:
-                    pass
-            return
         super().save_model(request, obj, form, change)
-        if not obj.muqova_key:
-            self._generate_muqova(obj, saqlagich)
-
-    def _muqova_key(self, book: Book, ext: str) -> str:
-        return f"muqovalar/{book.slug}-{uuid.uuid4().hex[:8]}.{ext}"
 
     def _generate_muqova(self, book: Book, saqlagich):
-        # Many-to-many fields are saved after save_model(), so admin calls the
-        # same helper again from save_related() to refresh author/subject text.
         key = cover_key(book)
         saqlagich.muqova_yuklash(key, render_cover_png(book), content_type="image/png")
         book.muqova_key = key
@@ -266,10 +198,8 @@ class BookAdmin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
-        muqova = form.cleaned_data.get("muqova_fayl")
-        if muqova:
-            return
-        self._generate_muqova(form.instance, get_saqlagich())
+        if not form.instance.muqova_key:
+            self._generate_muqova(form.instance, get_saqlagich())
 
     def save_formset(self, request, form, formset, change):
         if formset.model is not BookFile:
