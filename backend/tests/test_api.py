@@ -209,6 +209,16 @@ def test_cors_vercel_preview_origin_ruxsat(api_client):
     assert res.headers.get("Access-Control-Allow-Origin") == origin
 
 
+def test_cors_custom_domain_ruxsat(api_client):
+    origin = "https://lib.boos.uz"
+    res = api_client.get(
+        "/api/kitoblar/",
+        HTTP_ORIGIN=origin,
+    )
+    assert res.status_code == 200
+    assert res.headers.get("Access-Control-Allow-Origin") == origin
+
+
 def test_cors_begona_origin_bloklash(api_client):
     res = api_client.get(
         "/api/kitoblar/",

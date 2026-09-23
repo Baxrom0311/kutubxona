@@ -142,6 +142,7 @@ CORS_ALLOWED_ORIGINS = env.list(
 CORS_ALLOWED_ORIGIN_REGEXES = env.list(
     "CORS_ALLOWED_ORIGIN_REGEXES",
     default=[
+        r"^https://lib\.boos\.uz$",
         r"^https://.*\.vercel\.app$",
     ],
 )
