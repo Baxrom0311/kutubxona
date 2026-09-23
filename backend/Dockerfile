@@ -16,6 +16,7 @@ COPY . .
 
 # Build jarayonida statik fayllarni yig'ish
 RUN python manage.py collectstatic --noinput
+RUN chmod +x /app/entrypoint.sh
 
 # Huquqlarni appuser ga o'tkazish
 RUN chown -R appuser:appgroup /app
@@ -23,6 +24,7 @@ USER appuser
 
 EXPOSE 8000
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi:application", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "2", \
