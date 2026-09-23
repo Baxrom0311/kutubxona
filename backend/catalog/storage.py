@@ -90,7 +90,7 @@ class R2Saqlagich(Saqlagich):
         )
 
     def yuklash(self, key: str, fayl, content_type: str = "application/octet-stream") -> None:
-        if hasattr(fayl, "seek"):
+        if hasattr(fayl, "seek") and (not hasattr(fayl, "seekable") or fayl.seekable()):
             fayl.seek(0)
         self._client.upload_fileobj(
             fayl,
@@ -142,7 +142,7 @@ class SoxtaSaqlagich(Saqlagich):
         return f"https://r2.mock.local/{self.bucket_kitoblar}/{key.lstrip('/')}?content_type={content_type}&muddat={muddat}"
 
     def yuklash(self, key: str, fayl, content_type: str = "application/octet-stream") -> None:
-        if hasattr(fayl, "seek"):
+        if hasattr(fayl, "seek") and (not hasattr(fayl, "seekable") or fayl.seekable()):
             fayl.seek(0)
         self._fayllar[key] = fayl.read()
 
