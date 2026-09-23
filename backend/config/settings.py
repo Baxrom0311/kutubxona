@@ -9,14 +9,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    ALLOWED_HOSTS=(
+        list,
+        [
+            "localhost",
+            "127.0.0.1",
+            "lib.boos.uz",
+            "kutubxona.boos.uz",
+        ],
+    ),
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("SECRET_KEY", default="dev-only-insecure-key-almashtiring")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "https://lib.boos.uz",
+        "https://kutubxona.boos.uz",
+    ],
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -143,6 +157,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = env.list(
     "CORS_ALLOWED_ORIGIN_REGEXES",
     default=[
         r"^https://lib\.boos\.uz$",
+        r"^https://kutubxona\.boos\.uz$",
         r"^https://.*\.vercel\.app$",
     ],
 )
