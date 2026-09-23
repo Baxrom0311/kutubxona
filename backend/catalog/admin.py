@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+from catalog.covers import cover_key, render_cover_png
 from catalog.models import (
     AiBotConfig,
     Author,
@@ -128,14 +129,14 @@ class BookFileInline(admin.TabularInline):
 
 
 class BookAdminForm(forms.ModelForm):
-    """Kitob formasi — muqova rasmini to'g'ridan-to'g'ri yuklash bilan."""
+    """Kitob formasi — muqova avtomatik generatsiya qilinadi."""
 
     muqova_fayl = forms.ImageField(
         required=False,
-        label="Muqova rasmi",
+        label="Muqova rasmi (ixtiyoriy)",
         help_text=(
-            "JPG, PNG yoki WEBP. Tavsiya etilgan nisbat 3:4 (masalan 600×800). "
-            "Yangi rasm yuklansa, eskisi almashtiriladi."
+            "Odatda bo'sh qoldiring: tizim kitob ma'lumotlaridan yagona shablonda muqova yaratadi. "
+            "Faqat maxsus muqova kerak bo'lsa JPG, PNG yoki WEBP yuklang."
         ),
     )
 
@@ -192,7 +193,12 @@ class BookAdmin(admin.ModelAdmin):
         ),
         (
             _("Muqova"),
-            {"fields": ("muqova_korinishi", "muqova_fayl", "muqova_key")},
+            {
+                "fields": ("muqova_korinishi", "muqova_fayl", "muqova_key"),
+                "description": _(
+                    "Muqova avtomatik generatsiya qilinadi. Qo'lda rasm yuklash shart emas."
+                ),
+            },
         ),
         (
             _("Tizim ma'lumotlari"),
@@ -224,8 +230,8 @@ class BookAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         muqova = form.cleaned_data.get("muqova_fayl")
+        saqlagich = get_saqlagich()
         if muqova:
-            saqlagich = get_saqlagich()
             eski_key = obj.muqova_key
             # slug save() ichida yaratiladi, shuning uchun avval saqlaymiz
             super().save_model(request, obj, form, change)
@@ -244,9 +250,26 @@ class BookAdmin(admin.ModelAdmin):
                     pass
             return
         super().save_model(request, obj, form, change)
+        if not obj.muqova_key:
+            self._generate_muqova(obj, saqlagich)
 
     def _muqova_key(self, book: Book, ext: str) -> str:
         return f"muqovalar/{book.slug}-{uuid.uuid4().hex[:8]}.{ext}"
+
+    def _generate_muqova(self, book: Book, saqlagich):
+        # Many-to-many fields are saved after save_model(), so admin calls the
+        # same helper again from save_related() to refresh author/subject text.
+        key = cover_key(book)
+        saqlagich.muqova_yuklash(key, render_cover_png(book), content_type="image/png")
+        book.muqova_key = key
+        book.save(update_fields=["muqova_key"])
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        muqova = form.cleaned_data.get("muqova_fayl")
+        if muqova:
+            return
+        self._generate_muqova(form.instance, get_saqlagich())
 
     def save_formset(self, request, form, formset, change):
         if formset.model is not BookFile:
