@@ -121,6 +121,14 @@ class Book(models.Model):
         ("en", "English"),
     ]
 
+    # Kutubxona 100% elektron emas: ayrim kitoblarning faqat bosma nusxasi
+    # bor. Ularning muqovasi katalogda ko'rinadi, lekin onlayn o'qilmaydi —
+    # o'quvchi kitobni kutubxonadan olishi kerak.
+    MAVJUDLIK_TANLOVI = [
+        ("raqamli", "Raqamli — onlayn o'qish mumkin"),
+        ("bosma", "Faqat bosma nusxa — kutubxonadan olinadi"),
+    ]
+
     nomi = models.CharField(max_length=300, db_index=True)
     slug = models.SlugField(max_length=300, unique=True, blank=True)
     tavsif = models.TextField(blank=True)
@@ -128,6 +136,16 @@ class Book(models.Model):
     yil = models.PositiveSmallIntegerField(null=True, blank=True)
     til = models.CharField(max_length=5, choices=TIL_TANLOVI, default="uz")
     muqova_key = models.CharField(max_length=500, blank=True)
+    mavjudlik = models.CharField(
+        max_length=10,
+        choices=MAVJUDLIK_TANLOVI,
+        default="raqamli",
+        db_index=True,
+        help_text=(
+            "Raqamli — PDF/EPUB yuklang, saytda o'qiladi. "
+            "Faqat bosma — faqat muqova yuklang, saytda «kutubxonadan olasiz» deb ko'rinadi."
+        ),
+    )
 
     mualliflar = models.ManyToManyField(Author, blank=True, related_name="kitoblar")
     turi = models.ForeignKey(Form, on_delete=models.PROTECT, related_name="kitoblar")
@@ -149,6 +167,10 @@ class Book(models.Model):
         if not self.slug:
             self.slug = generate_unique_slug(self, self.nomi, max_length=300)
         super().save(*args, **kwargs)
+
+    def oqish_mumkinmi(self) -> bool:
+        """Saytda onlayn o'qish mumkinmi — raqamli belgilangan va fayli bor."""
+        return self.mavjudlik == "raqamli" and self.fayllar.exists()
 
     def korishni_qoshish(self):
         """F() ifodasi yordamida parallel so'rovlarda hisob yo'qolmasligi uchun."""

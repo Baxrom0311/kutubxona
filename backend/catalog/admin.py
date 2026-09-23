@@ -7,6 +7,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from catalog.models import (
@@ -27,6 +28,13 @@ from catalog.storage import get_saqlagich
 BOOK_CONTENT_TYPES = {
     "pdf": "application/pdf",
     "epub": "application/epub+zip",
+}
+
+COVER_CONTENT_TYPES = {
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+    "webp": "image/webp",
 }
 
 
@@ -119,20 +127,137 @@ class BookFileInline(admin.TabularInline):
     readonly_fields = ("storage_key", "hajm")
 
 
+class BookAdminForm(forms.ModelForm):
+    """Kitob formasi — muqova rasmini to'g'ridan-to'g'ri yuklash bilan."""
+
+    muqova_fayl = forms.ImageField(
+        required=False,
+        label="Muqova rasmi",
+        help_text=(
+            "JPG, PNG yoki WEBP. Tavsiya etilgan nisbat 3:4 (masalan 600×800). "
+            "Yangi rasm yuklansa, eskisi almashtiriladi."
+        ),
+    )
+
+    class Meta:
+        model = Book
+        fields = "__all__"
+
+    def clean_muqova_fayl(self):
+        fayl = self.cleaned_data.get("muqova_fayl")
+        if not fayl:
+            return fayl
+
+        ext = Path(fayl.name).suffix.lower().lstrip(".")
+        allowed = getattr(settings, "ALLOWED_COVER_EXTENSIONS", ["jpg", "jpeg", "png", "webp"])
+        if ext not in allowed:
+            raise forms.ValidationError(f"Faqat {', '.join(allowed).upper()} formatdagi rasm.")
+
+        max_mb = getattr(settings, "MAX_COVER_FILE_MB", 8)
+        if fayl.size > max_mb * 1024 * 1024:
+            raise forms.ValidationError(f"Rasm hajmi {max_mb} MB dan oshmasligi kerak.")
+
+        return fayl
+
+
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ("nomi", "turi", "til", "yil", "korishlar_soni", "qoshilgan_sana")
-    list_filter = ("turi", "til", "yil", "yonalishlar")
+    form = BookAdminForm
+    list_display = ("nomi", "turi", "mavjudlik_belgisi", "til", "yil", "korishlar_soni")
+    list_filter = ("mavjudlik", "turi", "til", "yil", "yonalishlar")
     search_fields = ("nomi", "mualliflar__ism", "slug", "nashriyot")
     filter_horizontal = ("mualliflar", "yonalishlar")
-    readonly_fields = ("slug", "korishlar_soni", "qoshilgan_sana")
+    readonly_fields = ("slug", "korishlar_soni", "qoshilgan_sana", "muqova_korinishi")
     inlines = [BookFileInline]
+    fieldsets = (
+        (
+            _("Kitob haqida"),
+            {"fields": ("nomi", "mualliflar", "tavsif", "nashriyot", "yil", "til")},
+        ),
+        (
+            _("Toifalash"),
+            {"fields": ("turi", "yonalishlar")},
+        ),
+        (
+            _("Mavjudligi"),
+            {
+                "fields": ("mavjudlik",),
+                "description": _(
+                    "<b>Raqamli</b> — pastdagi «Kitob fayllari» bo'limiga PDF yoki EPUB yuklang, "
+                    "kitob saytda o'qiladi.<br>"
+                    "<b>Faqat bosma nusxa</b> — fayl yuklamang, faqat muqova yuklang. "
+                    "Saytda kitob ko'rinadi, lekin o'qish o'rniga «kutubxonadan olishingiz mumkin» yoziladi."
+                ),
+            },
+        ),
+        (
+            _("Muqova"),
+            {"fields": ("muqova_korinishi", "muqova_fayl", "muqova_key")},
+        ),
+        (
+            _("Tizim ma'lumotlari"),
+            {
+                "fields": ("slug", "korishlar_soni", "qoshilgan_sana"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    @admin.display(description=_("Mavjudligi"))
+    def mavjudlik_belgisi(self, obj: Book) -> str:
+        if obj.mavjudlik == "bosma":
+            return "📕 Bosma nusxa"
+        if obj.fayllar.exists():
+            return "💻 Onlayn"
+        return "⚠️ Raqamli, lekin fayl yo'q"
+
+    @admin.display(description=_("Hozirgi muqova"))
+    def muqova_korinishi(self, obj: Book):
+        if not obj.pk or not obj.muqova_key:
+            return _("Muqova yuklanmagan")
+        url = get_saqlagich().ochiq_url(obj.muqova_key)
+        return format_html(
+            '<img src="{}" alt="" style="height:220px;border-radius:6px;'
+            'box-shadow:0 2px 12px rgba(0,0,0,.2)">',
+            url,
+        )
+
+    def save_model(self, request, obj, form, change):
+        muqova = form.cleaned_data.get("muqova_fayl")
+        if muqova:
+            saqlagich = get_saqlagich()
+            eski_key = obj.muqova_key
+            # slug save() ichida yaratiladi, shuning uchun avval saqlaymiz
+            super().save_model(request, obj, form, change)
+            ext = Path(muqova.name).suffix.lower().lstrip(".")
+            obj.muqova_key = self._muqova_key(obj, ext)
+            saqlagich.muqova_yuklash(
+                obj.muqova_key,
+                muqova,
+                content_type=COVER_CONTENT_TYPES.get(ext, "image/jpeg"),
+            )
+            obj.save(update_fields=["muqova_key"])
+            if eski_key and eski_key != obj.muqova_key:
+                try:
+                    saqlagich.ochirish(eski_key)
+                except Exception:
+                    pass
+            return
+        super().save_model(request, obj, form, change)
+
+    def _muqova_key(self, book: Book, ext: str) -> str:
+        return f"muqovalar/{book.slug}-{uuid.uuid4().hex[:8]}.{ext}"
 
     def save_formset(self, request, form, formset, change):
         if formset.model is not BookFile:
             return super().save_formset(request, form, formset, change)
 
         saqlagich = get_saqlagich()
+
+        # `deleted_objects` aynan shu chaqiruvda to'ldiriladi; commit=False
+        # bo'lgani uchun obyektlar bazaga hali yozilmaydi va fayllarni
+        # saqlagichga yuklashdan oldin nazorat bizda qoladi.
+        formset.save(commit=False)
 
         for deleted in formset.deleted_objects:
             if deleted.storage_key:
@@ -148,7 +273,8 @@ class BookAdmin(admin.ModelAdmin):
             if not inline_form.has_changed():
                 continue
 
-            obj = inline_form.save(commit=False)
+            # formset.save(commit=False) instance'ni allaqachon to'ldirgan
+            obj = inline_form.instance
             uploaded = inline_form.cleaned_data.get("fayl")
             if uploaded:
                 ext = Path(uploaded.name).suffix.lower().lstrip(".")

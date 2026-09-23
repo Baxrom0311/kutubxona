@@ -1,277 +1,173 @@
 import { Link } from "@/i18n/routing";
-import { kitoblarniOlish } from "@/lib/api";
+import { kitoblarniOlish, yonalishlarniOlish } from "@/lib/api";
 import KitobKartochka from "@/components/KitobKartochka";
+import Muqova from "@/components/Muqova";
 import OpenAiChatButton from "@/components/OpenAiChatButton";
+import { Yonalish } from "@/lib/types";
 import { getTranslations } from "next-intl/server";
+import { ArrowRight, Search, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 interface HomePageProps {
-  params: Promise<{
-    locale: string;
-  }>;
+  params: Promise<{ locale: string }>;
+}
+
+/** Ierarxiyani tekis ro'yxatga yoyadi — yo'nalishlar sonini hisoblash uchun. */
+function yoyish(yonalishlar: Yonalish[]): Yonalish[] {
+  return yonalishlar.flatMap((y) => [y, ...yoyish(y.bolalar || [])]);
 }
 
 export default async function HomePage({ params }: HomePageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "home" });
+  const lang = locale as "uz" | "ru" | "en";
 
-  // Yangi va eng ko'p o'qilgan kitoblarni olish
-  const yangiKitoblarRes = await kitoblarniOlish({ saralash: "-qoshilgan_sana" });
+  const [kitoblarRes, yonalishlar] = await Promise.all([
+    kitoblarniOlish({ saralash: "-qoshilgan_sana" }),
+    yonalishlarniOlish(),
+  ]);
 
-  const yangiKitoblar = yangiKitoblarRes.natijalar.slice(0, 4);
+  const yangiKitoblar = kitoblarRes.natijalar.slice(0, 5);
+  const jamiKitoblar = kitoblarRes.soni;
+  // Kitobi ko'p yo'nalishlar oldinda — bo'sh yo'nalishlar oxirida.
+  const barchaYonalishlar = yoyish(yonalishlar).sort(
+    (a, b) => (b.kitoblar_soni ?? 0) - (a.kitoblar_soni ?? 0)
+  );
 
-  const ommabopMavzular = [
-    { nom: locale === "ru" ? "Основы сестринского дела" : locale === "en" ? "Nursing Fundamentals" : "Hamshiralik ishi asoslari", q: "hamshiralik" },
-    { nom: locale === "ru" ? "Анализ ЭКГ" : locale === "en" ? "ECG Diagnostics" : "EKG tahlili", q: "EKG" },
-    { nom: locale === "ru" ? "Скорая помощь" : locale === "en" ? "Emergency Care" : "Shoshilinch tibbiy yordam", q: "shoshilinch" },
-    { nom: locale === "ru" ? "Педиатрический уход" : locale === "en" ? "Pediatric Care" : "Pediatriya parvarishi", q: "pediatriya" },
-    { nom: locale === "ru" ? "Асептика и антисептика" : locale === "en" ? "Asepsis & Antisepsis" : "Aseptika va antiseptika", q: "aseptika" },
-    { nom: locale === "ru" ? "Фармакотерапия" : locale === "en" ? "Pharmacotherapy" : "Farmakoterapiya", q: "farmakoterapiya" },
-  ];
-
-  const darslikText = locale === "ru" ? "учебников" : locale === "en" ? "textbooks" : "darslik";
-
-  const mutaxassisliklar = [
-    {
-      nom: locale === "ru" ? "Терапия и уход" : locale === "en" ? "Therapy & Nursing Care" : "Terapiya va parvarish",
-      tavsif: locale === "ru" ? "Внутренние болезни, гериатрия и общая профилактика" : locale === "en" ? "Internal medicine, geriatrics and clinical care" : "Ichki kasalliklar, geriatriya va umumiy profilaktika",
-      icon: "medical_services",
-      soni: `140+ ${darslikText}`,
-      yonalish: "ichki-kasalliklar",
-    },
-    {
-      nom: locale === "ru" ? "Хирургия и операционный блок" : locale === "en" ? "Surgery & Operating Block" : "Xirurgiya va operatsiya",
-      tavsif: locale === "ru" ? "Послеоперационный уход, асептика, перевязки" : locale === "en" ? "Post-op care, asepsis, wound dressing" : "Operatsiyadan keyingi parvarish, aseptika, bog'lovlar",
-      icon: "healing",
-      soni: `95+ ${darslikText}`,
-      yonalish: "xirurgiya",
-    },
-    {
-      nom: locale === "ru" ? "Анестезиология и реанимация" : locale === "en" ? "Anesthesiology & ICU" : "Anesteziologiya va reanimatsiya",
-      tavsif: locale === "ru" ? "Интенсивная терапия, мониторинг жизненных функций" : locale === "en" ? "Intensive care, vital signs clinical monitoring" : "Intensiv terapiya, hayotiy ko'rsatkichlar monitoringi",
-      icon: "vital_signs",
-      soni: `70+ ${darslikText}`,
-      yonalish: "reanimatsiya",
-    },
-    {
-      nom: locale === "ru" ? "Педиатрия и неонатальный уход" : locale === "en" ? "Pediatrics & Neonatal Care" : "Pediatriya va neonatal parvarish",
-      tavsif: locale === "ru" ? "Клинические стандарты ухода за новорожденными и детьми" : locale === "en" ? "Clinical standards for newborn and infant care" : "Chaqaloqlar va bolalar parvarishi klinik standartlari",
-      icon: "child_care",
-      soni: `85+ ${darslikText}`,
-      yonalish: "pediatriya",
-    },
-    {
-      nom: locale === "ru" ? "Неотложная медицинская помощь" : locale === "en" ? "Emergency Medical Aid" : "Shoshilinch tibbiy yordam",
-      tavsif: locale === "ru" ? "Кардиогенный шок, травмы и алгоритмы скорой помощи" : locale === "en" ? "Cardiogenic shock, trauma and first responder protocols" : "Kardiogen shok, travmalar va tezkor algoritmlar",
-      icon: "emergency",
-      soni: `60+ ${darslikText}`,
-      yonalish: "shoshilinch",
-    },
-    {
-      nom: locale === "ru" ? "Клиническая кардиология" : locale === "en" ? "Clinical Cardiology" : "Klinik Kardiologiya",
-      tavsif: locale === "ru" ? "Сердечно-сосудистые заболевания и диагностика" : locale === "en" ? "Cardiovascular diseases and clinical diagnostics" : "Yurak qon-tomir kasalliklari va diagnostikasi",
-      icon: "cardiology",
-      soni: `55+ ${darslikText}`,
-      yonalish: "kardiologiya",
-    },
-  ];
+  // Hero uchun — fonddagi eng yangi uchta kitob.
+  const muqovalar = kitoblarRes.natijalar.slice(0, 3);
 
   return (
-    <div className="w-full flex flex-col items-center">
-      {/* 1. Hero Section (Stitch Design) */}
-      <section className="relative w-full overflow-hidden pt-4 sm:pt-8 lg:pt-12 pb-10 sm:pb-14 lg:pb-20">
-        {/* Ambient Glows */}
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[850px] h-[450px] bg-sky-200/40 dark:bg-sky-950/30 rounded-full blur-[110px] pointer-events-none" />
-        <div className="absolute top-1/3 -right-24 w-[420px] h-[420px] bg-teal-200/40 dark:bg-teal-950/30 rounded-full blur-[90px] pointer-events-none" />
+    <div className="w-full">
+      {/* ── Hero: qidiruv ──────────────────────────────────── */}
+      <section className="bg-surface border-b border-line">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-18 grid lg:grid-cols-[minmax(0,1fr)_360px] gap-12 lg:gap-16 items-center">
+          <div className="max-w-xl">
+            <h1 className="rise rise-1 font-display text-[32px] sm:text-[42px] lg:text-[48px] leading-[1.08] text-ink">
+              {t("sarlavha")}
+            </h1>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex flex-col items-center text-center animate-fade-in">
-          {/* Main Headline */}
-          <h1 className="font-extrabold text-2xl sm:text-4xl md:text-5xl lg:text-6xl max-w-4xl text-slate-900 dark:text-white tracking-tight leading-[1.15] mb-3 sm:mb-4 font-display">
-            {t("sarlavha")}
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mb-6 sm:mb-8 leading-relaxed">
-            {t("tavsif")}
-          </p>
-
-          {/* Search Bar */}
-          <div className="w-full max-w-3xl bg-white dark:bg-slate-900 p-2 sm:p-2.5 rounded-2xl shadow-md hover:shadow-lg focus-within:shadow-xl focus-within:ring-2 focus-within:ring-sky-500/20 border border-slate-200 dark:border-slate-800 mb-6 transition-all duration-300">
-            <form action={`/${locale}/katalog`} method="GET" className="flex flex-col sm:flex-row items-center gap-2">
-              <div className="flex items-center gap-2.5 sm:gap-3 w-full px-3 sm:px-4 py-2 text-slate-400">
-                <span className="material-symbols-outlined text-sky-700 dark:text-sky-400 text-[22px] sm:text-[26px]">search</span>
+            <form
+              action={`/${locale}/katalog`}
+              method="GET"
+              className="rise rise-2 mt-8 flex flex-col sm:flex-row gap-2"
+            >
+              <div className="relative flex-1">
+                <Search
+                  size={18}
+                  strokeWidth={1.75}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+                />
                 <input
                   name="q"
-                  type="text"
+                  type="search"
                   placeholder={t("qidiruvPlaceholder")}
-                  className="w-full bg-transparent text-sm sm:text-base text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none"
+                  aria-label={t("qidiruvPlaceholder")}
+                  className="w-full h-12 pl-11 pr-4 rounded-xl bg-paper border border-line-2 text-[15px] text-ink placeholder:text-muted focus:outline-none focus:border-brand focus:bg-surface transition-colors"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-sm font-semibold hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 shadow-md flex-shrink-0"
+                className="h-12 px-6 rounded-xl bg-brand hover:bg-brand-strong text-on-brand text-[15px] font-semibold transition-colors"
               >
-                <span>{t("qidirish")}</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                {t("qidirish")}
               </button>
             </form>
+
+            <p className="rise rise-3 mt-4 text-[13px] text-muted">
+              {t("fondKitoblar", { n: jamiKitoblar })} ·{" "}
+              {t("fondYonalishlar", { n: barchaYonalishlar.length })}
+            </p>
           </div>
 
-          {/* Quick Tags */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mb-8">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("ommabopMavzular")}:</span>
-            {ommabopMavzular.map((m) => (
-              <Link
-                key={m.q}
-                href={`/katalog?q=${encodeURIComponent(m.q)}`}
-                className="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 hover:bg-sky-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-sky-800 dark:hover:text-white text-xs font-medium border border-slate-200 dark:border-slate-800 shadow-2xs hover:-translate-y-0.5 transition-all duration-200"
-              >
-                {m.nom}
-              </Link>
-            ))}
-          </div>
-
-          {/* Action CTAs */}
-          <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3">
-            <Link
-              href="/katalog"
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-sm font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-[20px]">menu_book</span>
-              <span>{t("kataloggaOtish")}</span>
-            </Link>
-            <Link
-              href="/katalog"
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sky-900 dark:text-white text-sm font-semibold border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 transition-all duration-200"
-            >
-              <span className="material-symbols-outlined text-teal-600 dark:text-teal-400 text-[20px]">auto_awesome</span>
-              <span>{t("barchaDarsliklar")}</span>
-            </Link>
-          </div>
+          {/* Muqovalar — sahifadagi yagona bezak */}
+          {muqovalar.length > 0 && (
+            <div className="rise rise-3 hidden lg:flex justify-center items-center h-[290px]">
+              <div className="relative w-[360px] h-[270px]">
+                {muqovalar.map((kitob, i) => {
+                  const joylashuv = [
+                    "left-0 top-7 -rotate-6 w-[130px] z-0",
+                    "left-1/2 -translate-x-1/2 top-0 w-[160px] z-20",
+                    "right-0 top-7 rotate-6 w-[130px] z-10",
+                  ][i];
+                  return (
+                    <Link
+                      key={kitob.slug}
+                      href={`/kitob/${kitob.slug}`}
+                      title={kitob.nomi}
+                      className={`absolute ${joylashuv} aspect-[3/4] rounded-lg overflow-hidden shadow-lift ring-1 ring-black/5 hover:-translate-y-1.5 transition-transform duration-300`}
+                    >
+                      <Muqova
+                        slug={kitob.slug}
+                        nomi={kitob.nomi}
+                        muqova={kitob.muqova}
+                        priority={i === 1}
+                        sizes="165px"
+                      />
+                      {/* Yon kitoblar orqada turadi — soyalangani ularni
+                          old kitobdan ajratadi. */}
+                      {i !== 1 && <div className="absolute inset-0 bg-black/35" />}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* 2. Metrics Strip */}
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 mb-12 sm:mb-16">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-          <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-[22px] sm:text-[26px]">collections_bookmark</span>
-            </div>
-            <div className="min-w-0">
-              <span className="block font-bold text-xl sm:text-2xl text-slate-900 dark:text-white font-display">850+</span>
-              <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate block">{t("statDarsliklar")}</span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-400 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-[22px] sm:text-[26px]">medical_services</span>
-            </div>
-            <div className="min-w-0">
-              <span className="block font-bold text-xl sm:text-2xl text-slate-900 dark:text-white font-display">24+</span>
-              <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate block">{t("statYonalishlar")}</span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-[22px] sm:text-[26px]">lock_open_right</span>
-            </div>
-            <div className="min-w-0">
-              <span className="block font-bold text-xl sm:text-2xl text-slate-900 dark:text-white font-display">100%</span>
-              <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate block">{t("statOchiq")}</span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-[22px] sm:text-[26px]">bolt</span>
-            </div>
-            <div className="min-w-0">
-              <span className="block font-bold text-lg sm:text-xl text-slate-900 dark:text-white font-display truncate">
-                {t("statTezkorSarlavha")}
-              </span>
-              <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate block">{t("statTezkor")}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Specialties Grid (From Stitch) */}
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 mb-14 sm:mb-20">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div>
-            <span className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider block mb-1">
-              {t("mutaxassisliklarSubtitle")}
-            </span>
-            <h2 className="font-extrabold text-xl sm:text-2xl md:text-3xl text-slate-900 dark:text-white font-display">
-              {t("mutaxassisliklarSarlavha")}
+      {/* ── Yo'nalishlar ───────────────────────────────────── */}
+      {barchaYonalishlar.length > 0 && (
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-16">
+          <div className="flex items-baseline justify-between mb-6">
+            <h2 className="font-display text-[22px] sm:text-[26px] text-ink">
+              {t("yonalishlar")}
             </h2>
-          </div>
-          <Link
-            href="/katalog"
-            className="text-xs font-bold text-sky-800 dark:text-sky-400 hover:text-teal-700 dark:hover:text-teal-300 flex items-center gap-1 transition-colors"
-          >
-            <span>{t("barchaYonalishlar")}</span>
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
-          {mutaxassisliklar.map((spec) => (
             <Link
-              key={spec.nom}
-              href={`/katalog?yonalish=${spec.yonalish}`}
-              className="group p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-400 dark:hover:border-teal-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+              href="/katalog"
+              className="text-[14px] text-brand hover:text-brand-strong transition-colors"
             >
-              <div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-sky-50 dark:bg-slate-800 group-hover:bg-teal-600 text-sky-800 dark:text-sky-400 group-hover:text-white flex items-center justify-center transition-colors mb-3 sm:mb-4 shadow-2xs">
-                  <span className="material-symbols-outlined text-[22px] sm:text-[24px]">
-                    {spec.icon}
-                  </span>
-                </div>
-                <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white group-hover:text-teal-800 dark:group-hover:text-teal-300 transition-colors mb-1.5 sm:mb-2">
-                  {spec.nom}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {spec.tavsif}
-                </p>
-              </div>
-              <div className="mt-4 sm:mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-medium text-slate-400">
-                <span className="text-teal-700 dark:text-teal-400 font-semibold">{spec.soni}</span>
-                <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
-                  arrow_forward
-                </span>
-              </div>
+              {t("barchasi")}
             </Link>
-          ))}
-        </div>
-      </section>
+          </div>
 
-      {/* 4. New Arrivals (Yangi qo'shilganlar) */}
+          <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10">
+            {barchaYonalishlar.map((y) => (
+              <li key={y.slug} className="border-b border-line">
+                <Link
+                  href={`/katalog?yonalish=${y.slug}`}
+                  className="group flex items-baseline justify-between gap-4 py-3.5"
+                >
+                  <span className="text-[15px] text-ink-2 group-hover:text-brand transition-colors">
+                    {y.nomi?.[lang] || y.nomi?.uz}
+                  </span>
+                  <span className="text-[13px] text-muted tabular-nums">
+                    {y.kitoblar_soni}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* ── Yangi qo'shilganlar ────────────────────────────── */}
       {yangiKitoblar.length > 0 && (
-        <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 mb-14 sm:mb-20">
-          <div className="flex items-center justify-between mb-6 sm:mb-8">
-            <div>
-              <span className="text-xs font-bold text-sky-700 dark:text-sky-400 uppercase tracking-wider block mb-1">
-                {t("yangiAdabiyotlarSub")}
-              </span>
-              <h2 className="font-extrabold text-xl sm:text-2xl md:text-3xl text-slate-900 dark:text-white font-display">
-                {t("yangiAdabiyotlar")}
-              </h2>
-            </div>
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 sm:pb-16">
+          <div className="flex items-baseline justify-between mb-6">
+            <h2 className="font-display text-[22px] sm:text-[26px] text-ink">
+              {t("yangiKitoblar")}
+            </h2>
             <Link
               href="/katalog?saralash=-qoshilgan_sana"
-              className="text-xs font-bold text-sky-800 dark:text-sky-400 hover:text-teal-700 dark:hover:text-teal-300 flex items-center gap-1 transition-colors"
+              className="text-[14px] text-brand hover:text-brand-strong transition-colors"
             >
-              <span>{t("katalogdaKorish")}</span>
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              {t("barchasi")}
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 sm:gap-6">
             {yangiKitoblar.map((kitob) => (
               <KitobKartochka key={kitob.slug} kitob={kitob} />
             ))}
@@ -279,28 +175,23 @@ export default async function HomePage({ params }: HomePageProps) {
         </section>
       )}
 
-      {/* 5. AI Maslahatchi Banner Callout */}
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 mb-16 sm:mb-24">
-        <div className="relative rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-12 bg-gradient-to-br from-sky-900 via-teal-900 to-slate-900 text-white overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 border border-sky-800/40 dark:border-slate-800">
-          <div className="absolute right-0 top-0 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-teal-300 mb-3 sm:mb-4 border border-white/10">
-              <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
-              <span>{t("aiBannerBadge")}</span>
-            </div>
-            <h2 className="font-extrabold text-xl sm:text-3xl lg:text-4xl leading-tight font-display mb-3 sm:mb-4">
-              {t("aiBannerSarlavha")}
-            </h2>
-            <p className="text-xs sm:text-sm lg:text-base text-slate-300 leading-relaxed mb-6 sm:mb-8">
-              {t("aiBannerTavsif")}
-            </p>
-            <OpenAiChatButton
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 active:scale-95 text-slate-950 text-sm font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[20px]">smart_toy</span>
-              <span>{t("aiBannerBtn")}</span>
-            </OpenAiChatButton>
+      {/* ── AI maslahatchi ─────────────────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
+        <div className="rounded-2xl bg-surface border border-line px-6 py-7 sm:px-8 sm:py-8 flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
+          <Sparkles
+            size={26}
+            strokeWidth={1.5}
+            className="text-brand flex-shrink-0"
+            aria-hidden="true"
+          />
+          <div className="flex-1">
+            <h2 className="font-display text-[19px] text-ink">{t("aiSarlavha")}</h2>
+            <p className="mt-1 text-[14px] text-muted">{t("aiTavsif")}</p>
           </div>
+          <OpenAiChatButton className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-xl bg-brand hover:bg-brand-strong text-on-brand text-[14px] font-semibold transition-colors flex-shrink-0 cursor-pointer">
+            <span>{t("aiTugma")}</span>
+            <ArrowRight size={16} strokeWidth={2} />
+          </OpenAiChatButton>
         </div>
       </section>
     </div>

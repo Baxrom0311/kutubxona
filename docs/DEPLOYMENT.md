@@ -41,6 +41,42 @@ S3_OCHIQ_DOMEN=https://<public-covers-domain>
 SAQLAGICH=catalog.storage.R2Saqlagich
 ```
 
+### 2.1. R2 CORS sozlamasi (majburiy)
+
+Saytdagi PDF o'quvchi (pdf.js) faylni brauzerdan bevosita, bo'laklab
+o'qiydi. Shuning uchun `kutubxona-kitoblar` bucketining CORS qoidasida
+`Range` sarlavhasiga ruxsat berilishi va javobda bo'lak sarlavhalari
+ko'rinadigan bo'lishi shart — aks holda kitob ochilmaydi:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://<vercel-domain>"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["Range", "Content-Type"],
+    "ExposeHeaders": ["Content-Length", "Content-Range", "Accept-Ranges"],
+    "MaxAgeSeconds": 86400
+  }
+]
+```
+
+Xuddi shu qoida `kutubxona-muqovalar` bucketiga ham kerak (faqat `GET`).
+
+### 2.2. R2siz ishga tushirish
+
+R2 hali ulanmagan bo'lsa, fayllarni serverning o'z diskida saqlash mumkin:
+
+```env
+SAQLAGICH=catalog.storage.DiskSaqlagich
+MEDIA_ASOS_URL=https://<backend-domen>
+```
+
+Bunda fayllar `MEDIA_ROOT` ichiga yoziladi va `/media/...` manzilidan
+imzosiz beriladi. Northflank konteyneri qayta ishga tushganda disk
+tozalanishi mumkin, shuning uchun bu **faqat sinov uchun**; doimiy
+ishlatish uchun R2 ga o'ting. Lokal ishlab chiqishda standart qiymat
+shu — qo'shimcha sozlash talab qilinmaydi.
+
 ## 3. Northflank Backend
 
 ### 3.1. PostgreSQL addon

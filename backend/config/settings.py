@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import environ
+from corsheaders.defaults import default_headers
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -109,6 +110,10 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# DiskSaqlagich fayllarga to'liq URL yasashi uchun — frontend boshqa
+# portda ishlagani uchun nisbiy yo'l yetarli emas.
+MEDIA_ASOS_URL = env("MEDIA_ASOS_URL", default="http://127.0.0.1:8001")
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {
@@ -125,12 +130,25 @@ LOGIN_REDIRECT_URL = "/"
 ALLOWED_BOOK_EXTENSIONS = ["pdf", "epub"]
 MAX_BOOK_FILE_MB = 200
 
+# Muqova rasmlari
+ALLOWED_COVER_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
+MAX_COVER_FILE_MB = 8
+
 # --- CORS -------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     default=["http://localhost:3000", "http://127.0.0.1:3000"],
 )
 CORS_ALLOW_CREDENTIALS = False
+
+# PDF o'quvchisi (pdf.js) faylni bo'laklab so'raydi: `Range` sarlavhasiga
+# ruxsat bo'lmasa, preflight to'xtatiladi va kitob ochilmaydi. Javobdagi
+# bo'lak sarlavhalari ham ko'rinadigan bo'lishi kerak.
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "range",
+)
+CORS_EXPOSE_HEADERS = ["Content-Length", "Content-Range", "Accept-Ranges"]
 
 # --- Django Rest Framework --------------------------------------------------
 REST_FRAMEWORK = {
@@ -172,7 +190,7 @@ S3_SECRET_KEY = env("S3_SECRET_KEY", default="")
 S3_BUCKET_KITOBLAR = env("S3_BUCKET_KITOBLAR", default="kutubxona-kitoblar")
 S3_BUCKET_MUQOVALAR = env("S3_BUCKET_MUQOVALAR", default="kutubxona-muqovalar")
 S3_OCHIQ_DOMEN = env("S3_OCHIQ_DOMEN", default="https://muqovalar.kutubxona.uz")
-SAQLAGICH = env("SAQLAGICH", default="catalog.storage.SoxtaSaqlagich")
+SAQLAGICH = env("SAQLAGICH", default="catalog.storage.DiskSaqlagich")
 
 # HTTPS / Proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

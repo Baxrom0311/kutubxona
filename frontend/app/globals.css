@@ -2,87 +2,146 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ── Rang tizimi ─────────────────────────────────────────────
+   Yagona manba. `dark:` prefiksini har klassda takrorlash
+   o'rniga, o'zgaruvchilar tungi rejimda qayta belgilanadi.   */
+:root {
+  --paper: #f5f6f9;
+  --surface: #ffffff;
+  --surface-2: #f0f2f7;
+  --ink: #0c1424;
+  --ink-2: #4a5568;
+  --muted: #7a869c;
+  --line: #e2e6ee;
+  --line-2: #d3d9e5;
+  --brand: #1f4fe0;
+  --brand-strong: #173cb0;
+  --brand-soft: #ecf1ff;
+  --brand-ink: #1a3fb0;
+  --on-brand: #ffffff;
+  --accent: #0d9b9b;
+  --shadow-soft: 0 1px 2px rgb(12 20 36 / 0.04), 0 8px 24px -12px rgb(12 20 36 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(12 20 36 / 0.05), 0 18px 40px -18px rgb(12 20 36 / 0.25);
+}
+
+html.dark {
+  --paper: #070b14;
+  --surface: #0e1526;
+  --surface-2: #151d31;
+  --ink: #e9edf6;
+  --ink-2: #b6c0d4;
+  --muted: #8593ad;
+  --line: #1c2437;
+  --line-2: #29334a;
+  --brand: #5b84ff;
+  --brand-strong: #7a9bff;
+  --brand-soft: #142043;
+  --brand-ink: #a8c0ff;
+  --on-brand: #06122e;
+  --accent: #2fc5c5;
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.45), 0 18px 40px -18px rgb(0 0 0 / 0.8);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-on-brand: var(--on-brand);
+  --color-accent: var(--accent);
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-literata), Georgia, "Times New Roman", serif;
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
+}
+
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
 }
 
-html, body {
+html.dark {
+  color-scheme: dark;
+}
+
+body {
   margin: 0;
-  padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  transition: background-color 0.25s ease, color 0.25s ease;
-}
-
-html.dark body {
-  background-color: #020617;
-  color: #f8fafc;
-}
-
-html:not(.dark) body {
-  background-color: #f8fafc;
-  color: #0f172a;
-}
-
-h1, h2, h3, h4, h5, h6, .font-display {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
+  background-color: var(--paper);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Subtle, non-distracting animations */
-@keyframes fadeIn {
+/* Kitob sarlavhalari va bo'lim sarlavhalari — o'qish uchun
+   mo'ljallangan serif. Matn esa sans — ikkisi aniq farqlanadi. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+::selection {
+  background: var(--brand);
+  color: var(--on-brand);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+/* Sahifa ochilishida bitta boshqariladigan kirish —
+   har bo'limda emas, faqat hero'da. */
+@keyframes riseIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
-@keyframes fadeInFast {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.rise {
+  animation: riseIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes gentleFloat {
-  0%, 100% {
-    transform: translateY(0);
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.19s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-  50% {
-    transform: translateY(-4px);
+  .rise {
+    animation: none;
   }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-fade-in-fast {
-  animation: fadeInFast 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-gentle-float {
-  animation: gentleFloat 5s ease-in-out infinite;
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

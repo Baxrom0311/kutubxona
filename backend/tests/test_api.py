@@ -228,3 +228,55 @@ def test_sahifalash_24_ta(api_client, form_darslik):
     assert len(data2["natijalar"]) == 1
     assert data2["keyingi"] is None
     assert data2["oldingi"] is not None
+
+
+def test_bosma_kitob_oqish_mumkin_emas(api_client, kitob):
+    """Faqat bosma nusxa deb belgilangan kitob onlayn berilmasligi kerak."""
+    fayl = BookFile.objects.create(
+        kitob=kitob, storage_key="kitoblar/2024/yurak.pdf", format="pdf", hajm=1024,
+    )
+    kitob.mavjudlik = "bosma"
+    kitob.save(update_fields=["mavjudlik"])
+
+    res = api_client.get(f"/api/kitoblar/{kitob.slug}/oqish/{fayl.id}/")
+    assert res.status_code == 403
+    assert "xato" in res.json()
+
+    kitob.refresh_from_db()
+    assert kitob.korishlar_soni == 0
+
+
+def test_oqish_mumkin_maydoni(api_client, kitob):
+    """`oqish_mumkin` faqat raqamli va fayli bor kitobda rost bo'ladi."""
+    res = api_client.get(f"/api/kitoblar/{kitob.slug}/")
+    assert res.json()["oqish_mumkin"] is False  # fayl hali yo'q
+
+    BookFile.objects.create(
+        kitob=kitob, storage_key="kitoblar/2024/yurak.pdf", format="pdf", hajm=1024,
+    )
+    res = api_client.get(f"/api/kitoblar/{kitob.slug}/")
+    data = res.json()
+    assert data["oqish_mumkin"] is True
+    assert data["mavjudlik"] == "raqamli"
+
+    kitob.mavjudlik = "bosma"
+    kitob.save(update_fields=["mavjudlik"])
+    res = api_client.get(f"/api/kitoblar/{kitob.slug}/")
+    assert res.json()["oqish_mumkin"] is False
+
+
+def test_mavjudlik_filtri(api_client, kitob, form_darslik):
+    """Katalog mavjudlik bo'yicha filtrlansin."""
+    Book.objects.create(
+        nomi="Faqat kutubxonada", turi=form_darslik, til="uz", mavjudlik="bosma",
+    )
+
+    res = api_client.get("/api/kitoblar/?mavjudlik=bosma")
+    natijalar = res.json()["natijalar"]
+    assert len(natijalar) == 1
+    assert natijalar[0]["nomi"] == "Faqat kutubxonada"
+
+    res = api_client.get("/api/kitoblar/?mavjudlik=raqamli")
+    natijalar = res.json()["natijalar"]
+    assert len(natijalar) == 1
+    assert natijalar[0]["slug"] == kitob.slug

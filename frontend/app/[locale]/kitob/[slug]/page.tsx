@@ -1,14 +1,13 @@
-import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import { kitobniOlish, kitoblarniOlish } from "@/lib/api";
+import KitobKartochka from "@/components/KitobKartochka";
+import Muqova from "@/components/Muqova";
 import { getTranslations } from "next-intl/server";
+import { BookOpen, ChevronRight, Library, Smartphone } from "lucide-react";
 
 interface KitobDetailPageProps {
-  params: Promise<{
-    slug: string;
-    locale: string;
-  }>;
+  params: Promise<{ slug: string; locale: string }>;
 }
 
 export const dynamic = "force-dynamic";
@@ -23,275 +22,157 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
 
   const t = await getTranslations({ locale, namespace: "kitob" });
   const tNav = await getTranslations({ locale, namespace: "nav" });
+  const lang = locale as "uz" | "ru" | "en";
 
-  const currentLocale = locale as "uz" | "ru" | "en";
-
-  // O'xshash kitoblarni olish (bir xil yo'nalishdagi)
-  const yonalishSlug =
-    kitob.yonalishlar && kitob.yonalishlar.length > 0
-      ? kitob.yonalishlar[0].slug
-      : undefined;
+  const yonalishSlug = kitob.yonalishlar?.[0]?.slug;
 
   const oxshashRes = await kitoblarniOlish({
     yonalish: yonalishSlug,
     turi: kitob.turi.slug,
   });
-
   const oxshashKitoblar = oxshashRes.natijalar
     .filter((k) => k.slug !== kitob.slug)
-    .slice(0, 3);
+    .slice(0, 4);
 
-  const birinchiPdf = kitob.fayllar?.find((f) => f.format === "pdf");
-  const birinchiEpub = kitob.fayllar?.find((f) => f.format === "epub");
+  const pdf = kitob.fayllar?.find((f) => f.format === "pdf");
+  const epub = kitob.fayllar?.find((f) => f.format === "epub");
 
   const mualliflarMatni =
     kitob.mualliflar && kitob.mualliflar.length > 0
       ? kitob.mualliflar.join(", ")
       : t("muallifYoq");
 
-  const turNomi = kitob.turi.nomi[currentLocale] || kitob.turi.nomi.uz;
+  const turNomi = kitob.turi.nomi[lang] || kitob.turi.nomi.uz;
+  const yonalishNomi =
+    kitob.yonalishlar?.[0]?.nomi?.[lang] || kitob.yonalishlar?.[0]?.nomi?.uz || turNomi;
 
-  const yonalishlarMatni =
-    kitob.yonalishlar && kitob.yonalishlar.length > 0
-      ? kitob.yonalishlar
-          .map((y) => y.nomi[currentLocale] || y.nomi.uz)
-          .join(" → ")
-      : turNomi;
+  const malumotlar = [
+    { yorliq: t("nashriyot"), qiymat: kitob.nashriyot || t("nomalum") },
+    { yorliq: t("chiqarilganYili"), qiymat: kitob.yil ? String(kitob.yil) : t("nomalum") },
+    {
+      yorliq: t("tili"),
+      qiymat: kitob.til ? t(`tillar.${kitob.til}`) : t("nomalum"),
+    },
+    { yorliq: t("korishlar"), qiymat: String(kitob.korishlar_soni ?? 0) },
+  ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
-      {/* 1. Breadcrumbs */}
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500 dark:text-slate-400 mb-5 sm:mb-8 font-medium overflow-hidden"
+        aria-label={tNav("katalog")}
+        className="flex items-center gap-1.5 text-[13px] text-muted mb-8"
       >
-        <Link
-          href="/"
-          className="hover:text-sky-800 dark:hover:text-sky-400 transition-colors flex items-center gap-1 flex-shrink-0"
-        >
-          <span className="material-symbols-outlined text-[16px]">home</span>
-          <span>{tNav("boshSahifa")}</span>
-        </Link>
-        <span className="flex-shrink-0">/</span>
-        <Link
-          href="/katalog"
-          className="hover:text-sky-800 dark:hover:text-sky-400 transition-colors flex-shrink-0"
-        >
+        <Link href="/katalog" className="hover:text-brand transition-colors">
           {tNav("katalog")}
         </Link>
-        <span className="flex-shrink-0">/</span>
-        <span className="text-sky-900 dark:text-sky-300 font-bold truncate max-w-[150px] sm:max-w-md">
-          {kitob.nomi}
-        </span>
+        <ChevronRight size={14} className="flex-shrink-0" />
+        <Link
+          href={`/katalog?yonalish=${yonalishSlug || ""}`}
+          className="hover:text-brand transition-colors truncate"
+        >
+          {yonalishNomi}
+        </Link>
       </nav>
 
-      {/* 2. Main Showcase */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 border border-slate-200 dark:border-slate-800 shadow-xs mb-8 sm:mb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 items-start">
-          {/* Left Column: 3D Cover & Action buttons (5 cols) */}
-          <div className="lg:col-span-5 flex flex-col items-center">
-            {/* 3D Book Cover */}
-            <div className="relative w-full max-w-[240px] sm:max-w-[280px] lg:max-w-[320px] aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-xl mb-5 sm:mb-6 group border border-slate-200 dark:border-slate-800">
-              {kitob.muqova ? (
-                <Image
-                  src={kitob.muqova}
-                  alt={kitob.nomi}
-                  fill
-                  priority
-                  className="object-cover group-hover:scale-102 transition-transform duration-300"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-6 text-center text-slate-400 dark:text-slate-500">
-                  <span className="material-symbols-outlined text-5xl sm:text-6xl text-sky-400 dark:text-sky-500 mb-2 sm:mb-3">
-                    menu_book
-                  </span>
-                  <span className="font-bold text-xs sm:text-sm text-slate-600 dark:text-slate-300 line-clamp-4 font-display">
-                    {kitob.nomi}
-                  </span>
-                </div>
-              )}
+      <div className="grid lg:grid-cols-[260px_minmax(0,1fr)] gap-10 lg:gap-14 items-start">
+        {/* Muqova va o'qish tugmalari */}
+        <div className="flex flex-col gap-4 max-w-[260px] mx-auto lg:mx-0 w-full">
+          <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-surface-2 shadow-lift">
+            <Muqova
+              slug={kitob.slug}
+              nomi={kitob.nomi}
+              muqova={kitob.muqova}
+              muallif={mualliflarMatni}
+              priority
+              katta
+              sizes="260px"
+            />
+          </div>
 
-              {/* Status pill overlay */}
-              <div className="absolute bottom-2.5 left-2.5 right-2.5 sm:bottom-3 sm:left-3 sm:right-3 flex justify-center">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-900/80 backdrop-blur-md text-emerald-200 text-[11px] sm:text-xs font-semibold shadow-md">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{t("onlaynMutolaa")}</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Read Buttons */}
-            <div className="w-full max-w-[260px] sm:max-w-[320px] flex flex-col gap-2.5">
-              {birinchiPdf ? (
+          {kitob.oqish_mumkin ? (
+            <>
+              {pdf && (
                 <Link
-                  href={`/kitob/${kitob.slug}/oqish/${birinchiPdf.id}`}
-                  className="w-full py-3 sm:py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 text-white font-bold text-xs sm:text-sm text-center shadow-md flex items-center justify-center gap-2 transition-all"
+                  href={`/kitob/${kitob.slug}/oqish/${pdf.id}`}
+                  className="h-12 rounded-xl bg-brand hover:bg-brand-strong text-on-brand text-[15px] font-semibold flex items-center justify-center gap-2 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
-                    auto_stories
-                  </span>
-                  <span className="truncate px-1">
-                    {t("mutolaaQilish")} (PDF
-                    {birinchiPdf.sahifalar_soni
-                      ? ` - ${birinchiPdf.sahifalar_soni} ${t("bet")}`
-                      : ""}
-                    )
-                  </span>
+                  <BookOpen size={18} strokeWidth={1.75} />
+                  <span>{t("mutolaaQilish")}</span>
                 </Link>
-              ) : (
-                <div className="w-full py-3 sm:py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs text-center">
-                  {t("faylYoq")}
-                </div>
               )}
-
-              {birinchiEpub && (
+              {epub && (
                 <Link
-                  href={`/kitob/${kitob.slug}/oqish/${birinchiEpub.id}`}
-                  className="w-full py-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/50 text-teal-800 dark:text-teal-300 font-semibold text-xs text-center border border-teal-200 dark:border-teal-800 flex items-center justify-center gap-1.5 transition-colors"
+                  href={`/kitob/${kitob.slug}/oqish/${epub.id}`}
+                  className={`h-12 rounded-xl text-[15px] font-medium flex items-center justify-center gap-2 transition-colors ${
+                    pdf
+                      ? "border border-line-2 text-ink-2 hover:border-brand hover:text-brand"
+                      : "bg-brand hover:bg-brand-strong text-on-brand font-semibold"
+                  }`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">
-                    phone_iphone
-                  </span>
+                  <Smartphone size={18} strokeWidth={1.75} />
                   <span>{t("epubOqish")}</span>
                 </Link>
               )}
-            </div>
-          </div>
-
-          {/* Right Column: Metadata & Synopsis (7 cols) */}
-          <div className="lg:col-span-7 flex flex-col">
-            {/* Category tag */}
-            <div className="inline-flex items-center gap-2 mb-3">
-              <span className="px-3 py-1 rounded-full bg-sky-100 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 text-xs font-bold uppercase tracking-wider">
-                {turNomi}
-              </span>
-              <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs font-semibold text-teal-700 dark:text-teal-400">
-                {yonalishlarMatni}
-              </span>
-            </div>
-
-            {/* Title */}
-            <h1 className="font-extrabold text-2xl sm:text-4xl text-slate-900 dark:text-white leading-tight mb-4 font-display">
-              {kitob.nomi}
-            </h1>
-
-            {/* Author */}
-            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
-              <div className="w-10 h-10 rounded-full bg-sky-100 dark:bg-slate-800 text-sky-800 dark:text-sky-300 flex items-center justify-center font-bold text-sm">
-                <span className="material-symbols-outlined text-[20px]">
-                  person
-                </span>
-              </div>
+            </>
+          ) : (
+            /* Bosma nusxa — onlayn o'qish yo'q, kitob kutubxonadan olinadi. */
+            <div className="rounded-xl bg-surface-2 px-4 py-4 flex gap-3">
+              <Library size={19} strokeWidth={1.75} className="text-brand flex-shrink-0 mt-0.5" />
               <div>
-                <span className="text-xs text-slate-400 dark:text-slate-500 block font-medium">
-                  {t("muallif")}
-                </span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                  {mualliflarMatni}
-                </span>
+                <p className="text-[14px] font-medium text-ink">{t("bosmaSarlavha")}</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted">{t("bosmaTavsif")}</p>
               </div>
             </div>
+          )}
 
-            {/* 4-Box Metadata Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
-                  {t("nashriyot")}
-                </span>
-                <span className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate block">
-                  {kitob.nashriyot || t("nomalum")}
-                </span>
-              </div>
+          {kitob.oqish_mumkin && pdf?.sahifalar_soni ? (
+            <p className="text-[13px] text-muted text-center">
+              PDF · {pdf.sahifalar_soni} {t("bet")}
+            </p>
+          ) : null}
+        </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
-                  {t("chiqarilganYili")}
-                </span>
-                <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
-                  {kitob.yil || t("nomalum")}
-                </span>
-              </div>
+        {/* Ma'lumotlar */}
+        <div>
+          <p className="text-[13px] text-brand">{turNomi}</p>
+          <h1 className="mt-2 font-display text-[28px] sm:text-[36px] leading-[1.15] text-ink">
+            {kitob.nomi}
+          </h1>
+          <p className="mt-3 text-[16px] text-ink-2">{mualliflarMatni}</p>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
-                  {t("tili")}
-                </span>
-                <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
-                  {kitob.til ? (t(`tillar.${kitob.til}`) || kitob.til.toUpperCase()) : t("nomalum")}
-                </span>
+          <dl className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-5 py-6 border-y border-line">
+            {malumotlar.map((m) => (
+              <div key={m.yorliq}>
+                <dt className="text-[13px] text-muted">{m.yorliq}</dt>
+                <dd className="mt-1 text-[14px] text-ink">{m.qiymat}</dd>
               </div>
+            ))}
+          </dl>
 
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60">
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 block font-semibold uppercase tracking-wider mb-1">
-                  {t("korishlar")}
-                </span>
-                <span className="font-bold text-xs text-teal-700 dark:text-teal-400">
-                  {kitob.korishlar_soni} {t("marta")}
-                </span>
-              </div>
-            </div>
-
-            {/* Synopsis / Annotation */}
-            <div className="mb-6">
-              <h2 className="font-bold text-lg text-slate-900 dark:text-white mb-3 font-display">
-                {t("haqida")}
-              </h2>
-              <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed space-y-3 whitespace-pre-line">
-                {kitob.tavsif || t("defaultTavsif")}
-              </div>
-            </div>
+          <div className="mt-8">
+            <h2 className="font-display text-[19px] text-ink mb-3">{t("haqida")}</h2>
+            <p className="text-[15px] leading-[1.7] text-ink-2 whitespace-pre-line max-w-[70ch]">
+              {kitob.tavsif || t("defaultTavsif")}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* 3. Related Books */}
       {oxshashKitoblar.length > 0 && (
-        <section className="mb-16">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-xl text-slate-900 dark:text-white font-display">
-              {t("oxshash")}
-            </h3>
+        <section className="mt-16 sm:mt-20 pt-10 border-t border-line">
+          <div className="flex items-baseline justify-between mb-6">
+            <h2 className="font-display text-[22px] text-ink">{t("oxshash")}</h2>
             <Link
-              href={`/katalog?yonalish=${yonalishSlug}`}
-              className="text-xs font-bold text-sky-800 dark:text-sky-400 hover:text-teal-700 dark:hover:text-teal-300 flex items-center gap-1"
+              href={`/katalog?yonalish=${yonalishSlug || ""}`}
+              className="text-[14px] text-brand hover:text-brand-strong transition-colors"
             >
-              <span>{t("yonalishdagiBarchasi")}</span>
-              <span className="material-symbols-outlined text-[16px]">
-                arrow_forward
-              </span>
+              {t("yonalishdagiBarchasi")}
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 sm:gap-6">
             {oxshashKitoblar.map((k) => (
-              <div
-                key={k.slug}
-                className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col justify-between"
-              >
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-sky-700 dark:text-sky-400 block mb-1">
-                    {k.turi.nomi[currentLocale] || k.turi.nomi.uz}
-                  </span>
-                  <Link href={`/kitob/${k.slug}`}>
-                    <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200 hover:text-sky-800 dark:hover:text-sky-400 line-clamp-2 mb-1">
-                      {k.nomi}
-                    </h4>
-                  </Link>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mb-3">
-                    {k.mualliflar?.join(", ") || t("muallifYoq")}
-                  </p>
-                </div>
-                <Link
-                  href={`/kitob/${k.slug}`}
-                  className="text-xs font-bold text-teal-700 dark:text-teal-400 flex items-center gap-1"
-                >
-                  <span>{t("korish")}</span>
-                  <span className="material-symbols-outlined text-[16px]">
-                    arrow_forward
-                  </span>
-                </Link>
-              </div>
+              <KitobKartochka key={k.slug} kitob={k} />
             ))}
           </div>
         </section>

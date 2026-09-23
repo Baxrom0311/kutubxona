@@ -74,6 +74,15 @@ class BookViewSet(viewsets.ReadOnlyModelViewSet):
     def oqish(self, request, slug=None, fayl_id=None):
         """Kitobni o'qish uchun Cloudflare R2 presigned URL qaytaradi."""
         kitob = self.get_object()
+
+        # Bosma nusxa deb belgilangan kitob onlayn berilmaydi, hatto
+        # eski fayl biriktirilgan bo'lsa ham.
+        if kitob.mavjudlik != "raqamli":
+            return Response(
+                {"xato": "Bu kitobning faqat bosma nusxasi bor, onlayn o'qib bo'lmaydi"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         try:
             fayl = kitob.fayllar.get(pk=fayl_id)
         except kitob.fayllar.model.DoesNotExist:

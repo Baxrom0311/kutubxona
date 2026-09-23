@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "@/i18n/routing";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import AiChatWidget from "./AiChatWidget";
@@ -14,6 +15,11 @@ export default function ClientShell({
   initialTheme?: "light" | "dark";
 }) {
   const [aiChatOpen, setAiChatOpen] = useState(false);
+  const pathname = usePathname();
+
+  // O'qish oynasi butun ekranni egallaydi — menyu, footer va AI tugmasi
+  // o'qishga xalaqit bermasligi uchun ko'rsatilmaydi.
+  const oqishRejimi = pathname.includes("/oqish/");
 
   useEffect(() => {
     const handleOpenAi = () => setAiChatOpen(true);
@@ -21,10 +27,14 @@ export default function ClientShell({
     return () => window.removeEventListener("open-ai-chat", handleOpenAi);
   }, []);
 
+  if (oqishRejimi) {
+    return <ThemeProvider initialTheme={initialTheme}>{children}</ThemeProvider>;
+  }
+
   return (
     <ThemeProvider initialTheme={initialTheme}>
       <Navbar />
-      <main className="flex-1 pt-16 sm:pt-20">{children}</main>
+      <main className="flex-1 pt-16">{children}</main>
       <Footer />
       <AiChatWidget
         isOpen={aiChatOpen}

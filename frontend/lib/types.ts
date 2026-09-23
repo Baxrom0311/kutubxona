@@ -40,6 +40,10 @@ export interface Kitob {
   til: "uz" | "ru" | "en";
   muqova: string;
   formatlar: ("pdf" | "epub")[];
+  /** "raqamli" — saytda o'qiladi; "bosma" — faqat kutubxonadagi nusxa. */
+  mavjudlik: "raqamli" | "bosma";
+  /** Raqamli va fayli biriktirilgan bo'lsagina rost. */
+  oqish_mumkin: boolean;
   korishlar_soni: number;
 }
 
@@ -61,6 +65,7 @@ export interface KatalogFiltri {
   turi?: string;
   yonalish?: string;
   til?: string;
+  mavjudlik?: string;
   yil_dan?: number;
   yil_gacha?: number;
   q?: string;

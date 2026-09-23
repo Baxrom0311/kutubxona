@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 import pytest
 
-from catalog.storage import SoxtaSaqlagich, R2Saqlagich, get_saqlagich
+from catalog.storage import DiskSaqlagich, SoxtaSaqlagich, R2Saqlagich, get_saqlagich
 
 
 def test_soxta_saqlagich_oqish_url():
@@ -66,9 +66,12 @@ def test_soxta_saqlagich_muqova_yuklash():
     assert storage.ochiq_url(key).endswith(key)
 
 
-def test_get_saqlagich_standart():
-    storage = get_saqlagich()
-    assert isinstance(storage, SoxtaSaqlagich)
+def test_get_saqlagich_sozlamadan_olinadi(settings):
+    settings.SAQLAGICH = "catalog.storage.SoxtaSaqlagich"
+    assert isinstance(get_saqlagich(), SoxtaSaqlagich)
+
+    settings.SAQLAGICH = "catalog.storage.DiskSaqlagich"
+    assert isinstance(get_saqlagich(), DiskSaqlagich)
 
 
 @patch("boto3.client")
@@ -122,3 +125,48 @@ def test_r2_saqlagich_muqova_yuklash_muqova_bucketga(mock_boto_client):
     assert args[1] == r2.bucket_muqovalar
     assert args[2] == "covers/demo.png"
     assert kwargs["ExtraArgs"] == {"ContentType": "image/png"}
+
+
+def test_disk_saqlagich_yozish_oqish_ochirish(tmp_path, settings):
+    """Disk saqlagichi faylni MEDIA_ROOT ichiga yozadi va to'liq URL beradi."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    settings.MEDIA_ROOT = tmp_path
+    settings.MEDIA_URL = "media/"
+    settings.MEDIA_ASOS_URL = "http://localhost:8001"
+
+    storage = DiskSaqlagich()
+    key = "muqovalar/anatomiya-ab12cd34.png"
+    storage.muqova_yuklash(key, SimpleUploadedFile("a.png", b"rasm"), content_type="image/png")
+
+    assert (tmp_path / key).read_bytes() == b"rasm"
+    assert storage.mavjudmi(key)
+    assert storage.hajm(key) == 4
+    assert storage.ochiq_url(key) == f"http://localhost:8001/media/{key}"
+    assert storage.oqish_url(key) == f"http://localhost:8001/media/{key}"
+
+    storage.ochirish(key)
+    assert not storage.mavjudmi(key)
+
+
+def test_disk_saqlagich_katalogdan_chiqishni_rad_etadi(tmp_path, settings):
+    """`..` bilan MEDIA_ROOT tashqarisiga yozishga urinish to'xtatilsin."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    settings.MEDIA_ROOT = tmp_path
+    storage = DiskSaqlagich()
+
+    with pytest.raises(ValueError):
+        storage.yuklash("../parol.txt", SimpleUploadedFile("x", b"x"))
+
+    # mavjudmi/hajm/ochirish xato ko'tarmasdan xavfsiz qaytishi kerak
+    assert storage.mavjudmi("../parol.txt") is False
+    assert storage.hajm("../parol.txt") == 0
+    storage.ochirish("../parol.txt")
+
+
+def test_disk_saqlagich_tashqi_url_ozgarmaydi(settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    storage = DiskSaqlagich()
+    assert storage.ochiq_url("https://cdn.example.com/a.png") == "https://cdn.example.com/a.png"
+    assert storage.ochiq_url("") == ""

@@ -83,6 +83,7 @@ class BookListSerializer(serializers.ModelSerializer):
     yonalishlar = serializers.SerializerMethodField()
     muqova = serializers.SerializerMethodField()
     formatlar = serializers.SerializerMethodField()
+    oqish_mumkin = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -96,6 +97,8 @@ class BookListSerializer(serializers.ModelSerializer):
             "til",
             "muqova",
             "formatlar",
+            "mavjudlik",
+            "oqish_mumkin",
             "korishlar_soni",
         ]
 
@@ -123,6 +126,11 @@ class BookListSerializer(serializers.ModelSerializer):
 
     def get_formatlar(self, obj) -> list[str]:
         return list(dict.fromkeys(f.format for f in obj.fayllar.all()))
+
+    def get_oqish_mumkin(self, obj) -> bool:
+        """Saytda onlayn o'qish mumkinmi. `fayllar` prefetch qilingani uchun
+        qo'shimcha so'rov yuzaga kelmaydi."""
+        return obj.mavjudlik == "raqamli" and bool(obj.fayllar.all())
 
 
 class BookDetailSerializer(BookListSerializer):

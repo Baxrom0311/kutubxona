@@ -1,15 +1,13 @@
 import { Link } from "@/i18n/routing";
 import { kitobniOlish, oqishUrlOlish } from "@/lib/api";
 import { notFound } from "next/navigation";
-import PdfViewerClient from "@/components/PdfViewerClient";
+import PdfOquvchi from "@/components/PdfOquvchi";
+import EpubOquvchi from "@/components/EpubOquvchi";
 import { getTranslations } from "next-intl/server";
+import { ArrowLeft } from "lucide-react";
 
 interface OqishPageProps {
-  params: Promise<{
-    slug: string;
-    id: string;
-    locale: string;
-  }>;
+  params: Promise<{ slug: string; id: string; locale: string }>;
 }
 
 export default async function OqishPage({ params }: OqishPageProps) {
@@ -23,53 +21,33 @@ export default async function OqishPage({ params }: OqishPageProps) {
     oqishUrlOlish(slug, faylId),
   ]);
 
-  if (!kitob || !oqishData) {
+  // Bosma nusxa kitoblar uchun API o'qish havolasini bermaydi.
+  if (!kitob || !oqishData || !kitob.oqish_mumkin) {
     notFound();
   }
 
+  const fayl = kitob.fayllar?.find((f) => f.id === faylId);
+
   return (
-    <div className="fixed inset-0 h-[100dvh] w-full z-50 bg-slate-900 text-white flex flex-col">
-      {/* Top Controls Toolbar */}
-      <header className="h-14 sm:h-16 px-3 sm:px-6 bg-slate-950/90 border-b border-slate-800 backdrop-blur-md flex items-center justify-between gap-2.5 sm:gap-4 flex-shrink-0">
-        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
-          <Link
-            href={`/kitob/${kitob.slug}`}
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold flex-shrink-0"
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              arrow_back
-            </span>
-            <span className="hidden sm:inline">{t("kitobgaQaytish")}</span>
-          </Link>
-
-          <div className="truncate min-w-0">
-            <h1 className="font-bold text-xs sm:text-base text-white truncate leading-tight">
-              {kitob.nomi}
-            </h1>
-            <span className="text-[10px] sm:text-[11px] text-teal-400 font-mono uppercase">
-              {oqishData.format} format
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <a
-            href={oqishData.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-sky-800 hover:bg-sky-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
-              open_in_new
-            </span>
-            <span className="hidden md:inline">{t("yangiOynada")}</span>
-          </a>
-        </div>
+    // O'quvchi doim qorong'u: sahifa oq bo'lib ajralib tursin.
+    <div className="fixed inset-0 h-[100dvh] z-50 bg-[#15181f] flex flex-col">
+      <header className="h-14 px-3 sm:px-5 border-b border-white/10 flex items-center gap-3 flex-shrink-0">
+        <Link
+          href={`/kitob/${kitob.slug}`}
+          className="w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors flex-shrink-0"
+          aria-label={t("kitobgaQaytish")}
+        >
+          <ArrowLeft size={18} strokeWidth={1.75} />
+        </Link>
+        <h1 className="font-display text-[15px] text-white truncate">{kitob.nomi}</h1>
       </header>
 
-      {/* Main Document Canvas */}
-      <main className="flex-1 w-full h-full overflow-hidden bg-slate-800 flex items-center justify-center relative">
-        <PdfViewerClient url={oqishData.url} format={oqishData.format} />
+      <main className="flex-1 min-h-0">
+        {oqishData.format === "pdf" ? (
+          <PdfOquvchi url={oqishData.url} sahifalarSoni={fayl?.sahifalar_soni ?? null} />
+        ) : (
+          <EpubOquvchi url={oqishData.url} />
+        )}
       </main>
     </div>
   );

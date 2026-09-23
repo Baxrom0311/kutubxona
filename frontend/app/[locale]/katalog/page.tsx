@@ -3,15 +3,15 @@ import { kitoblarniOlish, turlarniOlish, yonalishlarniOlish } from "@/lib/api";
 import KitobKartochka from "@/components/KitobKartochka";
 import FiltrSidebar from "@/components/FiltrSidebar";
 import { getTranslations } from "next-intl/server";
+import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 interface KatalogPageProps {
-  params: Promise<{
-    locale: string;
-  }>;
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{
     turi?: string;
     yonalish?: string;
     til?: string;
+    mavjudlik?: string;
     yil_dan?: string;
     yil_gacha?: string;
     q?: string;
@@ -25,18 +25,18 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
   const search = await searchParams;
 
   const t = await getTranslations({ locale, namespace: "katalog" });
-  const tNav = await getTranslations({ locale, namespace: "nav" });
+  const lang = locale as "uz" | "ru" | "en";
 
   const sahifaRaqam = search.sahifa ? parseInt(search.sahifa, 10) : 1;
   const yilDan = search.yil_dan ? parseInt(search.yil_dan, 10) : undefined;
   const yilGacha = search.yil_gacha ? parseInt(search.yil_gacha, 10) : undefined;
 
-  // Parallel fetch: books, forms, subjects
   const [kitoblarRes, turlar, yonalishlar] = await Promise.all([
     kitoblarniOlish({
       turi: search.turi,
       yonalish: search.yonalish,
       til: search.til,
+      mavjudlik: search.mavjudlik,
       yil_dan: yilDan,
       yil_gacha: yilGacha,
       q: search.q,
@@ -51,250 +51,211 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
   const kitoblar = kitoblarRes.natijalar;
   const jamiSahifalar = Math.ceil(jamiKitoblar / 24) || 1;
 
-  // Faol filtrlar teglari
-  const faolFiltrlar: { kalit: string; qiymat: string; yorliq: string }[] = [];
+  // Faol filtrlar — har birini alohida olib tashlash mumkin.
+  const faolFiltrlar: { kalit: string; yorliq: string }[] = [];
   if (search.turi) {
-    const tur = turlar.find((tItem) => tItem.slug === search.turi);
-    const turNomi = tur
-      ? tur.nomi[locale as "uz" | "ru" | "en"] || tur.nomi.uz
-      : search.turi;
+    const tur = turlar.find((x) => x.slug === search.turi);
     faolFiltrlar.push({
       kalit: "turi",
-      qiymat: "",
-      yorliq: `${t("kitobTuri")}: ${turNomi}`,
+      yorliq: tur ? tur.nomi[lang] || tur.nomi.uz : search.turi,
     });
   }
   if (search.yonalish) {
-    const yon = yonalishlar.find((y) => y.slug === search.yonalish);
-    const yonNomi = yon
-      ? yon.nomi[locale as "uz" | "ru" | "en"] || yon.nomi.uz
-      : search.yonalish;
+    const yoyilgan = yonalishlar.flatMap((y) => [y, ...(y.bolalar || [])]);
+    const yon = yoyilgan.find((y) => y.slug === search.yonalish);
     faolFiltrlar.push({
       kalit: "yonalish",
-      qiymat: "",
-      yorliq: `${t("yonalishlar")}: ${yonNomi}`,
+      yorliq: yon ? yon.nomi[lang] || yon.nomi.uz : search.yonalish,
     });
   }
   if (search.til) {
+    faolFiltrlar.push({ kalit: "til", yorliq: t(`kitobTili`) + ": " + search.til.toUpperCase() });
+  }
+  if (search.mavjudlik) {
     faolFiltrlar.push({
-      kalit: "til",
-      qiymat: "",
-      yorliq: `${t("kitobTili")}: ${search.til.toUpperCase()}`,
+      kalit: "mavjudlik",
+      yorliq:
+        search.mavjudlik === "bosma" ? t("mavjudlikBosma") : t("mavjudlikRaqamli"),
     });
   }
   if (search.q) {
-    faolFiltrlar.push({
-      kalit: "q",
-      qiymat: "",
-      yorliq: `"${search.q}"`,
-    });
+    faolFiltrlar.push({ kalit: "q", yorliq: `“${search.q}”` });
   }
 
-  const buildPageUrl = (p: number) => {
+  const urlYasash = (ozgarish: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
-    if (search.turi) q.set("turi", search.turi);
-    if (search.yonalish) q.set("yonalish", search.yonalish);
-    if (search.til) q.set("til", search.til);
-    if (search.yil_dan) q.set("yil_dan", search.yil_dan);
-    if (search.yil_gacha) q.set("yil_gacha", search.yil_gacha);
-    if (search.q) q.set("q", search.q);
-    if (search.saralash) q.set("saralash", search.saralash);
-    q.set("sahifa", p.toString());
-    return `/katalog?${q.toString()}`;
+    const joriy: Record<string, string | undefined> = {
+      turi: search.turi,
+      yonalish: search.yonalish,
+      til: search.til,
+      mavjudlik: search.mavjudlik,
+      yil_dan: search.yil_dan,
+      yil_gacha: search.yil_gacha,
+      q: search.q,
+      saralash: search.saralash,
+      sahifa: search.sahifa,
+      ...ozgarish,
+    };
+    Object.entries(joriy).forEach(([k, v]) => {
+      if (v) q.set(k, v);
+    });
+    const qs = q.toString();
+    return qs ? `/katalog?${qs}` : "/katalog";
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8">
-      {/* 1. Breadcrumbs */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-6 font-medium"
-      >
-        <Link
-          href="/"
-          className="hover:text-sky-800 dark:hover:text-sky-400 transition-colors flex items-center gap-1"
-        >
-          <span className="material-symbols-outlined text-[16px]">home</span>
-          <span>{tNav("boshSahifa")}</span>
-        </Link>
-        <span>/</span>
-        <span className="text-sky-900 dark:text-sky-300 font-bold">
-          {t("sarlavha")}
-        </span>
-      </nav>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <h1 className="font-display text-[26px] sm:text-[32px] text-ink">{t("sarlavha")}</h1>
 
-      {/* 2. Top Search & Sort Bar */}
-      <section className="bg-white dark:bg-slate-900 p-2.5 sm:p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm mb-6">
-        <form
-          method="GET"
-          className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3"
-        >
-          <div className="relative flex-1 flex items-center">
-            <span className="material-symbols-outlined absolute left-3.5 sm:left-4 text-sky-700 dark:text-sky-400 text-[22px] sm:text-[24px]">
-              search
-            </span>
-            <input
-              name="q"
-              defaultValue={search.q || ""}
-              type="text"
-              placeholder={t("qidiruvPlaceholder")}
-              className="w-full h-11 sm:h-12 pl-11 sm:pl-12 pr-3 sm:pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs sm:text-sm focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700 transition-colors"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 flex-shrink-0 w-full md:w-auto">
-            {/* Sort Select */}
-            <div className="relative flex-1 md:flex-initial md:min-w-[200px]">
-              <select
-                name="saralash"
-                defaultValue={search.saralash || "-qoshilgan_sana"}
-                className="w-full h-11 sm:h-12 appearance-none rounded-xl bg-slate-50 dark:bg-slate-800 px-3 sm:px-4 pr-8 sm:pr-10 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
-              >
-                <option value="-qoshilgan_sana">{t("saralash.yangi")}</option>
-                <option value="-korishlar_soni">{t("saralash.kopOqilgan")}</option>
-                <option value="nomi">{t("saralash.nomi")}</option>
-                <option value="-yil">{t("saralash.yil")}</option>
-              </select>
-              <span className="material-symbols-outlined absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[18px] sm:text-[20px]">
-                expand_more
-              </span>
-            </div>
-
-            <button
-              type="submit"
-              className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-sky-800 hover:bg-sky-900 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm flex-shrink-0"
-            >
-              <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
-                filter_list
-              </span>
-              <span>{t("qidirish")}</span>
-            </button>
-          </div>
-        </form>
-
-        {/* Active Filter Chips */}
-        {faolFiltrlar.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
-              {t("faolFiltrlar")}
-            </span>
-            {faolFiltrlar.map((f) => (
-              <span
-                key={f.yorliq}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 text-xs font-semibold"
-              >
-                <span>{f.yorliq}</span>
-              </span>
-            ))}
-            <Link
-              href="/katalog"
-              className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline px-2 py-1 flex items-center gap-1"
-            >
-              <span className="material-symbols-outlined text-[15px]">
-                restart_alt
-              </span>
-              <span>{t("tozalash")}</span>
-            </Link>
-          </div>
+      {/* Qidiruv va saralash */}
+      <form method="GET" className="mt-5 flex flex-col sm:flex-row gap-2">
+        {search.turi && <input type="hidden" name="turi" value={search.turi} />}
+        {search.yonalish && <input type="hidden" name="yonalish" value={search.yonalish} />}
+        {search.til && <input type="hidden" name="til" value={search.til} />}
+        {search.mavjudlik && (
+          <input type="hidden" name="mavjudlik" value={search.mavjudlik} />
         )}
-      </section>
 
-      {/* 3. Main Grid Layout (Sidebar + Books) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Filter Sidebar (3 cols) */}
-        <aside className="lg:col-span-4 xl:col-span-3 lg:sticky lg:top-24">
+        <div className="relative flex-1">
+          <Search
+            size={18}
+            strokeWidth={1.75}
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+          />
+          <input
+            name="q"
+            defaultValue={search.q || ""}
+            type="search"
+            placeholder={t("qidiruvPlaceholder")}
+            aria-label={t("qidiruvPlaceholder")}
+            className="w-full h-11 pl-11 pr-4 rounded-xl bg-surface border border-line-2 text-[15px] text-ink placeholder:text-muted focus:outline-none focus:border-brand transition-colors"
+          />
+        </div>
+
+        <select
+          name="saralash"
+          defaultValue={search.saralash || "-qoshilgan_sana"}
+          aria-label={t("saralash.yangi")}
+          className="h-11 px-3.5 rounded-xl bg-surface border border-line-2 text-[14px] text-ink-2 cursor-pointer focus:outline-none focus:border-brand transition-colors"
+        >
+          <option value="-qoshilgan_sana">{t("saralash.yangi")}</option>
+          <option value="-korishlar_soni">{t("saralash.kopOqilgan")}</option>
+          <option value="nomi">{t("saralash.nomi")}</option>
+          <option value="-yil">{t("saralash.yil")}</option>
+        </select>
+
+        <button
+          type="submit"
+          className="h-11 px-6 rounded-xl bg-brand hover:bg-brand-strong text-on-brand text-[15px] font-semibold transition-colors"
+        >
+          {t("qidirish")}
+        </button>
+      </form>
+
+      {faolFiltrlar.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {faolFiltrlar.map((f) => (
+            <Link
+              key={f.kalit}
+              href={urlYasash({ [f.kalit]: undefined, sahifa: undefined })}
+              className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full bg-brand-soft text-brand-ink text-[13px] hover:bg-brand hover:text-on-brand transition-colors"
+            >
+              <span>{f.yorliq}</span>
+              <X size={13} strokeWidth={2.5} />
+            </Link>
+          ))}
+          <Link
+            href="/katalog"
+            className="text-[13px] text-muted hover:text-brand transition-colors px-1"
+          >
+            {t("tozalash")}
+          </Link>
+        </div>
+      )}
+
+      <div className="mt-8 grid lg:grid-cols-[230px_minmax(0,1fr)] gap-8 lg:gap-12 items-start">
+        <aside className="lg:sticky lg:top-24">
           <FiltrSidebar turlar={turlar} yonalishlar={yonalishlar} />
         </aside>
 
-        {/* Right Books Content (9 cols) */}
-        <main className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
-          {/* Header count */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              {t("jami")}{" "}
-              <strong className="text-sky-900 dark:text-sky-300 font-bold">
-                {jamiKitoblar}
-              </strong>{" "}
-              {t("jamiTopildi")}
-            </span>
-            <span className="text-xs text-slate-400 dark:text-slate-500">
-              {t("sahifa")} {sahifaRaqam} / {jamiSahifalar}
-            </span>
+        <main>
+          <div className="flex items-baseline justify-between text-[13px] text-muted mb-5">
+            <span>{t("topildi", { n: jamiKitoblar })}</span>
+            {jamiSahifalar > 1 && (
+              <span>
+                {t("sahifa")} {sahifaRaqam}/{jamiSahifalar}
+              </span>
+            )}
           </div>
 
-          {/* Book Cards Grid */}
           {kitoblar.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5">
-              {kitoblar.map((kitob) => (
-                <KitobKartochka key={kitob.slug} kitob={kitob} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
+              {kitoblar.map((kitob, i) => (
+                <KitobKartochka key={kitob.slug} kitob={kitob} priority={i < 4} />
               ))}
             </div>
           ) : (
-            /* Empty State */
-            <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-12 border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center text-center">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-sky-50 dark:bg-slate-800 text-sky-700 dark:text-sky-300 flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-[28px] sm:text-[32px]">
-                  menu_book
-                </span>
-              </div>
-              <h3 className="font-bold text-lg sm:text-xl text-slate-900 dark:text-white mb-2 font-display">
-                {t("topilmadi")}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6">
-                {t("topilmadiTavsif")}
-              </p>
+            <div className="py-20 text-center">
+              <h2 className="font-display text-[20px] text-ink">{t("topilmadi")}</h2>
+              <p className="mt-2 text-[14px] text-muted">{t("topilmadiTavsif")}</p>
               <Link
                 href="/katalog"
-                className="px-6 py-3 rounded-xl bg-sky-800 hover:bg-sky-900 text-white text-xs font-bold transition-colors"
+                className="inline-block mt-6 h-11 leading-[44px] px-6 rounded-xl bg-brand hover:bg-brand-strong text-on-brand text-[14px] font-semibold transition-colors"
               >
-                {t("barchasiniTozalash")}
+                {t("tozalash")}
               </Link>
             </div>
           )}
 
-          {/* Pagination */}
           {jamiSahifalar > 1 && (
-            <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-6 sm:pt-8 pb-10 sm:pb-12 flex-wrap">
+            <nav
+              aria-label={t("sahifa")}
+              className="mt-12 flex items-center justify-center gap-1.5"
+            >
               {sahifaRaqam > 1 && (
                 <Link
-                  href={buildPageUrl(sahifaRaqam - 1)}
-                  className="px-2.5 sm:px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                  href={urlYasash({ sahifa: String(sahifaRaqam - 1) })}
+                  aria-label={t("oldingi")}
+                  className="w-9 h-9 rounded-lg border border-line text-ink-2 hover:border-brand hover:text-brand flex items-center justify-center transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[16px]">
-                    chevron_left
-                  </span>
-                  <span className="hidden min-[400px]:inline">{t("oldingi")}</span>
+                  <ChevronLeft size={16} />
                 </Link>
               )}
 
-              {Array.from({ length: Math.min(jamiSahifalar, 7) }, (_, i) => i + 1).map(
-                (num) => (
-                  <Link
-                    key={num}
-                    href={buildPageUrl(num)}
-                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs font-bold flex items-center justify-center transition-colors ${
-                      sahifaRaqam === num
-                        ? "bg-sky-800 text-white shadow-xs"
-                        : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
-                    } ${Math.abs(num - sahifaRaqam) > 1 && num !== 1 && num !== Math.min(jamiSahifalar, 7) ? "hidden sm:flex" : ""}`}
-                  >
-                    {num}
-                  </Link>
+              {Array.from({ length: jamiSahifalar }, (_, i) => i + 1)
+                .filter(
+                  (n) =>
+                    n === 1 || n === jamiSahifalar || Math.abs(n - sahifaRaqam) <= 1
                 )
-              )}
+                .map((n, i, arr) => (
+                  <span key={n} className="flex items-center gap-1.5">
+                    {i > 0 && arr[i - 1] !== n - 1 && (
+                      <span className="text-muted px-1">…</span>
+                    )}
+                    <Link
+                      href={urlYasash({ sahifa: String(n) })}
+                      aria-current={n === sahifaRaqam ? "page" : undefined}
+                      className={`w-9 h-9 rounded-lg text-[14px] flex items-center justify-center transition-colors tabular-nums ${
+                        n === sahifaRaqam
+                          ? "bg-brand text-on-brand"
+                          : "border border-line text-ink-2 hover:border-brand hover:text-brand"
+                      }`}
+                    >
+                      {n}
+                    </Link>
+                  </span>
+                ))}
 
               {sahifaRaqam < jamiSahifalar && (
                 <Link
-                  href={buildPageUrl(sahifaRaqam + 1)}
-                  className="px-2.5 sm:px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                  href={urlYasash({ sahifa: String(sahifaRaqam + 1) })}
+                  aria-label={t("keyingi")}
+                  className="w-9 h-9 rounded-lg border border-line text-ink-2 hover:border-brand hover:text-brand flex items-center justify-center transition-colors"
                 >
-                  <span className="hidden min-[400px]:inline">{t("keyingi")}</span>
-                  <span className="material-symbols-outlined text-[16px]">
-                    chevron_right
-                  </span>
+                  <ChevronRight size={16} />
                 </Link>
               )}
-            </div>
+            </nav>
           )}
         </main>
       </div>

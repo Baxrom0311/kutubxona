@@ -188,6 +188,80 @@ class SoxtaSaqlagich(Saqlagich):
         self._fayllar[key] = kontent
 
 
+class DiskSaqlagich(Saqlagich):
+    """Lokal disk saqlagichi — fayllarni MEDIA_ROOT ichida saqlaydi.
+
+    R2 hisobisiz ishlab chiqish va kichik o'rnatishlar uchun. Fayllar
+    `MEDIA_ASOS_URL` ostidan oddiy URL bilan beriladi, ya'ni imzolash yo'q —
+    havolani bilgan har kim ocha oladi. Ishlab chiqarishda R2Saqlagich
+    ishlatilsin (qarang: docs/DEPLOYMENT.md).
+    """
+
+    def __init__(self):
+        from pathlib import Path
+
+        self.ildiz = Path(settings.MEDIA_ROOT)
+        self.asos_url = getattr(settings, "MEDIA_ASOS_URL", "").rstrip("/")
+        self.media_url = str(getattr(settings, "MEDIA_URL", "media/")).strip("/")
+
+    def _yol(self, key: str):
+        from pathlib import Path
+
+        toza = Path(key.lstrip("/"))
+        if ".." in toza.parts or toza.is_absolute():
+            raise ValueError(f"Xavfsiz bo'lmagan fayl kaliti: {key}")
+        return self.ildiz / toza
+
+    def _url(self, key: str) -> str:
+        if not key:
+            return ""
+        return f"{self.asos_url}/{self.media_url}/{key.lstrip('/')}"
+
+    def oqish_url(self, key: str, muddat: int = 7200) -> str:
+        return self._url(key)
+
+    def yuklash_url(self, key: str, content_type: str, muddat: int = 900) -> str:
+        # To'g'ridan-to'g'ri brauzerdan yuklash qo'llab-quvvatlanmaydi;
+        # fayllar admin panel orqali serverga yuklanadi.
+        return ""
+
+    def yuklash(self, key: str, fayl, content_type: str = "application/octet-stream") -> None:
+        yol = self._yol(key)
+        yol.parent.mkdir(parents=True, exist_ok=True)
+        if hasattr(fayl, "seek") and (not hasattr(fayl, "seekable") or fayl.seekable()):
+            fayl.seek(0)
+        with open(yol, "wb") as f:
+            for bolak in getattr(fayl, "chunks", lambda: [fayl.read()])():
+                f.write(bolak)
+
+    def muqova_yuklash(self, key: str, fayl, content_type: str = "image/png") -> None:
+        self.yuklash(key, fayl, content_type=content_type)
+
+    def ochiq_url(self, key: str) -> str:
+        if key.startswith("http://") or key.startswith("https://"):
+            return key
+        return self._url(key)
+
+    def ochirish(self, key: str) -> None:
+        try:
+            self._yol(key).unlink(missing_ok=True)
+        except (ValueError, OSError):
+            pass
+
+    def mavjudmi(self, key: str) -> bool:
+        try:
+            return self._yol(key).is_file()
+        except ValueError:
+            return False
+
+    def hajm(self, key: str) -> int:
+        try:
+            yol = self._yol(key)
+            return yol.stat().st_size if yol.is_file() else 0
+        except (ValueError, OSError):
+            return 0
+
+
 def get_saqlagich() -> Saqlagich:
     """Konfiguratsiyada ko'rsatilgan saqlagichni qaytaradi."""
     saqlagich_sinfi_yoli = getattr(settings, "SAQLAGICH", "catalog.storage.SoxtaSaqlagich")

@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "pdf-worker": "node -e \"require('fs').copyFileSync(require.resolve('pdfjs-dist/build/pdf.worker.min.mjs'),'public/pdf.worker.min.mjs')\"",
+    "predev": "npm run pdf-worker",
+    "prebuild": "npm run pdf-worker"
   },
   "dependencies": {
     "epubjs": "^0.3.93",

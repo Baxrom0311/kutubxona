@@ -10,6 +10,7 @@ class BookFilter(django_filters.FilterSet):
     """Katalogdagi kitoblarni tur, yo'nalish, til, yil va qidiruv bo'yicha saralash."""
 
     turi = django_filters.CharFilter(field_name="turi__slug")
+    mavjudlik = django_filters.CharFilter(field_name="mavjudlik")
     til = django_filters.CharFilter(field_name="til")
     yil_dan = django_filters.NumberFilter(field_name="yil", lookup_expr="gte")
     yil_gacha = django_filters.NumberFilter(field_name="yil", lookup_expr="lte")
@@ -32,7 +33,16 @@ class BookFilter(django_filters.FilterSet):
 
     class Meta:
         model = Book
-        fields = ["turi", "yonalish", "til", "yil_dan", "yil_gacha", "q", "saralash"]
+        fields = [
+            "turi",
+            "yonalish",
+            "til",
+            "mavjudlik",
+            "yil_dan",
+            "yil_gacha",
+            "q",
+            "saralash",
+        ]
 
     def filter_q(self, queryset, name, value):
         if not value:

@@ -5,19 +5,22 @@ import { notFound } from "next/navigation";
 import ClientShell from "@/components/ClientShell";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Manrope, Literata } from "next/font/google";
 import "../globals.css";
 
-const inter = Inter({
-  subsets: ["latin", "cyrillic"],
+// Interfeys shrifti — kirill va lotin alifbolarini qo'llab-quvvatlaydi.
+const manrope = Manrope({
+  subsets: ["latin", "latin-ext", "cyrillic"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-manrope",
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin", "cyrillic-ext"],
+// Sarlavhalar va kitob nomlari uchun — o'qish uchun mo'ljallangan serif.
+const literata = Literata({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  weight: ["500", "600", "700"],
   display: "swap",
-  variable: "--font-jakarta",
+  variable: "--font-literata",
 });
 
 export function generateStaticParams() {
@@ -37,6 +40,7 @@ export async function generateMetadata({
   return {
     title: t("title"),
     description: t("description"),
+    icons: { icon: "/logo.png", apple: "/logo.png" },
   };
 }
 
@@ -59,13 +63,6 @@ export default async function LocaleLayout({
     <html lang={locale} className={isDark ? "dark" : ""} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font, @next/next/google-font-display */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
-        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -89,7 +86,9 @@ export default async function LocaleLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} ${plusJakarta.variable} font-sans antialiased min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-150`}>
+      <body
+        className={`${manrope.variable} ${literata.variable} font-sans min-h-screen flex flex-col bg-paper text-ink`}
+      >
         <NextIntlClientProvider messages={messages}>
           <ClientShell initialTheme={isDark ? "dark" : "light"}>{children}</ClientShell>
         </NextIntlClientProvider>

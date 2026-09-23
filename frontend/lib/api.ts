@@ -17,6 +17,7 @@ export async function kitoblarniOlish(
   if (params.turi) query.set("turi", params.turi);
   if (params.yonalish) query.set("yonalish", params.yonalish);
   if (params.til) query.set("til", params.til);
+  if (params.mavjudlik) query.set("mavjudlik", params.mavjudlik);
   if (params.yil_dan) query.set("yil_dan", params.yil_dan.toString());
   if (params.yil_gacha) query.set("yil_gacha", params.yil_gacha.toString());
   if (params.q) query.set("q", params.q);

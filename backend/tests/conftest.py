@@ -3,6 +3,14 @@ import pytest
 from catalog.models import Author, Book, Form, Reader, Subject
 
 
+@pytest.fixture(autouse=True)
+def soxta_saqlagich(settings):
+    """Testlar diskka yozmasligi uchun xotiradagi saqlagichga o'tkaziladi.
+
+    Ishlab chiqarishdagi standart DiskSaqlagich bo'lgani uchun bu majburiy."""
+    settings.SAQLAGICH = "catalog.storage.SoxtaSaqlagich"
+
+
 @pytest.fixture
 def form_darslik(db):
     return Form.objects.create(nomi_uz="Darslik", nomi_ru="Учебник", nomi_en="Textbook")
