@@ -60,17 +60,39 @@ class AuthorAdmin(admin.ModelAdmin):
 
 @admin.register(Form)
 class FormAdmin(admin.ModelAdmin):
-    list_display = ("nomi_uz", "nomi_ru", "nomi_en", "slug", "tartib")
+    fields = ("nomi_uz", "slug", "tartib")
+    list_display = ("nomi_uz", "slug", "tartib")
     search_fields = ("nomi_uz", "nomi_ru", "nomi_en", "slug")
     list_editable = ("tartib",)
+    prepopulated_fields = {"slug": ("nomi_uz",)}
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "nomi_uz":
+            formfield.label = _("Nomi")
+            formfield.help_text = _(
+                "Admin uchun bitta nom yetarli. Sayt boshqa tillarda shu nomni fallback sifatida ko'rsatadi."
+            )
+        return formfield
 
 
 @admin.register(Subject)
 class SubjectAdmin(admin.ModelAdmin):
+    fields = ("nomi_uz", "ota", "slug", "tartib")
     list_display = ("nomi_uz", "ota", "slug", "tartib")
     list_filter = ("ota",)
     search_fields = ("nomi_uz", "nomi_ru", "nomi_en", "slug")
     list_editable = ("tartib",)
+    prepopulated_fields = {"slug": ("nomi_uz",)}
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "nomi_uz":
+            formfield.label = _("Nomi")
+            formfield.help_text = _(
+                "Yo'nalish nomini bitta tilda kiriting. Kerak bo'lsa slug avtomatik to'ldiriladi."
+            )
+        return formfield
 
 
 class BookFileInlineForm(forms.ModelForm):
@@ -132,7 +154,12 @@ class BookAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             _("Kitob haqida"),
-            {"fields": ("nomi", "mualliflar", "tavsif", "nashriyot", "yil", "til")},
+            {
+                "fields": ("til", "nomi", "mualliflar", "tavsif", "nashriyot", "yil"),
+                "description": _(
+                    "Avval kitob tilini tanlang. Kitob nomi va avtomatik muqova shu asl tilda saqlanadi."
+                ),
+            },
         ),
         (
             _("Toifalash"),
@@ -145,7 +172,7 @@ class BookAdmin(admin.ModelAdmin):
                 "description": _(
                     "<b>Raqamli</b> — pastdagi «Kitob fayllari» bo'limiga PDF yoki EPUB yuklang, "
                     "kitob saytda o'qiladi.<br>"
-                    "<b>Faqat bosma nusxa</b> — fayl yuklamang, faqat muqova yuklang. "
+                    "<b>Faqat bosma nusxa</b> — fayl yuklamang. Muqova avtomatik chiqadi. "
                     "Saytda kitob ko'rinadi, lekin o'qish o'rniga «kutubxonadan olishingiz mumkin» yoziladi."
                 ),
             },
@@ -198,7 +225,9 @@ class BookAdmin(admin.ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
-        if not form.instance.muqova_key:
+        cover_fields = {"nomi", "til", "turi", "mualliflar", "yonalishlar", "yil", "mavjudlik"}
+        should_regenerate = not form.instance.muqova_key or bool(cover_fields & set(form.changed_data))
+        if should_regenerate:
             self._generate_muqova(form.instance, get_saqlagich())
 
     def save_formset(self, request, form, formset, change):

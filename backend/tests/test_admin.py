@@ -1,10 +1,11 @@
 import pytest
+from io import BytesIO
 from django.contrib.admin.sites import site
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.exceptions import ValidationError
 
-from catalog.admin import BookAdmin, LoanEntryAdmin, QaytarilganFilter
-from catalog.models import Book, LoanEntry
+from catalog.admin import BookAdmin, FormAdmin, LoanEntryAdmin, QaytarilganFilter, SubjectAdmin
+from catalog.models import Book, Form, LoanEntry, Subject
 
 pytestmark = pytest.mark.django_db
 
@@ -129,6 +130,37 @@ def test_admin_muqova_yuklash_maydoni_yoq(rf):
     assert "muqova_fayl" not in form_class.base_fields
 
 
+def test_admin_tur_va_yonalish_bitta_nom_bilan_korinadi(rf):
+    """Tur/yo'nalish adminida ru/en tarjima maydonlari kutubxonachini chalg'itmasin."""
+    request = rf.get("/admin/catalog/form/add/")
+    request.user = type("User", (), {"has_perm": lambda self, perm: True})()
+
+    form_admin = FormAdmin(Form, site)
+    form_class = form_admin.get_form(request)
+    assert "nomi_uz" in form_class.base_fields
+    assert "nomi_ru" not in form_class.base_fields
+    assert "nomi_en" not in form_class.base_fields
+    assert form_class.base_fields["nomi_uz"].label == "Nomi"
+
+    subject_admin = SubjectAdmin(Subject, site)
+    subject_form_class = subject_admin.get_form(request)
+    assert "nomi_uz" in subject_form_class.base_fields
+    assert "nomi_ru" not in subject_form_class.base_fields
+    assert "nomi_en" not in subject_form_class.base_fields
+    assert subject_form_class.base_fields["nomi_uz"].label == "Nomi"
+
+
+def test_admin_kitobda_til_nomdan_oldin_keladi(rf):
+    """Kutubxonachi avval asl tilni tanlaydi, keyin nomni o'sha tilda yozadi."""
+    model_admin = BookAdmin(Book, site)
+    request = rf.get("/admin/catalog/book/add/")
+    request.user = type("User", (), {"has_perm": lambda self, perm: True})()
+    form_class = model_admin.get_form(request)
+
+    fields = list(form_class.base_fields)
+    assert fields.index("til") < fields.index("nomi")
+
+
 def test_admin_pdf_fayl_yuklaydi(client, kitob, kutubxonachi):
     """Admin panelidan PDF yuklanib, storage_key va hajm to'ldirilsin."""
     from django.core.files.uploadedfile import SimpleUploadedFile
@@ -176,3 +208,45 @@ def test_admin_pdf_fayl_yuklaydi(client, kitob, kutubxonachi):
     assert fayl.storage_key.startswith(f"kitoblar/")
     assert fayl.storage_key.endswith(".pdf")
     assert get_saqlagich().mavjudmi(fayl.storage_key)
+
+
+def test_admin_muqova_nom_yoki_til_ozgarsa_qayta_generatsiya_qiladi(client, kitob, kutubxonachi):
+    """Muqova kitobning asl tili va nomiga bog'liq, shuning uchun o'zgarishda yangilansin."""
+    from catalog.storage import get_saqlagich
+
+    kutubxonachi.is_superuser = True
+    kutubxonachi.save(update_fields=["is_superuser"])
+    client.force_login(kutubxonachi)
+
+    storage = get_saqlagich()
+    kitob.muqova_key = f"covers/{kitob.slug}.png"
+    kitob.save(update_fields=["muqova_key"])
+    storage.muqova_yuklash(kitob.muqova_key, BytesIO(b"old-cover"), content_type="image/png")
+
+    response = client.post(
+        f"/admin/catalog/book/{kitob.pk}/change/",
+        {
+            "nomi": "Cardiology Basics",
+            "tavsif": "",
+            "nashriyot": "",
+            "yil": kitob.yil,
+            "til": "en",
+            "turi": kitob.turi_id,
+            "mavjudlik": "raqamli",
+            "mualliflar": [m.pk for m in kitob.mualliflar.all()],
+            "yonalishlar": [y.pk for y in kitob.yonalishlar.all()],
+            "muqova_key": kitob.muqova_key,
+            "fayllar-TOTAL_FORMS": "0",
+            "fayllar-INITIAL_FORMS": "0",
+            "fayllar-MIN_NUM_FORMS": "0",
+            "fayllar-MAX_NUM_FORMS": "1000",
+        },
+        follow=True,
+    )
+    assert response.status_code == 200
+
+    kitob.refresh_from_db()
+    assert kitob.nomi == "Cardiology Basics"
+    assert kitob.til == "en"
+    assert storage.mavjudmi(kitob.muqova_key)
+    assert storage.hajm(kitob.muqova_key) > len(b"old-cover")

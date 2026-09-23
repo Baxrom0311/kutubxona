@@ -21,6 +21,36 @@ PALETTES = [
 ]
 _palette_bag: list[int] = []
 
+LIBRARY_LABELS = {
+    "uz": "KUTUBXONA",
+    "ru": "БИБЛИОТЕКА",
+    "en": "LIBRARY",
+}
+
+DEFAULT_TYPE_LABELS = {
+    "uz": "KITOB",
+    "ru": "КНИГА",
+    "en": "BOOK",
+}
+
+DEFAULT_AUTHOR_LABELS = {
+    "uz": "Muallif ko'rsatilmagan",
+    "ru": "Автор не указан",
+    "en": "Author not specified",
+}
+
+DEFAULT_SUBJECT_LABELS = {
+    "uz": "Elektron kutubxona",
+    "ru": "Электронная библиотека",
+    "en": "Digital library",
+}
+
+PRINT_LABELS = {
+    "uz": "BOSMA",
+    "ru": "ПЕЧАТЬ",
+    "en": "PRINT",
+}
+
 
 def cover_key(book: Book) -> str:
     return f"covers/{book.slug}.png"
@@ -54,8 +84,9 @@ def render_cover(book: Book) -> Image.Image:
     author_font = _font(34)
     small_font = _font(28, bold=True)
 
-    turi = book.turi.nomi_uz.upper() if book.turi_id else "KITOB"
-    draw.text((80, 72), "KUTUBXONA", font=badge_font, fill=primary)
+    lang = book.til if book.til in LIBRARY_LABELS else "uz"
+    turi = book.turi.nomi(lang).upper() if book.turi_id else DEFAULT_TYPE_LABELS[lang]
+    draw.text((80, 72), LIBRARY_LABELS[lang], font=badge_font, fill=primary)
     draw.text((80, 118), turi[:34], font=small_font, fill=accent)
 
     y = 285
@@ -63,17 +94,17 @@ def render_cover(book: Book) -> Image.Image:
         draw.text((80, y), line, font=title_font, fill=text)
         y += 78
 
-    authors = ", ".join(a.ism for a in book.mualliflar.all()) or "Muallif ko'rsatilmagan"
+    authors = ", ".join(a.ism for a in book.mualliflar.all()) or DEFAULT_AUTHOR_LABELS[lang]
     y = min(y + 45, 855)
     for line in _wrap_text(authors, author_font, max_width=740, max_lines=3):
         draw.text((80, y), line, font=author_font, fill=(230, 247, 255))
         y += 46
 
     subject = book.yonalishlar.first()
-    subject_name = subject.nomi_uz if subject else "Elektron kutubxona"
+    subject_name = subject.nomi(lang) if subject else DEFAULT_SUBJECT_LABELS[lang]
     draw.text((80, height - 175), subject_name[:44], font=small_font, fill=(255, 255, 255))
 
-    meta = "PDF" if book.mavjudlik == "raqamli" else "BOSMA"
+    meta = "PDF" if book.mavjudlik == "raqamli" else PRINT_LABELS[lang]
     if book.yil:
         meta += f"  |  {book.yil}"
     if book.til:
