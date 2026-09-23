@@ -63,35 +63,35 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
       {/* 1. Breadcrumbs */}
       <nav
         aria-label="Breadcrumb"
-        className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-8 font-medium"
+        className="flex items-center gap-1.5 sm:gap-2 text-xs text-slate-500 dark:text-slate-400 mb-5 sm:mb-8 font-medium overflow-hidden"
       >
         <Link
           href="/"
-          className="hover:text-sky-800 dark:hover:text-sky-400 transition-colors flex items-center gap-1"
+          className="hover:text-sky-800 dark:hover:text-sky-400 transition-colors flex items-center gap-1 flex-shrink-0"
         >
           <span className="material-symbols-outlined text-[16px]">home</span>
           <span>{tNav("boshSahifa")}</span>
         </Link>
-        <span>/</span>
+        <span className="flex-shrink-0">/</span>
         <Link
           href="/katalog"
-          className="hover:text-sky-800 dark:hover:text-sky-400 transition-colors"
+          className="hover:text-sky-800 dark:hover:text-sky-400 transition-colors flex-shrink-0"
         >
           {tNav("katalog")}
         </Link>
-        <span>/</span>
-        <span className="text-sky-900 dark:text-sky-300 font-bold truncate max-w-md">
+        <span className="flex-shrink-0">/</span>
+        <span className="text-sky-900 dark:text-sky-300 font-bold truncate max-w-[150px] sm:max-w-md">
           {kitob.nomi}
         </span>
       </nav>
 
       {/* 2. Main Showcase */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-200 dark:border-slate-800 shadow-xs mb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 border border-slate-200 dark:border-slate-800 shadow-xs mb-8 sm:mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 items-start">
           {/* Left Column: 3D Cover & Action buttons (5 cols) */}
           <div className="lg:col-span-5 flex flex-col items-center">
             {/* 3D Book Cover */}
-            <div className="relative w-full max-w-[320px] aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-xl mb-6 group border border-slate-200 dark:border-slate-800">
+            <div className="relative w-full max-w-[240px] sm:max-w-[280px] lg:max-w-[320px] aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-xl mb-5 sm:mb-6 group border border-slate-200 dark:border-slate-800">
               {kitob.muqova ? (
                 <Image
                   src={kitob.muqova}
@@ -101,19 +101,19 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
                   className="object-cover group-hover:scale-102 transition-transform duration-300"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-slate-400 dark:text-slate-500">
-                  <span className="material-symbols-outlined text-6xl text-sky-400 dark:text-sky-500 mb-3">
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-6 text-center text-slate-400 dark:text-slate-500">
+                  <span className="material-symbols-outlined text-5xl sm:text-6xl text-sky-400 dark:text-sky-500 mb-2 sm:mb-3">
                     menu_book
                   </span>
-                  <span className="font-bold text-sm text-slate-600 dark:text-slate-300 line-clamp-4 font-display">
+                  <span className="font-bold text-xs sm:text-sm text-slate-600 dark:text-slate-300 line-clamp-4 font-display">
                     {kitob.nomi}
                   </span>
                 </div>
               )}
 
               {/* Status pill overlay */}
-              <div className="absolute bottom-3 left-3 right-3 flex justify-center">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-900/80 backdrop-blur-md text-emerald-200 text-xs font-semibold shadow-md">
+              <div className="absolute bottom-2.5 left-2.5 right-2.5 sm:bottom-3 sm:left-3 sm:right-3 flex justify-center">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-900/80 backdrop-blur-md text-emerald-200 text-[11px] sm:text-xs font-semibold shadow-md">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>{t("onlaynMutolaa")}</span>
                 </span>
@@ -121,16 +121,16 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
             </div>
 
             {/* Read Buttons */}
-            <div className="w-full max-w-[320px] flex flex-col gap-2.5">
+            <div className="w-full max-w-[260px] sm:max-w-[320px] flex flex-col gap-2.5">
               {birinchiPdf ? (
                 <Link
                   href={`/kitob/${kitob.slug}/oqish/${birinchiPdf.id}`}
-                  className="w-full py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 text-white font-bold text-sm text-center shadow-md flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3 sm:py-3.5 rounded-xl bg-sky-800 hover:bg-sky-900 text-white font-bold text-xs sm:text-sm text-center shadow-md flex items-center justify-center gap-2 transition-all"
                 >
-                  <span className="material-symbols-outlined text-[20px]">
+                  <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
                     auto_stories
                   </span>
-                  <span>
+                  <span className="truncate px-1">
                     {t("mutolaaQilish")} (PDF
                     {birinchiPdf.sahifalar_soni
                       ? ` - ${birinchiPdf.sahifalar_soni} ${t("bet")}`
@@ -139,7 +139,7 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
                   </span>
                 </Link>
               ) : (
-                <div className="w-full py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs text-center">
+                <div className="w-full py-3 sm:py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-medium text-xs text-center">
                   {t("faylYoq")}
                 </div>
               )}
@@ -263,11 +263,11 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5">
             {oxshashKitoblar.map((k) => (
               <div
                 key={k.slug}
-                className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col justify-between"
+                className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col justify-between"
               >
                 <div>
                   <span className="text-[10px] font-bold uppercase text-sky-700 dark:text-sky-400 block mb-1">

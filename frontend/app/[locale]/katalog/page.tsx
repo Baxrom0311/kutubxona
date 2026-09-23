@@ -124,13 +124,13 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
       </nav>
 
       {/* 2. Top Search & Sort Bar */}
-      <section className="bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm mb-6">
+      <section className="bg-white dark:bg-slate-900 p-2.5 sm:p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm mb-6">
         <form
           method="GET"
-          className="flex flex-col md:flex-row items-stretch md:items-center gap-3"
+          className="flex flex-col md:flex-row items-stretch md:items-center gap-2.5 sm:gap-3"
         >
           <div className="relative flex-1 flex items-center">
-            <span className="material-symbols-outlined absolute left-4 text-sky-700 dark:text-sky-400 text-[24px]">
+            <span className="material-symbols-outlined absolute left-3.5 sm:left-4 text-sky-700 dark:text-sky-400 text-[22px] sm:text-[24px]">
               search
             </span>
             <input
@@ -138,33 +138,33 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
               defaultValue={search.q || ""}
               type="text"
               placeholder={t("qidiruvPlaceholder")}
-              className="w-full h-12 pl-12 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700 transition-colors"
+              className="w-full h-11 sm:h-12 pl-11 sm:pl-12 pr-3 sm:pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs sm:text-sm focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700 transition-colors"
             />
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 w-full md:w-auto">
             {/* Sort Select */}
-            <div className="relative flex-1 md:flex-initial min-w-[200px]">
+            <div className="relative flex-1 md:flex-initial md:min-w-[200px]">
               <select
                 name="saralash"
                 defaultValue={search.saralash || "-qoshilgan_sana"}
-                className="w-full h-12 appearance-none rounded-xl bg-slate-50 dark:bg-slate-800 px-4 pr-10 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                className="w-full h-11 sm:h-12 appearance-none rounded-xl bg-slate-50 dark:bg-slate-800 px-3 sm:px-4 pr-8 sm:pr-10 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
               >
                 <option value="-qoshilgan_sana">{t("saralash.yangi")}</option>
                 <option value="-korishlar_soni">{t("saralash.kopOqilgan")}</option>
                 <option value="nomi">{t("saralash.nomi")}</option>
                 <option value="-yil">{t("saralash.yil")}</option>
               </select>
-              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[20px]">
+              <span className="material-symbols-outlined absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-[18px] sm:text-[20px]">
                 expand_more
               </span>
             </div>
 
             <button
               type="submit"
-              className="h-12 px-6 rounded-xl bg-sky-800 hover:bg-sky-900 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+              className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-sky-800 hover:bg-sky-900 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm flex-shrink-0"
             >
-              <span className="material-symbols-outlined text-[18px]">
+              <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
                 filter_list
               </span>
               <span>{t("qidirish")}</span>
@@ -224,23 +224,23 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
 
           {/* Book Cards Grid */}
           {kitoblar.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5">
               {kitoblar.map((kitob) => (
                 <KitobKartochka key={kitob.slug} kitob={kitob} />
               ))}
             </div>
           ) : (
             /* Empty State */
-            <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-12 border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-sky-50 dark:bg-slate-800 text-sky-700 dark:text-sky-300 flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-[32px]">
+            <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-12 border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col items-center justify-center text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-sky-50 dark:bg-slate-800 text-sky-700 dark:text-sky-300 flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-[28px] sm:text-[32px]">
                   menu_book
                 </span>
               </div>
-              <h3 className="font-bold text-xl text-slate-900 dark:text-white mb-2 font-display">
+              <h3 className="font-bold text-lg sm:text-xl text-slate-900 dark:text-white mb-2 font-display">
                 {t("topilmadi")}
               </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mb-6">
                 {t("topilmadiTavsif")}
               </p>
               <Link
@@ -254,16 +254,16 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
 
           {/* Pagination */}
           {jamiSahifalar > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-8 pb-12">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-6 sm:pt-8 pb-10 sm:pb-12 flex-wrap">
               {sahifaRaqam > 1 && (
                 <Link
                   href={buildPageUrl(sahifaRaqam - 1)}
-                  className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                  className="px-2.5 sm:px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                 >
                   <span className="material-symbols-outlined text-[16px]">
                     chevron_left
                   </span>
-                  <span>{t("oldingi")}</span>
+                  <span className="hidden min-[400px]:inline">{t("oldingi")}</span>
                 </Link>
               )}
 
@@ -272,11 +272,11 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
                   <Link
                     key={num}
                     href={buildPageUrl(num)}
-                    className={`w-9 h-9 rounded-xl text-xs font-bold flex items-center justify-center transition-colors ${
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs font-bold flex items-center justify-center transition-colors ${
                       sahifaRaqam === num
                         ? "bg-sky-800 text-white shadow-xs"
                         : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
-                    }`}
+                    } ${Math.abs(num - sahifaRaqam) > 1 && num !== 1 && num !== Math.min(jamiSahifalar, 7) ? "hidden sm:flex" : ""}`}
                   >
                     {num}
                   </Link>
@@ -286,9 +286,9 @@ export default async function KatalogPage({ params, searchParams }: KatalogPageP
               {sahifaRaqam < jamiSahifalar && (
                 <Link
                   href={buildPageUrl(sahifaRaqam + 1)}
-                  className="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                  className="px-2.5 sm:px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                 >
-                  <span>{t("keyingi")}</span>
+                  <span className="hidden min-[400px]:inline">{t("keyingi")}</span>
                   <span className="material-symbols-outlined text-[16px]">
                     chevron_right
                   </span>

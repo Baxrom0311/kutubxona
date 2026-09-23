@@ -102,9 +102,9 @@ export default function AiChatWidget({
         type="button"
         aria-label={t("sarlavha")}
         title={t("sarlavha")}
-        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50 w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-teal-600 hover:bg-teal-700 active:scale-90 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white dark:border-slate-800"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-teal-600 hover:bg-teal-700 active:scale-90 text-white shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center border-2 border-white dark:border-slate-800"
       >
-        <span className="material-symbols-outlined text-[26px]">
+        <span className="material-symbols-outlined text-[24px] sm:text-[26px]">
           {isOpen ? "close" : "smart_toy"}
         </span>
         {!isOpen && (
@@ -122,7 +122,7 @@ export default function AiChatWidget({
           />
 
           <div
-            className="fixed inset-x-3 bottom-20 sm:bottom-24 sm:right-6 sm:left-auto sm:w-[390px] h-[520px] max-h-[calc(100vh-120px)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden animate-fade-in-fast"
+            className="fixed inset-x-2.5 bottom-18 sm:inset-x-auto sm:bottom-24 sm:right-6 sm:w-[390px] h-[520px] max-h-[calc(100dvh-85px)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden animate-fade-in-fast"
           >
             {/* Header */}
             <div className="px-4 py-3 bg-gradient-to-r from-sky-900 via-sky-800 to-teal-800 text-white flex items-center justify-between shadow-xs flex-shrink-0">
@@ -246,12 +246,12 @@ export default function AiChatWidget({
                   value={kirishMatni}
                   onChange={(e) => setKirishMatni(e.target.value)}
                   placeholder={t("placeholder")}
-                  className="flex-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-slate-900 transition-all"
+                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-base sm:text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-teal-600 focus:bg-white dark:focus:bg-slate-900 transition-all"
                 />
                 <button
                   type="submit"
                   disabled={!kirishMatni.trim() || yuklanmoqda}
-                  className="p-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white transition-colors flex items-center justify-center flex-shrink-0"
+                  className="w-10 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white transition-colors flex items-center justify-center flex-shrink-0"
                 >
                   <span className="material-symbols-outlined text-[18px]">
                     send

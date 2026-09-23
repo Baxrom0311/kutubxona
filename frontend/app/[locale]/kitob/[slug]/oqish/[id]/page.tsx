@@ -28,13 +28,13 @@ export default async function OqishPage({ params }: OqishPageProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900 text-white flex flex-col">
+    <div className="fixed inset-0 h-[100dvh] w-full z-50 bg-slate-900 text-white flex flex-col">
       {/* Top Controls Toolbar */}
-      <header className="h-16 px-4 sm:px-6 bg-slate-950/90 border-b border-slate-800 backdrop-blur-md flex items-center justify-between gap-4 flex-shrink-0">
-        <div className="flex items-center gap-4 min-w-0">
+      <header className="h-14 sm:h-16 px-3 sm:px-6 bg-slate-950/90 border-b border-slate-800 backdrop-blur-md flex items-center justify-between gap-2.5 sm:gap-4 flex-shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
           <Link
             href={`/kitob/${kitob.slug}`}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold flex-shrink-0"
           >
             <span className="material-symbols-outlined text-[18px]">
               arrow_back
@@ -42,11 +42,11 @@ export default async function OqishPage({ params }: OqishPageProps) {
             <span className="hidden sm:inline">{t("kitobgaQaytish")}</span>
           </Link>
 
-          <div className="truncate">
-            <h1 className="font-bold text-sm sm:text-base text-white truncate">
+          <div className="truncate min-w-0">
+            <h1 className="font-bold text-xs sm:text-base text-white truncate leading-tight">
               {kitob.nomi}
             </h1>
-            <span className="text-[11px] text-teal-400 font-mono uppercase">
+            <span className="text-[10px] sm:text-[11px] text-teal-400 font-mono uppercase">
               {oqishData.format} format
             </span>
           </div>
@@ -57,12 +57,12 @@ export default async function OqishPage({ params }: OqishPageProps) {
             href={oqishData.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 rounded-xl bg-sky-800 hover:bg-sky-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-sky-800 hover:bg-sky-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
           >
-            <span className="material-symbols-outlined text-[18px]">
+            <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
               open_in_new
             </span>
-            <span className="hidden sm:inline">{t("yangiOynada")}</span>
+            <span className="hidden md:inline">{t("yangiOynada")}</span>
           </a>
         </div>
       </header>

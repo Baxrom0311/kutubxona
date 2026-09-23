@@ -61,23 +61,17 @@ export default function FiltrSidebar({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  return (
-    <div className="w-full bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-2 text-sky-900 dark:text-sky-300">
-          <span className="material-symbols-outlined text-[22px]">tune</span>
-          <h2 className="font-bold text-lg">{t("filtrlar")}</h2>
-        </div>
-        <button
-          onClick={tozalash}
-          type="button"
-          className="text-xs font-semibold text-teal-700 dark:text-teal-400 hover:underline transition-colors"
-        >
-          {t("tozalash")}
-        </button>
-      </div>
+  const faolFiltrlarSoni = [
+    tanlanganTur,
+    tanlanganYonalish,
+    tanlanganTil,
+    searchParams.get("yil_dan") || searchParams.get("yil_gacha"),
+  ].filter(Boolean).length;
 
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+
+  const filterContent = (
+    <div className="space-y-6">
       {/* 1. Kitob turi */}
       <div className="space-y-2">
         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -261,11 +255,128 @@ export default function FiltrSidebar({
         <button
           onClick={yilFilterQollash}
           type="button"
-          className="w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors mt-1"
+          className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors mt-1"
         >
           {t("yilQollash")}
         </button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* 1. Mobile Filter Bar Trigger (Visible on screens < lg) */}
+      <div className="lg:hidden w-full mb-2">
+        <button
+          onClick={() => setMobileDrawerOpen(true)}
+          type="button"
+          className="w-full py-3 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between text-slate-800 dark:text-slate-100 hover:border-sky-500 dark:hover:border-sky-500 transition-colors"
+        >
+          <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
+            <span className="material-symbols-outlined text-sky-700 dark:text-sky-400 text-[20px]">
+              tune
+            </span>
+            <span>{t("filtrlar")}</span>
+            {faolFiltrlarSoni > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-sky-800 dark:bg-sky-600 text-white text-[10px] sm:text-xs font-bold">
+                {faolFiltrlarSoni}
+              </span>
+            )}
+          </div>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+            <span>{t("ochish")}</span>
+            <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+          </span>
+        </button>
+      </div>
+
+      {/* 2. Mobile Drawer Modal / Sheet (Slide-over) */}
+      {mobileDrawerOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div
+            onClick={() => setMobileDrawerOpen(false)}
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-2xs transition-opacity"
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative ml-auto w-full max-w-sm sm:max-w-md bg-white dark:bg-slate-900 h-full flex flex-col shadow-2xl z-10 animate-fade-in-fast border-l border-slate-200 dark:border-slate-800">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[22px] text-sky-700 dark:text-sky-400">
+                  tune
+                </span>
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                  {t("filtrlar")}
+                </h3>
+                {faolFiltrlarSoni > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-sky-800 dark:bg-sky-600 text-white text-xs font-bold">
+                    {faolFiltrlarSoni}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setMobileDrawerOpen(false)}
+                type="button"
+                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {/* Scrollable Filter List */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+              {filterContent}
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2.5 bg-white dark:bg-slate-900">
+              <button
+                onClick={() => {
+                  tozalash();
+                  setMobileDrawerOpen(false);
+                }}
+                type="button"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                {t("tozalash")}
+              </button>
+              <button
+                onClick={() => setMobileDrawerOpen(false)}
+                type="button"
+                className="flex-1 py-2.5 rounded-xl bg-sky-800 hover:bg-sky-900 dark:bg-sky-600 dark:hover:bg-sky-500 text-white text-xs font-bold text-center transition-colors shadow-xs"
+              >
+                {t("natijalarniKorish")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Desktop Sticky Sidebar Card (Visible only on lg+) */}
+      <div className="hidden lg:block w-full bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2 text-sky-900 dark:text-sky-300">
+            <span className="material-symbols-outlined text-[22px]">tune</span>
+            <h2 className="font-bold text-lg">{t("filtrlar")}</h2>
+            {faolFiltrlarSoni > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-sky-800 dark:bg-sky-600 text-white text-xs font-bold">
+                {faolFiltrlarSoni}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={tozalash}
+            type="button"
+            className="text-xs font-semibold text-teal-700 dark:text-teal-400 hover:underline transition-colors"
+          >
+            {t("tozalash")}
+          </button>
+        </div>
+
+        {filterContent}
+      </div>
+    </>
   );
 }
