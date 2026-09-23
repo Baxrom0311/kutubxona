@@ -22,6 +22,11 @@ class Saqlagich(ABC):
         pass
 
     @abstractmethod
+    def yuklash(self, key: str, fayl, content_type: str = "application/octet-stream") -> None:
+        """Fayl obyektini saqlagichga yuklash."""
+        pass
+
+    @abstractmethod
     def ochiq_url(self, key: str) -> str:
         """Ochiq bucket uchun oddiy URL, imzosiz."""
         pass
@@ -84,6 +89,16 @@ class R2Saqlagich(Saqlagich):
             ExpiresIn=muddat,
         )
 
+    def yuklash(self, key: str, fayl, content_type: str = "application/octet-stream") -> None:
+        if hasattr(fayl, "seek"):
+            fayl.seek(0)
+        self._client.upload_fileobj(
+            fayl,
+            self.bucket_kitoblar,
+            key,
+            ExtraArgs={"ContentType": content_type},
+        )
+
     def ochiq_url(self, key: str) -> str:
         if not key:
             return ""
@@ -112,17 +127,24 @@ class R2Saqlagich(Saqlagich):
 class SoxtaSaqlagich(Saqlagich):
     """Testlar va lokal ishlab chiqish uchun xotiradagi soxta saqlagich."""
 
+    _global_fayllar = {}
+
     def __init__(self):
         self.bucket_kitoblar = getattr(settings, "S3_BUCKET_KITOBLAR", "kutubxona-kitoblar")
         self.bucket_muqovalar = getattr(settings, "S3_BUCKET_MUQOVALAR", "kutubxona-muqovalar")
         self.ochiq_domen = getattr(settings, "S3_OCHIQ_DOMEN", "https://muqovalar.kutubxona.uz")
-        self._fayllar = {}
+        self._fayllar = self.__class__._global_fayllar
 
     def oqish_url(self, key: str, muddat: int = 7200) -> str:
         return f"https://r2.mock.local/{self.bucket_kitoblar}/{key.lstrip('/')}?muddat={muddat}"
 
     def yuklash_url(self, key: str, content_type: str, muddat: int = 900) -> str:
         return f"https://r2.mock.local/{self.bucket_kitoblar}/{key.lstrip('/')}?content_type={content_type}&muddat={muddat}"
+
+    def yuklash(self, key: str, fayl, content_type: str = "application/octet-stream") -> None:
+        if hasattr(fayl, "seek"):
+            fayl.seek(0)
+        self._fayllar[key] = fayl.read()
 
     def ochiq_url(self, key: str) -> str:
         if not key:

@@ -1,5 +1,10 @@
 """Django admin paneli sozlamalari va kutubxonachi jurnali."""
 
+from pathlib import Path
+import uuid
+
+from django import forms
+from django.conf import settings
 from django.contrib import admin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -16,6 +21,13 @@ from catalog.models import (
     Reader,
     Subject,
 )
+from catalog.storage import get_saqlagich
+
+
+BOOK_CONTENT_TYPES = {
+    "pdf": "application/pdf",
+    "epub": "application/epub+zip",
+}
 
 
 class QaytarilganFilter(admin.SimpleListFilter):
@@ -59,10 +71,52 @@ class SubjectAdmin(admin.ModelAdmin):
     list_editable = ("tartib",)
 
 
+class BookFileInlineForm(forms.ModelForm):
+    fayl = forms.FileField(
+        required=False,
+        label="Fayl yuklash",
+        help_text="PDF yoki EPUB fayl tanlang. Format, hajm va storage key avtomatik to'ldiriladi.",
+    )
+
+    class Meta:
+        model = BookFile
+        fields = ("fayl", "format", "storage_key", "hajm", "sahifalar_soni", "tartib")
+
+    def clean_fayl(self):
+        fayl = self.cleaned_data.get("fayl")
+        if not fayl:
+            return fayl
+
+        ext = Path(fayl.name).suffix.lower().lstrip(".")
+        allowed = getattr(settings, "ALLOWED_BOOK_EXTENSIONS", ["pdf", "epub"])
+        if ext not in allowed:
+            raise forms.ValidationError("Faqat PDF yoki EPUB fayl yuklash mumkin.")
+
+        max_mb = getattr(settings, "MAX_BOOK_FILE_MB", 200)
+        if fayl.size > max_mb * 1024 * 1024:
+            raise forms.ValidationError(f"Fayl hajmi {max_mb} MB dan oshmasligi kerak.")
+
+        return fayl
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("DELETE"):
+            return cleaned
+
+        fayl = cleaned.get("fayl")
+        storage_key = cleaned.get("storage_key")
+        if not self.instance.pk and not fayl and not storage_key:
+            raise forms.ValidationError("Yangi fayl uchun fayl yuklang yoki storage key kiriting.")
+
+        return cleaned
+
+
 class BookFileInline(admin.TabularInline):
     model = BookFile
+    form = BookFileInlineForm
     extra = 1
-    fields = ("format", "storage_key", "hajm", "sahifalar_soni", "tartib")
+    fields = ("fayl", "format", "storage_key", "hajm", "sahifalar_soni", "tartib")
+    readonly_fields = ("storage_key", "hajm")
 
 
 @admin.register(Book)
@@ -73,6 +127,53 @@ class BookAdmin(admin.ModelAdmin):
     filter_horizontal = ("mualliflar", "yonalishlar")
     readonly_fields = ("slug", "korishlar_soni", "qoshilgan_sana")
     inlines = [BookFileInline]
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model is not BookFile:
+            return super().save_formset(request, form, formset, change)
+
+        saqlagich = get_saqlagich()
+
+        for deleted in formset.deleted_objects:
+            if deleted.storage_key:
+                try:
+                    saqlagich.ochirish(deleted.storage_key)
+                except Exception:
+                    pass
+            deleted.delete()
+
+        for inline_form in formset.forms:
+            if not inline_form.cleaned_data or inline_form.cleaned_data.get("DELETE"):
+                continue
+            if not inline_form.has_changed():
+                continue
+
+            obj = inline_form.save(commit=False)
+            uploaded = inline_form.cleaned_data.get("fayl")
+            if uploaded:
+                ext = Path(uploaded.name).suffix.lower().lstrip(".")
+                old_key = obj.storage_key
+                obj.format = ext
+                obj.hajm = uploaded.size
+                obj.storage_key = self._book_file_key(form.instance, uploaded.name, ext)
+                saqlagich.yuklash(
+                    obj.storage_key,
+                    uploaded,
+                    content_type=BOOK_CONTENT_TYPES.get(ext, "application/octet-stream"),
+                )
+                if old_key and old_key != obj.storage_key:
+                    try:
+                        saqlagich.ochirish(old_key)
+                    except Exception:
+                        pass
+            obj.kitob = form.instance
+            obj.save()
+
+        formset.save_m2m()
+
+    def _book_file_key(self, book: Book, filename: str, ext: str) -> str:
+        safe_stem = Path(filename).stem[:80] or book.slug
+        return f"kitoblar/{timezone.now():%Y}/{book.slug}/{safe_stem}-{uuid.uuid4().hex[:8]}.{ext}"
 
 
 @admin.register(Reader)
@@ -185,4 +286,3 @@ class ChatSessionAdmin(admin.ModelAdmin):
     @admin.display(description=_("Xabarlar soni"))
     def xabarlar_soni(self, obj):
         return obj.xabarlar.count()
-
