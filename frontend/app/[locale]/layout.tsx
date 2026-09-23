@@ -38,9 +38,10 @@ export async function generateMetadata({
   }
   const t = await getTranslations({ locale, namespace: "metadata" });
   return {
+    // Ikonkalar `app/icon.svg`, `app/favicon.ico` va `app/apple-icon.png`
+    // fayllaridan avtomatik olinadi — bu yerda qayta e'lon qilish shart emas.
     title: t("title"),
     description: t("description"),
-    icons: { icon: "/logo.png", apple: "/logo.png" },
   };
 }
 
