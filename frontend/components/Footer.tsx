@@ -3,6 +3,8 @@ import { useTranslations } from "next-intl";
 import Logotip from "./Logotip";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 
+const MAPS_URL = "https://maps.app.goo.gl/gDrA4TofaJpohw2s8";
+
 /* lucide-react 1.x brend ikonkalarini tashlab yuborgan, shuning uchun
    Instagram va YouTube belgilari shu yerda — bir xil 24px to'r va
    1.75 chiziq qalinligida, qolgan ikonkalarga mos. */
@@ -81,7 +83,14 @@ export default function Footer() {
             <ul className="space-y-2.5 text-[14px] text-muted">
               <li className="flex gap-2.5">
                 <MapPin size={16} strokeWidth={1.75} className="mt-0.5 flex-shrink-0" />
-                <span>{t("manzil")}</span>
+                <a
+                  href={MAPS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-brand transition-colors"
+                >
+                  {t("manzil")}
+                </a>
               </li>
               <li className="flex gap-2.5">
                 <Phone size={16} strokeWidth={1.75} className="mt-0.5 flex-shrink-0" />
