@@ -52,6 +52,30 @@ class QaytarilganFilter(admin.SimpleListFilter):
         return queryset
 
 
+class LoanEntryForm(forms.ModelForm):
+    """Kutubxonachi kitob berayotganda faqat bo'sh kitoblarni ko'rsatuvchi form."""
+
+    class Meta:
+        model = LoanEntry
+        fields = ("kitob", "oquvchi", "qaytarilgan_sana", "kutubxonachi", "izoh")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        active_loans = LoanEntry.objects.filter(
+            qaytarilgan_sana__isnull=True,
+        )
+        if self.instance.pk and self.instance.kitob_id:
+            active_loans = active_loans.exclude(kitob_id=self.instance.kitob_id)
+        active_book_ids = active_loans.values_list("kitob_id", flat=True)
+        self.fields["kitob"].queryset = Book.objects.exclude(id__in=active_book_ids).order_by("nomi")
+        self.fields["kitob"].label = _("Qaysi kitob berildi")
+        self.fields["kitob"].help_text = _("Faqat hozir qarzda bo'lmagan kitoblar ko'rinadi.")
+        self.fields["oquvchi"].label = _("Kimga berildi")
+        self.fields["oquvchi"].help_text = _("Agar o'quvchi ro'yxatda bo'lmasa, avval «O'quvchilar» bo'limida qo'shing.")
+        self.fields["izoh"].label = _("Izoh")
+        self.fields["izoh"].help_text = _("Masalan: kitob holati, kelishilgan qaytarish sanasi yoki boshqa eslatma.")
+
+
 @admin.register(Author)
 class AuthorAdmin(admin.ModelAdmin):
     list_display = ("ism",)
@@ -293,13 +317,14 @@ class ReaderAdmin(admin.ModelAdmin):
 
 @admin.register(LoanEntry)
 class LoanEntryAdmin(admin.ModelAdmin):
+    form = LoanEntryForm
     list_display = (
+        "holati",
         "kitob",
         "oquvchi",
         "berilgan_sana",
         "qaytarilgan_sana",
         "kutubxonachi",
-        "holati",
     )
     list_filter = (QaytarilganFilter, "berilgan_sana", "kutubxonachi")
     search_fields = (
@@ -308,8 +333,60 @@ class LoanEntryAdmin(admin.ModelAdmin):
         "oquvchi__guruh",
         "oquvchi__telefon",
     )
-    readonly_fields = ("berilgan_sana",)
+    autocomplete_fields = ("kitob", "oquvchi")
+    readonly_fields = ("berilgan_sana", "kutubxonachi")
     actions = ["qaytarilgan_deb_belgilash"]
+    date_hierarchy = "berilgan_sana"
+    fieldsets = (
+        (
+            _("Kitob berish"),
+            {
+                "fields": ("kitob", "oquvchi", "izoh"),
+                "description": _(
+                    "Kitobni o'quvchiga berganda shu yerda yozuv yarating. "
+                    "Berilgan sana va kutubxonachi avtomatik yoziladi."
+                ),
+            },
+        ),
+        (
+            _("Qaytarish holati"),
+            {
+                "fields": ("qaytarilgan_sana",),
+                "description": _(
+                    "Kitob hali o'quvchida bo'lsa bu maydonni bo'sh qoldiring. "
+                    "Qaytganda ro'yxatdan yozuvni tanlab «qaytarilgan deb belgilash» actionini ishlating."
+                ),
+            },
+        ),
+        (
+            _("Tizim ma'lumotlari"),
+            {"fields": ("berilgan_sana", "kutubxonachi"), "classes": ("collapse",)},
+        ),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("kitob", "oquvchi", "kutubxonachi")
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is None:
+            return (
+                (
+                    _("Kitob berish"),
+                    {
+                        "fields": ("kitob", "oquvchi", "izoh"),
+                        "description": _(
+                            "Kitobni o'quvchiga berish uchun kitob va o'quvchini tanlang. "
+                            "Qaytarilgan sana keyin, kitob qaytganda to'ldiriladi."
+                        ),
+                    },
+                ),
+            )
+        return super().get_fieldsets(request, obj)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ()
+        return self.readonly_fields
 
     @admin.display(description=_("Holati"))
     def holati(self, obj: LoanEntry) -> str:

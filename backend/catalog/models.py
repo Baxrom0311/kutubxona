@@ -244,8 +244,8 @@ class LoanEntry(models.Model):
     izoh = models.TextField(blank=True)
 
     class Meta:
-        verbose_name = "Jurnal yozuvi"
-        verbose_name_plural = "Jurnal yozuvlari"
+        verbose_name = "Kitob berish/qaytarish"
+        verbose_name_plural = "Kitob berish/qaytarish"
         ordering = ["-berilgan_sana"]
 
     def clean(self):

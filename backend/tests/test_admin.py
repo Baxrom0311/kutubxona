@@ -4,7 +4,14 @@ from django.contrib.admin.sites import site
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core.exceptions import ValidationError
 
-from catalog.admin import BookAdmin, FormAdmin, LoanEntryAdmin, QaytarilganFilter, SubjectAdmin
+from catalog.admin import (
+    BookAdmin,
+    FormAdmin,
+    LoanEntryAdmin,
+    LoanEntryForm,
+    QaytarilganFilter,
+    SubjectAdmin,
+)
 from catalog.models import Book, Form, LoanEntry, Subject
 
 pytestmark = pytest.mark.django_db
@@ -73,6 +80,35 @@ def test_admin_holat_filtri(rf, kitob, oquvchi, kutubxonachi, form_darslik):
     f_qaytarilgan = QaytarilganFilter(request, {"holat": ["qaytarilgan"]}, LoanEntry, model_admin)
     qs_qaytarilgan = f_qaytarilgan.queryset(request, LoanEntry.objects.all())
     assert list(qs_qaytarilgan) == [qarz2]
+
+
+def test_kitob_berish_admin_nomi_aniq():
+    assert LoanEntry._meta.verbose_name == "Kitob berish/qaytarish"
+    assert LoanEntry._meta.verbose_name_plural == "Kitob berish/qaytarish"
+
+
+def test_kitob_berish_formi_qarzdagi_kitobni_yashiradi(kitob, oquvchi, kutubxonachi, form_darslik):
+    bosh_kitob = Book.objects.create(nomi="Bo'sh kitob", turi=form_darslik)
+    LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+
+    form = LoanEntryForm()
+
+    assert kitob not in form.fields["kitob"].queryset
+    assert bosh_kitob in form.fields["kitob"].queryset
+    assert form.fields["kitob"].label == "Qaysi kitob berildi"
+
+
+def test_kitob_berish_admin_qoshishda_faqat_berish_maydonlari_korinadi(rf):
+    model_admin = LoanEntryAdmin(LoanEntry, site)
+    request = rf.get("/admin/catalog/loanentry/add/")
+    request.user = type("User", (), {"has_perm": lambda self, perm: True})()
+
+    fieldsets = model_admin.get_fieldsets(request, obj=None)
+    fields = fieldsets[0][1]["fields"]
+
+    assert fields == ("kitob", "oquvchi", "izoh")
+    assert "qaytarilgan_sana" not in fields
+    assert "kutubxonachi" not in fields
 
 
 def test_axes_brute_force_qayd_qilish(client):
