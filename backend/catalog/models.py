@@ -146,6 +146,12 @@ class Book(models.Model):
             "Faqat bosma — faqat muqova yuklang, saytda «kutubxonadan olasiz» deb ko'rinadi."
         ),
     )
+    nusxalar_soni = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Nusxalar soni",
+        help_text="Bosma kitob uchun kutubxonadagi nusxalar soni.",
+    )
 
     mualliflar = models.ManyToManyField(Author, blank=True, related_name="kitoblar")
     turi = models.ForeignKey(Form, on_delete=models.PROTECT, related_name="kitoblar")
@@ -163,9 +169,21 @@ class Book(models.Model):
             models.Index(fields=["-qoshilgan_sana"]),
         ]
 
+    def clean(self):
+        super().clean()
+        if self.mavjudlik == "bosma":
+            if self.nusxalar_soni is not None and self.nusxalar_soni < 1:
+                raise ValidationError({"nusxalar_soni": "Nusxalar soni kamida 1 bo'lishi kerak."})
+        elif self.mavjudlik == "raqamli":
+            self.nusxalar_soni = None
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self, self.nomi, max_length=300)
+        if self.mavjudlik == "bosma" and not self.nusxalar_soni:
+            self.nusxalar_soni = 1
+        elif self.mavjudlik == "raqamli":
+            self.nusxalar_soni = None
         super().save(*args, **kwargs)
 
     def oqish_mumkinmi(self) -> bool:
@@ -254,8 +272,9 @@ class LoanEntry(models.Model):
             qs = LoanEntry.objects.filter(kitob=self.kitob, qaytarilgan_sana__isnull=True)
             if self.pk:
                 qs = qs.exclude(pk=self.pk)
-            if qs.exists():
-                raise ValidationError("Bu kitob allaqachon berilgan va hali qaytarilmagan.")
+            limit = getattr(self.kitob, "nusxalar_soni", None) or 1
+            if qs.count() >= limit:
+                raise ValidationError("Bu kitobning barcha nusxalari berilgan va hali qaytarilmagan.")
 
     def qaytarish(self):
         """Kitobni qaytarilgan deb belgilash."""

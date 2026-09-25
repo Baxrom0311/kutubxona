@@ -286,3 +286,92 @@ def test_admin_muqova_nom_yoki_til_ozgarsa_qayta_generatsiya_qiladi(client, kito
     assert kitob.til == "en"
     assert storage.mavjudmi(kitob.muqova_key)
     assert storage.hajm(kitob.muqova_key) > len(b"old-cover")
+
+
+def test_admin_fieldsets_ortiqcha_tizim_va_muqova_yoq(rf):
+    """Adminda Muqova va Tizim ma'lumotlari fieldsetlari ko'rsatilmasin."""
+    model_admin = BookAdmin(Book, site)
+    request = rf.get("/admin/catalog/book/add/")
+    request.user = type("User", (), {"has_perm": lambda self, perm: True})()
+
+    fieldsets = model_admin.get_fieldsets(request)
+    sarlavhalar = [f[0] for f in fieldsets]
+
+    assert "Muqova" not in sarlavhalar
+    assert "Tizim ma'lumotlari" not in sarlavhalar
+
+    # Barcha ko'rsatiladigan maydonlar
+    all_fields = []
+    for _, f_dict in fieldsets:
+        all_fields.extend(f_dict.get("fields", ()))
+
+    assert "slug" not in all_fields
+    assert "muqova_key" not in all_fields
+    assert "korishlar_soni" not in all_fields
+    assert "qoshilgan_sana" not in all_fields
+    assert "muqova_korinishi" not in all_fields
+    assert "nusxalar_soni" in all_fields
+    assert "mavjudlik" in all_fields
+
+
+def test_admin_bosma_kitob_nusxalar_sonini_talab_qiladi(client, form_darslik, kutubxonachi):
+    """Faqat bosma kitob tanlanganda nusxalar soni talab qilinsin."""
+    kutubxonachi.is_superuser = True
+    kutubxonachi.save(update_fields=["is_superuser"])
+    client.force_login(kutubxonachi)
+
+    # Nusxalar sonisiz saqlashga urinish
+    res = client.post(
+        "/admin/catalog/book/add/",
+        {
+            "nomi": "Jarrohlik asoslari",
+            "tavsif": "",
+            "nashriyot": "",
+            "til": "uz",
+            "turi": form_darslik.pk,
+            "mavjudlik": "bosma",
+            "nusxalar_soni": "",
+            "fayllar-TOTAL_FORMS": "0",
+            "fayllar-INITIAL_FORMS": "0",
+            "fayllar-MIN_NUM_FORMS": "0",
+            "fayllar-MAX_NUM_FORMS": "1000",
+        },
+    )
+    # Formada xatolik bo'lishi kerak
+    assert res.status_code == 200
+    assert "Bosma kitob uchun nusxalar sonini kiriting" in res.content.decode("utf-8")
+
+
+def test_admin_bosma_kitob_faylsiz_saqlanadi(client, form_darslik, kutubxonachi):
+    """Bosma kitob saqlanganda PDF talab qilinmasin, nusxalar soni bilan muvaffaqiyatli saqlansin."""
+    kutubxonachi.is_superuser = True
+    kutubxonachi.save(update_fields=["is_superuser"])
+    client.force_login(kutubxonachi)
+
+    res = client.post(
+        "/admin/catalog/book/add/",
+        {
+            "nomi": "Terapevtik stomatologiya",
+            "tavsif": "Darslik",
+            "nashriyot": "Ibn Sino",
+            "til": "uz",
+            "turi": form_darslik.pk,
+            "mavjudlik": "bosma",
+            "nusxalar_soni": "5",
+            "fayllar-TOTAL_FORMS": "1",
+            "fayllar-INITIAL_FORMS": "0",
+            "fayllar-MIN_NUM_FORMS": "0",
+            "fayllar-MAX_NUM_FORMS": "1000",
+            "fayllar-0-id": "",
+            "fayllar-0-format": "",
+            "fayllar-0-sahifalar_soni": "",
+            "fayllar-0-tartib": "0",
+        },
+        follow=True,
+    )
+    assert res.status_code == 200
+    book = Book.objects.get(nomi="Terapevtik stomatologiya")
+    assert book.mavjudlik == "bosma"
+    assert book.nusxalar_soni == 5
+    assert book.fayllar.count() == 0
+

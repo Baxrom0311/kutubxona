@@ -121,6 +121,11 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
               <div>
                 <p className="text-[14px] font-medium text-ink">{t("bosmaSarlavha")}</p>
                 <p className="mt-1 text-[13px] leading-relaxed text-muted">{t("bosmaTavsif")}</p>
+                {kitob.nusxalar_soni ? (
+                  <p className="mt-2 text-[12px] font-semibold text-brand">
+                    {t("nusxalarSoni")}: {kitob.nusxalar_soni} ta nusxa
+                  </p>
+                ) : null}
               </div>
             </div>
           )}

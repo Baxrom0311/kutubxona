@@ -98,6 +98,7 @@ class BookListSerializer(serializers.ModelSerializer):
             "muqova",
             "formatlar",
             "mavjudlik",
+            "nusxalar_soni",
             "oqish_mumkin",
             "korishlar_soni",
         ]

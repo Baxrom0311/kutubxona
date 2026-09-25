@@ -119,7 +119,32 @@ class SubjectAdmin(admin.ModelAdmin):
         return formfield
 
 
+class BookAdminForm(forms.ModelForm):
+    """Kitob admin formasi — mavjudlikka qarab validatsiya qiladi."""
+
+    class Meta:
+        model = Book
+        fields = "__all__"
+
+    def clean(self):
+        cleaned_data = super().clean()
+        mavjudlik = cleaned_data.get("mavjudlik")
+        nusxalar_soni = cleaned_data.get("nusxalar_soni")
+
+        if mavjudlik == "bosma":
+            if not nusxalar_soni or nusxalar_soni < 1:
+                self.add_error("nusxalar_soni", _("Bosma kitob uchun nusxalar sonini kiriting (kamida 1)."))
+        elif mavjudlik == "raqamli":
+            cleaned_data["nusxalar_soni"] = None
+
+        return cleaned_data
+
+
 class BookFileInlineForm(forms.ModelForm):
+    format = forms.ChoiceField(
+        choices=[("", "- Select an option -")] + BookFile.FORMAT_TANLOVI,
+        required=False,
+    )
     fayl = forms.FileField(
         required=False,
         label="Fayl yuklash",
@@ -154,7 +179,8 @@ class BookFileInlineForm(forms.ModelForm):
         fayl = cleaned.get("fayl")
         storage_key = cleaned.get("storage_key")
         if not self.instance.pk and not fayl and not storage_key:
-            raise forms.ValidationError("Yangi fayl uchun fayl yuklang yoki storage key kiriting.")
+            if cleaned.get("sahifalar_soni"):
+                raise forms.ValidationError("Yangi fayl uchun fayl yuklang yoki storage key kiriting.")
 
         return cleaned
 
@@ -169,11 +195,11 @@ class BookFileInline(admin.TabularInline):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
+    form = BookAdminForm
     list_display = ("nomi", "turi", "mavjudlik_belgisi", "til", "yil", "korishlar_soni")
     list_filter = ("mavjudlik", "turi", "til", "yil", "yonalishlar")
     search_fields = ("nomi", "mualliflar__ism", "slug", "nashriyot")
     filter_horizontal = ("mualliflar", "yonalishlar")
-    readonly_fields = ("slug", "korishlar_soni", "qoshilgan_sana", "muqova_korinishi", "muqova_key")
     inlines = [BookFileInline]
     fieldsets = (
         (
@@ -192,32 +218,19 @@ class BookAdmin(admin.ModelAdmin):
         (
             _("Mavjudligi"),
             {
-                "fields": ("mavjudlik",),
+                "fields": ("mavjudlik", "nusxalar_soni"),
                 "description": _(
                     "<b>Raqamli</b> — pastdagi «Kitob fayllari» bo'limiga PDF yoki EPUB yuklang, "
                     "kitob saytda o'qiladi.<br>"
-                    "<b>Faqat bosma nusxa</b> — fayl yuklamang. Muqova avtomatik chiqadi. "
-                    "Saytda kitob ko'rinadi, lekin o'qish o'rniga «kutubxonadan olishingiz mumkin» yoziladi."
+                    "<b>Faqat bosma nusxa</b> — kutubxonadagi nusxalar sonini kiriting. "
+                    "Saytda kitob ko'rinadi, lekin o'qish o'rniga «kutubxonadan olishingiz mumkin» yoziladi (fayl yuklanmaydi)."
                 ),
-            },
-        ),
-        (
-            _("Muqova"),
-            {
-                "fields": ("muqova_korinishi",),
-                "description": _(
-                    "Muqova kitob saqlanganda avtomatik generatsiya qilinadi. Qo'lda rasm yuklash kerak emas."
-                ),
-            },
-        ),
-        (
-            _("Tizim ma'lumotlari"),
-            {
-                "fields": ("slug", "muqova_key", "korishlar_soni", "qoshilgan_sana"),
-                "classes": ("collapse",),
             },
         ),
     )
+
+    class Media:
+        js = ("catalog/admin_book.js",)
 
     @admin.display(description=_("Mavjudligi"))
     def mavjudlik_belgisi(self, obj: Book) -> str:
