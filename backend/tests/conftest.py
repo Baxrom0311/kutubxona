@@ -56,6 +56,21 @@ def kitob(db, form_darslik, subject_kardiologiya, muallif):
 
 
 @pytest.fixture
+def bosma_kitob(db, form_darslik, subject_kardiologiya, muallif):
+    book = Book.objects.create(
+        nomi="Jarrohlik darsligi",
+        turi=form_darslik,
+        yil=2023,
+        til="uz",
+        mavjudlik="bosma",
+        nusxalar_soni=1,
+    )
+    book.mualliflar.add(muallif)
+    book.yonalishlar.add(subject_kardiologiya)
+    return book
+
+
+@pytest.fixture
 def oquvchi(db):
     return Reader.objects.create(fish="Aliyev Vali", guruh="201-A")
 

@@ -426,13 +426,16 @@ class LoanEntry(models.Model):
 
     def clean(self):
         super().clean()
-        if not self.qaytarilgan_sana and self.kitob_id:
-            qs = LoanEntry.objects.filter(kitob=self.kitob, qaytarilgan_sana__isnull=True)
-            if self.pk:
-                qs = qs.exclude(pk=self.pk)
-            limit = getattr(self.kitob, "nusxalar_soni", None) or 1
-            if qs.count() >= limit:
-                raise ValidationError("Bu kitobning barcha nusxalari berilgan va hali qaytarilmagan.")
+        if self.kitob_id:
+            if getattr(self.kitob, "mavjudlik", "bosma") != "bosma":
+                raise ValidationError("Kitob berish faqat bosma kitoblar uchun mumkin. Raqamli (onlayn) kitoblarni qarzga berib bo'lmaydi.")
+            if not self.qaytarilgan_sana:
+                qs = LoanEntry.objects.filter(kitob=self.kitob, qaytarilgan_sana__isnull=True)
+                if self.pk:
+                    qs = qs.exclude(pk=self.pk)
+                limit = getattr(self.kitob, "nusxalar_soni", None) or 1
+                if qs.count() >= limit:
+                    raise ValidationError("Bu kitobning barcha nusxalari berilgan va hali qaytarilmagan.")
 
     def qaytarish(self):
         """Kitobni qaytarilgan deb belgilash."""

@@ -32,20 +32,20 @@ def test_staff_admin_panelga_kiradi(client, kutubxonachi):
     assert response.status_code == 200
 
 
-def test_staff_jurnal_yozuvi_yaratadi_ikkinchisida_xato_oladi(client, kitob, oquvchi, kutubxonachi):
+def test_staff_jurnal_yozuvi_yaratadi_ikkinchisida_xato_oladi(client, bosma_kitob, oquvchi, kutubxonachi):
     """Admin orqali LoanEntry yaratish va ikkinchi marta xato olish."""
     # Birinchi yozuv
-    loan1 = LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+    loan1 = LoanEntry.objects.create(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
     assert loan1.qaytarilgan_sana is None
 
     # Ikkinchi marta — xato berishi kerak
-    ikkinchi = LoanEntry(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+    ikkinchi = LoanEntry(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
     with pytest.raises(ValidationError):
         ikkinchi.full_clean()
 
 
-def test_admin_action_qaytarilgan_deb_belgilash(rf, kitob, oquvchi, kutubxonachi):
-    loan = LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+def test_admin_action_qaytarilgan_deb_belgilash(rf, bosma_kitob, oquvchi, kutubxonachi):
+    loan = LoanEntry.objects.create(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
     assert loan.qaytarilgan_sana is None
 
     model_admin = LoanEntryAdmin(LoanEntry, site)
@@ -62,10 +62,10 @@ def test_admin_action_qaytarilgan_deb_belgilash(rf, kitob, oquvchi, kutubxonachi
     assert model_admin.holati(loan) == "✅ Qaytarilgan"
 
 
-def test_admin_holat_filtri(rf, kitob, oquvchi, kutubxonachi, form_darslik):
-    kitob2 = kitob.__class__.objects.create(nomi="Fiziologiya", turi=form_darslik)
+def test_admin_holat_filtri(rf, bosma_kitob, oquvchi, kutubxonachi, form_darslik):
+    kitob2 = Book.objects.create(nomi="Fiziologiya", turi=form_darslik, mavjudlik="bosma", nusxalar_soni=1)
 
-    qarz1 = LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+    qarz1 = LoanEntry.objects.create(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
     qarz2 = LoanEntry.objects.create(kitob=kitob2, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
     qarz2.qaytarish()
 
@@ -89,15 +89,23 @@ def test_kitob_berish_admin_nomi_aniq():
     assert LoanEntry._meta.verbose_name_plural == "Kitob berish/qaytarish"
 
 
-def test_kitob_berish_formi_qarzdagi_kitobni_yashiradi(kitob, oquvchi, kutubxonachi, form_darslik):
-    bosh_kitob = Book.objects.create(nomi="Bo'sh kitob", turi=form_darslik)
-    LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+def test_kitob_berish_formi_faqat_mavjud_bosma_kitoblarni_korsatadi(
+    bosma_kitob, oquvchi, kutubxonachi, form_darslik
+):
+    """Qarzda bo'lgan kitoblar va raqamli (onlayn) kitoblar ro'yxatda chiqmasin."""
+    bosh_bosma = Book.objects.create(nomi="Bo'sh bosma kitob", turi=form_darslik, mavjudlik="bosma", nusxalar_soni=1)
+    onlayn_kitob = Book.objects.create(nomi="Onlayn kitob", turi=form_darslik, mavjudlik="raqamli")
+    LoanEntry.objects.create(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
 
     form = LoanEntryForm()
 
-    assert kitob not in form.fields["kitob"].queryset
-    assert bosh_kitob in form.fields["kitob"].queryset
-    assert form.fields["kitob"].label == "Qaysi kitob berildi"
+    # Band bosma kitob chiqmaydi
+    assert bosma_kitob not in form.fields["kitob"].queryset
+    # Onlayn kitob umuman chiqmaydi!
+    assert onlayn_kitob not in form.fields["kitob"].queryset
+    # Faqat bo'sh bosma kitob chiqadi
+    assert bosh_bosma in form.fields["kitob"].queryset
+    assert "Faqat bosma" in form.fields["kitob"].label
 
 
 def test_kitob_berish_admin_qoshishda_faqat_berish_maydonlari_korinadi(rf):

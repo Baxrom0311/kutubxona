@@ -55,7 +55,7 @@ class QaytarilganFilter(admin.SimpleListFilter):
 
 
 class LoanEntryForm(forms.ModelForm):
-    """Kutubxonachi kitob berayotganda faqat bo'sh kitoblarni ko'rsatuvchi form."""
+    """Kutubxonachi kitob berayotganda faqat mavjud BOSMA kitoblarni ko'rsatuvchi form."""
 
     class Meta:
         model = LoanEntry
@@ -63,15 +63,26 @@ class LoanEntryForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        active_loans = LoanEntry.objects.filter(
-            qaytarilgan_sana__isnull=True,
-        )
+        from django.db.models import Count
+
+        bosma_kitoblar = Book.objects.filter(mavjudlik="bosma")
+        active_loans = LoanEntry.objects.filter(qaytarilgan_sana__isnull=True)
         if self.instance.pk and self.instance.kitob_id:
-            active_loans = active_loans.exclude(kitob_id=self.instance.kitob_id)
-        active_book_ids = active_loans.values_list("kitob_id", flat=True)
-        self.fields["kitob"].queryset = Book.objects.exclude(id__in=active_book_ids).order_by("nomi")
-        self.fields["kitob"].label = _("Qaysi kitob berildi")
-        self.fields["kitob"].help_text = _("Faqat hozir qarzda bo'lmagan kitoblar ko'rinadi.")
+            active_loans = active_loans.exclude(pk=self.instance.pk)
+
+        busy_counts = dict(
+            active_loans.values("kitob_id").annotate(cnt=Count("id")).values_list("kitob_id", "cnt")
+        )
+
+        available_ids = [
+            b.id for b in bosma_kitoblar if busy_counts.get(b.id, 0) < (b.nusxalar_soni or 1)
+        ]
+
+        self.fields["kitob"].queryset = Book.objects.filter(id__in=available_ids).order_by("nomi")
+        self.fields["kitob"].label = _("Qaysi kitob berildi (Faqat bosma)")
+        self.fields["kitob"].help_text = _(
+            "Faqat kutubxonadagi mavjud bosma nusxalar ko'rinadi (onlayn kitoblar chiqmaydi)."
+        )
         self.fields["oquvchi"].label = _("Kimga berildi")
         self.fields["oquvchi"].help_text = _("Agar o'quvchi ro'yxatda bo'lmasa, avval «O'quvchilar» bo'limida qo'shing.")
         self.fields["izoh"].label = _("Izoh")
@@ -401,7 +412,7 @@ class BookAdmin(DigitalBookAdmin):
         return False
 
     def get_queryset(self, request):
-        return admin.ModelAdmin.get_queryset(self, request)
+        return Book.objects.filter(mavjudlik="bosma")
 
     def save_model(self, request, obj, form, change):
         admin.ModelAdmin.save_model(self, request, obj, form, change)
@@ -436,6 +447,11 @@ class LoanEntryAdmin(admin.ModelAdmin):
     readonly_fields = ("berilgan_sana", "kutubxonachi")
     actions = ["qaytarilgan_deb_belgilash"]
     date_hierarchy = "berilgan_sana"
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "kitob":
+            kwargs["queryset"] = Book.objects.filter(mavjudlik="bosma").order_by("nomi")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     fieldsets = (
         (
             _("Kitob berish"),

@@ -72,24 +72,34 @@ def test_form_boglangan_kitob_bolsa_ochirilmaydi(db, form_darslik):
         form_darslik.delete()
 
 
-def test_qaytarilmagan_kitobni_qayta_berib_bolmaydi(kitob, oquvchi, kutubxonachi):
-    LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
-    ikkinchi = LoanEntry(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+def test_raqamli_kitobni_qarzga_berib_bolmaydi(kitob, oquvchi, kutubxonachi):
+    """Raqamli kitobni qarzga berishga urinilganda validatsiya xatosi berilsin."""
+    kitob.mavjudlik = "raqamli"
+    kitob.save(update_fields=["mavjudlik"])
+    loan = LoanEntry(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+    with pytest.raises(ValidationError) as exc:
+        loan.full_clean()
+    assert "faqat bosma kitoblar uchun" in str(exc.value)
+
+
+def test_qaytarilmagan_kitobni_qayta_berib_bolmaydi(bosma_kitob, oquvchi, kutubxonachi):
+    LoanEntry.objects.create(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+    ikkinchi = LoanEntry(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
     with pytest.raises(ValidationError):
         ikkinchi.full_clean()
 
 
-def test_qaytarilgandan_keyin_qayta_berish_mumkin(kitob, oquvchi, kutubxonachi):
-    birinchi = LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+def test_qaytarilgandan_keyin_qayta_berish_mumkin(bosma_kitob, oquvchi, kutubxonachi):
+    birinchi = LoanEntry.objects.create(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
     birinchi.qaytarish()
-    ikkinchi = LoanEntry(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+    ikkinchi = LoanEntry(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
     ikkinchi.full_clean()  # xato bermasligi kerak
 
 
-def test_kitob_hozir_kimdaligi(kitob, oquvchi, kutubxonachi):
-    assert kitob.hozir_kimda() is None
-    LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
-    assert kitob.hozir_kimda() == oquvchi
+def test_kitob_hozir_kimdaligi(bosma_kitob, oquvchi, kutubxonachi):
+    assert bosma_kitob.hozir_kimda() is None
+    LoanEntry.objects.create(kitob=bosma_kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+    assert bosma_kitob.hozir_kimda() == oquvchi
 
 
 def test_korishni_hisoblash(kitob):

@@ -44,6 +44,13 @@ export default function KitobKartochka({ kitob, priority }: KitobKartochkaProps)
             {kitob.formatlar[0].toUpperCase()}
           </span>
         )}
+
+        {!kitob.oqish_mumkin && (
+          <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-semibold tracking-wide backdrop-blur-sm flex items-center gap-1">
+            <span>📕</span>
+            <span>{kitob.nusxalar_soni ? `${kitob.nusxalar_soni} ta nusxa` : t("bosmaBelgi")}</span>
+          </span>
+        )}
       </div>
 
       <div className="pt-3">
@@ -60,7 +67,10 @@ export default function KitobKartochka({ kitob, priority }: KitobKartochkaProps)
           {kitob.yil ? `, ${kitob.yil}` : ""}
           {/* Onlayn o'qib bo'lmaydigan kitob darhol ajralib tursin. */}
           {!kitob.oqish_mumkin && (
-            <span className="text-brand"> · {t("bosmaBelgi")}</span>
+            <span className="text-brand font-medium">
+              {" "}
+              · {t("bosmaBelgi")}{kitob.nusxalar_soni ? ` (${kitob.nusxalar_soni} ta)` : ""}
+            </span>
           )}
         </p>
       </div>

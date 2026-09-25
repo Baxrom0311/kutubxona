@@ -133,6 +133,12 @@ class BookListSerializer(serializers.ModelSerializer):
         qo'shimcha so'rov yuzaga kelmaydi."""
         return obj.mavjudlik == "raqamli" and bool(obj.fayllar.all())
 
+    def get_nusxalar_soni(self, obj) -> int | None:
+        """Bosma kitoblar uchun nusxalar soni (kamida 1)."""
+        if obj.mavjudlik == "bosma":
+            return obj.nusxalar_soni or 1
+        return None
+
 
 class BookDetailSerializer(BookListSerializer):
     """Bitta kitobning to'liq ma'lumotlari serializatori."""

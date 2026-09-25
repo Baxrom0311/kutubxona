@@ -53,6 +53,9 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
       yorliq: t("tili"),
       qiymat: kitob.til ? t(`tillar.${kitob.til}`) : t("nomalum"),
     },
+    ...(kitob.mavjudlik === "bosma" || !kitob.oqish_mumkin
+      ? [{ yorliq: t("nusxalarSoni"), qiymat: `${kitob.nusxalar_soni || 1} ta` }]
+      : []),
     { yorliq: t("korishlar"), qiymat: String(kitob.korishlar_soni ?? 0) },
   ];
 
@@ -121,11 +124,10 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
               <div>
                 <p className="text-[14px] font-medium text-ink">{t("bosmaSarlavha")}</p>
                 <p className="mt-1 text-[13px] leading-relaxed text-muted">{t("bosmaTavsif")}</p>
-                {kitob.nusxalar_soni ? (
-                  <p className="mt-2 text-[12px] font-semibold text-brand">
-                    {t("nusxalarSoni")}: {kitob.nusxalar_soni} ta nusxa
-                  </p>
-                ) : null}
+                <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-brand/10 text-brand text-[12px] font-semibold">
+                  <span>📚</span>
+                  <span>{t("nusxalarSoni")}: {kitob.nusxalar_soni || 1} ta nusxa</span>
+                </div>
               </div>
             </div>
           )}
