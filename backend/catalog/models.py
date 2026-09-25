@@ -204,6 +204,44 @@ class Book(models.Model):
         return self.nomi
 
 
+class DigitalBook(Book):
+    """Raqamli (onlayn o'qiladigan) kitoblar uchun proxy model."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Raqamli kitob"
+        verbose_name_plural = "Raqamli kitoblar"
+
+    def clean(self):
+        self.mavjudlik = "raqamli"
+        self.nusxalar_soni = None
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.mavjudlik = "raqamli"
+        self.nusxalar_soni = None
+        super().save(*args, **kwargs)
+
+
+class PrintedBook(Book):
+    """Faqat kutubxonada mavjud bosma kitoblar uchun proxy model."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Bosma kitob"
+        verbose_name_plural = "Bosma kitoblar"
+
+    def clean(self):
+        self.mavjudlik = "bosma"
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.mavjudlik = "bosma"
+        if not self.nusxalar_soni:
+            self.nusxalar_soni = 1
+        super().save(*args, **kwargs)
+
+
 class BookFile(models.Model):
     """Kitobning raqamli fayli (PDF yoki EPUB)."""
 

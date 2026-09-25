@@ -375,3 +375,58 @@ def test_admin_bosma_kitob_faylsiz_saqlanadi(client, form_darslik, kutubxonachi)
     assert book.nusxalar_soni == 5
     assert book.fayllar.count() == 0
 
+
+def test_proxy_modellar_admin_paneldan_joy_olgan(client, kutubxonachi, form_darslik):
+    """DigitalBook va PrintedBook admin panelda 2 ta mustaqil bo'lim sifatida ishlaydi."""
+    from catalog.models import DigitalBook, PrintedBook
+
+    kutubxonachi.is_superuser = True
+    kutubxonachi.save(update_fields=["is_superuser"])
+    client.force_login(kutubxonachi)
+
+    # 1. DigitalBook qo'shish
+    res = client.post(
+        "/admin/catalog/digitalbook/add/",
+        {
+            "nomi": "Elektron Gematologiya",
+            "tavsif": "PDF kitob",
+            "nashriyot": "Tibbiyot",
+            "til": "uz",
+            "turi": form_darslik.pk,
+            "fayllar-TOTAL_FORMS": "0",
+            "fayllar-INITIAL_FORMS": "0",
+            "fayllar-MIN_NUM_FORMS": "0",
+            "fayllar-MAX_NUM_FORMS": "1000",
+        },
+        follow=True,
+    )
+    assert res.status_code == 200
+    d_book = Book.objects.get(nomi="Elektron Gematologiya")
+    assert d_book.mavjudlik == "raqamli"
+    assert d_book.nusxalar_soni is None
+
+    # 2. PrintedBook qo'shish (Fayl umuman yo'q, faqat nusxalar soni)
+    res2 = client.post(
+        "/admin/catalog/printedbook/add/",
+        {
+            "nomi": "Bosma Nevrologiya",
+            "tavsif": "Kutubxonadagi kitob",
+            "nashriyot": "Fan",
+            "til": "uz",
+            "turi": form_darslik.pk,
+            "nusxalar_soni": "12",
+        },
+        follow=True,
+    )
+    assert res2.status_code == 200
+    p_book = Book.objects.get(nomi="Bosma Nevrologiya")
+    assert p_book.mavjudlik == "bosma"
+    assert p_book.nusxalar_soni == 12
+
+    # 3. Queryset tekshiruvi: DigitalBook faqat raqamlini, PrintedBook faqat bosmani ko'rsatadi
+    assert DigitalBook.objects.filter(pk=d_book.pk).exists()
+    assert not DigitalBook.objects.filter(pk=p_book.pk, mavjudlik="raqamli").exists()
+    assert PrintedBook.objects.filter(pk=p_book.pk).exists()
+    assert not PrintedBook.objects.filter(pk=d_book.pk, mavjudlik="bosma").exists()
+
+

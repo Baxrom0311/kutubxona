@@ -18,8 +18,10 @@ from catalog.models import (
     BookFile,
     ChatMessage,
     ChatSession,
+    DigitalBook,
     Form,
     LoanEntry,
+    PrintedBook,
     Reader,
     Subject,
 )
@@ -193,66 +195,11 @@ class BookFileInline(admin.TabularInline):
     readonly_fields = ("storage_key", "hajm")
 
 
-@admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
-    form = BookAdminForm
-    list_display = ("nomi", "turi", "mavjudlik_belgisi", "til", "yil", "korishlar_soni")
-    list_filter = ("mavjudlik", "turi", "til", "yil", "yonalishlar")
+class BaseBookAdmin(admin.ModelAdmin):
+    """Kitoblar uchun umumiy admin — qidiruv, m2m va muqova generatsiyasi."""
+
     search_fields = ("nomi", "mualliflar__ism", "slug", "nashriyot")
     filter_horizontal = ("mualliflar", "yonalishlar")
-    inlines = [BookFileInline]
-    fieldsets = (
-        (
-            _("Kitob haqida"),
-            {
-                "fields": ("til", "nomi", "mualliflar", "tavsif", "nashriyot", "yil"),
-                "description": _(
-                    "Avval kitob tilini tanlang. Kitob nomi va avtomatik muqova shu asl tilda saqlanadi."
-                ),
-            },
-        ),
-        (
-            _("Toifalash"),
-            {"fields": ("turi", "yonalishlar")},
-        ),
-        (
-            _("Mavjudligi"),
-            {
-                "fields": ("mavjudlik", "nusxalar_soni"),
-                "description": _(
-                    "<b>Raqamli</b> — pastdagi «Kitob fayllari» bo'limiga PDF yoki EPUB yuklang, "
-                    "kitob saytda o'qiladi.<br>"
-                    "<b>Faqat bosma nusxa</b> — kutubxonadagi nusxalar sonini kiriting. "
-                    "Saytda kitob ko'rinadi, lekin o'qish o'rniga «kutubxonadan olishingiz mumkin» yoziladi (fayl yuklanmaydi)."
-                ),
-            },
-        ),
-    )
-
-    class Media:
-        js = ("catalog/admin_book.js",)
-
-    @admin.display(description=_("Mavjudligi"))
-    def mavjudlik_belgisi(self, obj: Book) -> str:
-        if obj.mavjudlik == "bosma":
-            return "📕 Bosma nusxa"
-        if obj.fayllar.exists():
-            return "💻 Onlayn"
-        return "⚠️ Raqamli, lekin fayl yo'q"
-
-    @admin.display(description=_("Hozirgi muqova"))
-    def muqova_korinishi(self, obj: Book):
-        if not obj.pk or not obj.muqova_key:
-            return _("Muqova yuklanmagan")
-        url = get_saqlagich().ochiq_url(obj.muqova_key)
-        return format_html(
-            '<img src="{}" alt="" style="height:220px;border-radius:6px;'
-            'box-shadow:0 2px 12px rgba(0,0,0,.2)">',
-            url,
-        )
-
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
 
     def _generate_muqova(self, book: Book, saqlagich):
         key = cover_key(book)
@@ -267,15 +214,56 @@ class BookAdmin(admin.ModelAdmin):
         if should_regenerate:
             self._generate_muqova(form.instance, get_saqlagich())
 
+
+class DigitalBookForm(forms.ModelForm):
+    class Meta:
+        model = DigitalBook
+        fields = ("til", "nomi", "mualliflar", "tavsif", "nashriyot", "yil", "turi", "yonalishlar")
+
+
+@admin.register(DigitalBook)
+class DigitalBookAdmin(BaseBookAdmin):
+    """💻 Raqamli (onlayn) kitoblar boshqaruvi — faqat PDF/EPUB yuklanadi."""
+
+    form = DigitalBookForm
+    list_display = ("nomi", "turi", "holati", "til", "yil", "korishlar_soni")
+    list_filter = ("turi", "til", "yil", "yonalishlar")
+    inlines = [BookFileInline]
+    fieldsets = (
+        (
+            _("Kitob haqida"),
+            {
+                "fields": ("til", "nomi", "mualliflar", "tavsif", "nashriyot", "yil"),
+                "description": _(
+                    "Avval kitob tilini tanlang. Kitob nomi va avtomatik muqova shu tilda saqlanadi."
+                ),
+            },
+        ),
+        (
+            _("Toifalash"),
+            {"fields": ("turi", "yonalishlar")},
+        ),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(mavjudlik="raqamli")
+
+    @admin.display(description=_("Fayl holati"))
+    def holati(self, obj: DigitalBook) -> str:
+        if obj.fayllar.exists():
+            return "💻 Onlayn o'qiladi"
+        return "⚠️ Fayl yuklanmagan"
+
+    def save_model(self, request, obj, form, change):
+        obj.mavjudlik = "raqamli"
+        obj.nusxalar_soni = None
+        super().save_model(request, obj, form, change)
+
     def save_formset(self, request, form, formset, change):
         if formset.model is not BookFile:
             return super().save_formset(request, form, formset, change)
 
         saqlagich = get_saqlagich()
-
-        # `deleted_objects` aynan shu chaqiruvda to'ldiriladi; commit=False
-        # bo'lgani uchun obyektlar bazaga hali yozilmaydi va fayllarni
-        # saqlagichga yuklashdan oldin nazorat bizda qoladi.
         formset.save(commit=False)
 
         for deleted in formset.deleted_objects:
@@ -292,7 +280,6 @@ class BookAdmin(admin.ModelAdmin):
             if not inline_form.has_changed():
                 continue
 
-            # formset.save(commit=False) instance'ni allaqachon to'ldirgan
             obj = inline_form.instance
             uploaded = inline_form.cleaned_data.get("fayl")
             if uploaded:
@@ -319,6 +306,118 @@ class BookAdmin(admin.ModelAdmin):
     def _book_file_key(self, book: Book, filename: str, ext: str) -> str:
         safe_stem = Path(filename).stem[:80] or book.slug
         return f"kitoblar/{timezone.now():%Y}/{book.slug}/{safe_stem}-{uuid.uuid4().hex[:8]}.{ext}"
+
+
+class PrintedBookForm(forms.ModelForm):
+    class Meta:
+        model = PrintedBook
+        fields = ("til", "nomi", "mualliflar", "tavsif", "nashriyot", "yil", "turi", "yonalishlar", "nusxalar_soni")
+
+    def clean_nusxalar_soni(self):
+        soni = self.cleaned_data.get("nusxalar_soni")
+        if not soni or soni < 1:
+            raise forms.ValidationError("Kutubxonadagi nusxalar sonini kiriting (kamida 1).")
+        return soni
+
+
+@admin.register(PrintedBook)
+class PrintedBookAdmin(BaseBookAdmin):
+    """📕 Bosma kitoblar boshqaruvi — fayl yuklanmaydi, faqat nusxalar soni kiritiladi."""
+
+    form = PrintedBookForm
+    list_display = (
+        "nomi",
+        "turi",
+        "til",
+        "yil",
+        "nusxalar_soni_korinishi",
+        "band_nusxalar",
+        "korishlar_soni",
+    )
+    list_filter = ("turi", "til", "yil", "yonalishlar")
+    inlines = []  # Fayl yuklash mutlaqo yo'q!
+    fieldsets = (
+        (
+            _("Kitob haqida"),
+            {
+                "fields": ("til", "nomi", "mualliflar", "tavsif", "nashriyot", "yil"),
+                "description": _(
+                    "Avval kitob tilini tanlang. Kitob nomi va avtomatik muqova shu tilda saqlanadi."
+                ),
+            },
+        ),
+        (
+            _("Toifalash"),
+            {"fields": ("turi", "yonalishlar")},
+        ),
+        (
+            _("Kutubxonadagi nusxalar"),
+            {
+                "fields": ("nusxalar_soni",),
+                "description": _(
+                    "Kutubxonada mavjud bosma nusxalar sonini kiriting. Saytda «kutubxonadan olasiz» deb ko'rinadi."
+                ),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(mavjudlik="bosma")
+
+    @admin.display(description=_("Nusxalar soni"))
+    def nusxalar_soni_korinishi(self, obj: PrintedBook) -> str:
+        return f"{obj.nusxalar_soni or 1} ta"
+
+    @admin.display(description=_("Band / Qarzda"))
+    def band_nusxalar(self, obj: PrintedBook) -> str:
+        qarz_soni = obj.qarzlar.filter(qaytarilgan_sana__isnull=True).count()
+        jami = obj.nusxalar_soni or 1
+        if qarz_soni >= jami:
+            return f"❌ Hammasi berilgan ({qarz_soni}/{jami})"
+        if qarz_soni > 0:
+            return f"⚠️ {qarz_soni} ta berilgan ({jami - qarz_soni} ta bo'sh)"
+        return f"✅ Barchasi bo'sh ({jami} ta)"
+
+    def save_model(self, request, obj, form, change):
+        obj.mavjudlik = "bosma"
+        if not obj.nusxalar_soni:
+            obj.nusxalar_soni = 1
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(Book)
+class BookAdmin(DigitalBookAdmin):
+    """Orqaga moslik uchun BookAdmin klassi."""
+
+    model = Book
+    form = BookAdminForm
+    fieldsets = (
+        (
+            _("Kitob haqida"),
+            {
+                "fields": ("til", "nomi", "mualliflar", "tavsif", "nashriyot", "yil"),
+                "description": _(
+                    "Avval kitob tilini tanlang. Kitob nomi va avtomatik muqova shu asl tilda saqlanadi."
+                ),
+            },
+        ),
+        (
+            _("Toifalash"),
+            {"fields": ("turi", "yonalishlar")},
+        ),
+        (
+            _("Mavjudligi"),
+            {
+                "fields": ("mavjudlik", "nusxalar_soni"),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        return admin.ModelAdmin.get_queryset(self, request)
+
+    def save_model(self, request, obj, form, change):
+        admin.ModelAdmin.save_model(self, request, obj, form, change)
 
 
 @admin.register(Reader)
