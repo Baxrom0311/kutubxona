@@ -6,13 +6,15 @@ from django.core.exceptions import ValidationError
 
 from catalog.admin import (
     BookAdmin,
+    DigitalBookAdmin,
     FormAdmin,
     LoanEntryAdmin,
     LoanEntryForm,
+    PrintedBookAdmin,
     QaytarilganFilter,
     SubjectAdmin,
 )
-from catalog.models import Book, Form, LoanEntry, Subject
+from catalog.models import Book, DigitalBook, Form, LoanEntry, PrintedBook, Subject
 
 pytestmark = pytest.mark.django_db
 
@@ -129,7 +131,7 @@ def test_admin_muqova_avtomatik_generatsiya_qiladi(client, kitob, kutubxonachi):
     assert kitob.muqova_key == ""
 
     response = client.post(
-        f"/admin/catalog/book/{kitob.pk}/change/",
+        f"/admin/catalog/digitalbook/{kitob.pk}/change/",
         {
             "nomi": kitob.nomi,
             "tavsif": "",
@@ -137,10 +139,8 @@ def test_admin_muqova_avtomatik_generatsiya_qiladi(client, kitob, kutubxonachi):
             "yil": kitob.yil,
             "til": kitob.til,
             "turi": kitob.turi_id,
-            "mavjudlik": "raqamli",
             "mualliflar": [m.pk for m in kitob.mualliflar.all()],
             "yonalishlar": [y.pk for y in kitob.yonalishlar.all()],
-            "muqova_key": "",
             "fayllar-TOTAL_FORMS": "0",
             "fayllar-INITIAL_FORMS": "0",
             "fayllar-MIN_NUM_FORMS": "0",
@@ -158,8 +158,8 @@ def test_admin_muqova_avtomatik_generatsiya_qiladi(client, kitob, kutubxonachi):
 
 def test_admin_muqova_yuklash_maydoni_yoq(rf):
     """Muqova qo'lda yuklanmaydi; admin form faqat generatsiyadan foydalanadi."""
-    model_admin = BookAdmin(Book, site)
-    request = rf.get("/admin/catalog/book/add/")
+    model_admin = DigitalBookAdmin(DigitalBook, site)
+    request = rf.get("/admin/catalog/digitalbook/add/")
     request.user = type("User", (), {"has_perm": lambda self, perm: True})()
     form_class = model_admin.get_form(request)
 
@@ -188,8 +188,8 @@ def test_admin_tur_va_yonalish_bitta_nom_bilan_korinadi(rf):
 
 def test_admin_kitobda_til_nomdan_oldin_keladi(rf):
     """Kutubxonachi avval asl tilni tanlaydi, keyin nomni o'sha tilda yozadi."""
-    model_admin = BookAdmin(Book, site)
-    request = rf.get("/admin/catalog/book/add/")
+    model_admin = DigitalBookAdmin(DigitalBook, site)
+    request = rf.get("/admin/catalog/digitalbook/add/")
     request.user = type("User", (), {"has_perm": lambda self, perm: True})()
     form_class = model_admin.get_form(request)
 
@@ -209,7 +209,7 @@ def test_admin_pdf_fayl_yuklaydi(client, kitob, kutubxonachi):
     client.force_login(kutubxonachi)
 
     response = client.post(
-        f"/admin/catalog/book/{kitob.pk}/change/",
+        f"/admin/catalog/digitalbook/{kitob.pk}/change/",
         {
             "nomi": kitob.nomi,
             "tavsif": "",
@@ -217,10 +217,8 @@ def test_admin_pdf_fayl_yuklaydi(client, kitob, kutubxonachi):
             "yil": kitob.yil,
             "til": kitob.til,
             "turi": kitob.turi_id,
-            "mavjudlik": "raqamli",
             "mualliflar": [m.pk for m in kitob.mualliflar.all()],
             "yonalishlar": [y.pk for y in kitob.yonalishlar.all()],
-            "muqova_key": "",
             "fayllar-TOTAL_FORMS": "1",
             "fayllar-INITIAL_FORMS": "0",
             "fayllar-MIN_NUM_FORMS": "0",
@@ -260,7 +258,7 @@ def test_admin_muqova_nom_yoki_til_ozgarsa_qayta_generatsiya_qiladi(client, kito
     storage.muqova_yuklash(kitob.muqova_key, BytesIO(b"old-cover"), content_type="image/png")
 
     response = client.post(
-        f"/admin/catalog/book/{kitob.pk}/change/",
+        f"/admin/catalog/digitalbook/{kitob.pk}/change/",
         {
             "nomi": "Cardiology Basics",
             "tavsif": "",
@@ -268,10 +266,8 @@ def test_admin_muqova_nom_yoki_til_ozgarsa_qayta_generatsiya_qiladi(client, kito
             "yil": kitob.yil,
             "til": "en",
             "turi": kitob.turi_id,
-            "mavjudlik": "raqamli",
             "mualliflar": [m.pk for m in kitob.mualliflar.all()],
             "yonalishlar": [y.pk for y in kitob.yonalishlar.all()],
-            "muqova_key": kitob.muqova_key,
             "fayllar-TOTAL_FORMS": "0",
             "fayllar-INITIAL_FORMS": "0",
             "fayllar-MIN_NUM_FORMS": "0",
@@ -290,28 +286,29 @@ def test_admin_muqova_nom_yoki_til_ozgarsa_qayta_generatsiya_qiladi(client, kito
 
 def test_admin_fieldsets_ortiqcha_tizim_va_muqova_yoq(rf):
     """Adminda Muqova va Tizim ma'lumotlari fieldsetlari ko'rsatilmasin."""
-    model_admin = BookAdmin(Book, site)
-    request = rf.get("/admin/catalog/book/add/")
-    request.user = type("User", (), {"has_perm": lambda self, perm: True})()
+    for model_cls, admin_cls, endpoint in [
+        (DigitalBook, DigitalBookAdmin, "/admin/catalog/digitalbook/add/"),
+        (PrintedBook, PrintedBookAdmin, "/admin/catalog/printedbook/add/"),
+    ]:
+        model_admin = admin_cls(model_cls, site)
+        request = rf.get(endpoint)
+        request.user = type("User", (), {"has_perm": lambda self, perm: True})()
 
-    fieldsets = model_admin.get_fieldsets(request)
-    sarlavhalar = [f[0] for f in fieldsets]
+        fieldsets = model_admin.get_fieldsets(request)
+        sarlavhalar = [f[0] for f in fieldsets]
 
-    assert "Muqova" not in sarlavhalar
-    assert "Tizim ma'lumotlari" not in sarlavhalar
+        assert "Muqova" not in sarlavhalar
+        assert "Tizim ma'lumotlari" not in sarlavhalar
 
-    # Barcha ko'rsatiladigan maydonlar
-    all_fields = []
-    for _, f_dict in fieldsets:
-        all_fields.extend(f_dict.get("fields", ()))
+        all_fields = []
+        for _, f_dict in fieldsets:
+            all_fields.extend(f_dict.get("fields", ()))
 
-    assert "slug" not in all_fields
-    assert "muqova_key" not in all_fields
-    assert "korishlar_soni" not in all_fields
-    assert "qoshilgan_sana" not in all_fields
-    assert "muqova_korinishi" not in all_fields
-    assert "nusxalar_soni" in all_fields
-    assert "mavjudlik" in all_fields
+        assert "slug" not in all_fields
+        assert "muqova_key" not in all_fields
+        assert "korishlar_soni" not in all_fields
+        assert "qoshilgan_sana" not in all_fields
+        assert "muqova_korinishi" not in all_fields
 
 
 def test_admin_bosma_kitob_nusxalar_sonini_talab_qiladi(client, form_darslik, kutubxonachi):
@@ -322,24 +319,19 @@ def test_admin_bosma_kitob_nusxalar_sonini_talab_qiladi(client, form_darslik, ku
 
     # Nusxalar sonisiz saqlashga urinish
     res = client.post(
-        "/admin/catalog/book/add/",
+        "/admin/catalog/printedbook/add/",
         {
             "nomi": "Jarrohlik asoslari",
             "tavsif": "",
             "nashriyot": "",
             "til": "uz",
             "turi": form_darslik.pk,
-            "mavjudlik": "bosma",
             "nusxalar_soni": "",
-            "fayllar-TOTAL_FORMS": "0",
-            "fayllar-INITIAL_FORMS": "0",
-            "fayllar-MIN_NUM_FORMS": "0",
-            "fayllar-MAX_NUM_FORMS": "1000",
         },
     )
     # Formada xatolik bo'lishi kerak
     assert res.status_code == 200
-    assert "Bosma kitob uchun nusxalar sonini kiriting" in res.content.decode("utf-8")
+    assert "Kutubxonadagi nusxalar sonini kiriting" in res.content.decode("utf-8")
 
 
 def test_admin_bosma_kitob_faylsiz_saqlanadi(client, form_darslik, kutubxonachi):
@@ -349,23 +341,14 @@ def test_admin_bosma_kitob_faylsiz_saqlanadi(client, form_darslik, kutubxonachi)
     client.force_login(kutubxonachi)
 
     res = client.post(
-        "/admin/catalog/book/add/",
+        "/admin/catalog/printedbook/add/",
         {
             "nomi": "Terapevtik stomatologiya",
             "tavsif": "Darslik",
             "nashriyot": "Ibn Sino",
             "til": "uz",
             "turi": form_darslik.pk,
-            "mavjudlik": "bosma",
             "nusxalar_soni": "5",
-            "fayllar-TOTAL_FORMS": "1",
-            "fayllar-INITIAL_FORMS": "0",
-            "fayllar-MIN_NUM_FORMS": "0",
-            "fayllar-MAX_NUM_FORMS": "1000",
-            "fayllar-0-id": "",
-            "fayllar-0-format": "",
-            "fayllar-0-sahifalar_soni": "",
-            "fayllar-0-tartib": "0",
         },
         follow=True,
     )
@@ -428,5 +411,26 @@ def test_proxy_modellar_admin_paneldan_joy_olgan(client, kutubxonachi, form_dars
     assert not DigitalBook.objects.filter(pk=p_book.pk, mavjudlik="raqamli").exists()
     assert PrintedBook.objects.filter(pk=p_book.pk).exists()
     assert not PrintedBook.objects.filter(pk=d_book.pk, mavjudlik="bosma").exists()
+
+
+def test_admin_umumiy_kitoblar_menyu_yoq_faqat_bosma_va_raqamli(client, kutubxonachi):
+    """Admin panelda umumiy 'Kitoblar' (Book) bo'limi yo'q, faqat 'Raqamli kitoblar' va 'Bosma kitoblar' mavjud."""
+    kutubxonachi.is_superuser = True
+    kutubxonachi.save(update_fields=["is_superuser"])
+    client.force_login(kutubxonachi)
+
+    # Django admin registry-da Book yo'q, DigitalBook va PrintedBook bor
+    assert Book not in site._registry
+    assert DigitalBook in site._registry
+    assert PrintedBook in site._registry
+
+    # Admin bosh sahifasida tekshirish
+    res = client.get("/admin/")
+    assert res.status_code == 200
+    content = res.content.decode("utf-8")
+    assert "/admin/catalog/digitalbook/" in content
+    assert "/admin/catalog/printedbook/" in content
+    assert "/admin/catalog/book/" not in content
+
 
 

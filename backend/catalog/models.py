@@ -38,6 +38,11 @@ class Author(models.Model):
         verbose_name_plural = "Mualliflar"
         ordering = ["ism"]
 
+    @property
+    def kitoblar_soni(self) -> int:
+        """Ushbu muallifga tegishli kitoblar soni."""
+        return self.kitoblar.count()
+
     def __str__(self) -> str:
         return self.ism
 
@@ -64,6 +69,17 @@ class Form(models.Model):
             self.slug = generate_unique_slug(self, self.nomi_uz, max_length=100)
         super().save(*args, **kwargs)
 
+    @property
+    def kitoblar_soni(self) -> int:
+        """Ushbu turdagi kitoblar soni."""
+        if hasattr(self, "_kitoblar_soni"):
+            return self._kitoblar_soni
+        return self.kitoblar.count()
+
+    @kitoblar_soni.setter
+    def kitoblar_soni(self, value: int):
+        self._kitoblar_soni = value
+
     def __str__(self) -> str:
         return self.nomi_uz
 
@@ -81,6 +97,8 @@ class Subject(models.Model):
         null=True,
         blank=True,
         related_name="bolalar",
+        verbose_name="Yuqori yo'nalish",
+        help_text="Ierarxik tuzilma uchun asosiy yo'nalishni tanlang.",
     )
     tartib = models.PositiveSmallIntegerField(default=0)
 
@@ -96,6 +114,22 @@ class Subject(models.Model):
         if self.ota:
             return f"{self.ota.toliq_nomi()} → {self.nomi_uz}"
         return self.nomi_uz
+
+    @property
+    def kitoblar_soni(self) -> int:
+        """Ushbu yo'nalishdagi kitoblar soni."""
+        if hasattr(self, "_kitoblar_soni"):
+            return self._kitoblar_soni
+        return self.kitoblar.count()
+
+    @kitoblar_soni.setter
+    def kitoblar_soni(self, value: int):
+        self._kitoblar_soni = value
+
+    @property
+    def bolalar_soni(self) -> int:
+        """Quyi yo'nalishlar (tarmoqlar) soni."""
+        return self.bolalar.count()
 
     def clean(self):
         super().clean()
@@ -153,12 +187,30 @@ class Book(models.Model):
         help_text="Bosma kitob uchun kutubxonadagi nusxalar soni.",
     )
 
-    mualliflar = models.ManyToManyField(Author, blank=True, related_name="kitoblar")
-    turi = models.ForeignKey(Form, on_delete=models.PROTECT, related_name="kitoblar")
-    yonalishlar = models.ManyToManyField(Subject, blank=True, related_name="kitoblar")
+    mualliflar = models.ManyToManyField(
+        Author,
+        blank=True,
+        related_name="kitoblar",
+        verbose_name="Mualliflar",
+        help_text="Kitob mualliflari",
+    )
+    turi = models.ForeignKey(
+        Form,
+        on_delete=models.PROTECT,
+        related_name="kitoblar",
+        verbose_name="Kitob turi",
+        help_text="Kitob turi (darslik, monografiya, badiiy adabiyot va h.k.)",
+    )
+    yonalishlar = models.ManyToManyField(
+        Subject,
+        blank=True,
+        related_name="kitoblar",
+        verbose_name="Yo'nalishlar",
+        help_text="Tegishli fan yoki soha yo'nalishlari",
+    )
 
-    korishlar_soni = models.PositiveIntegerField(default=0)
-    qoshilgan_sana = models.DateTimeField(auto_now_add=True, db_index=True)
+    korishlar_soni = models.PositiveIntegerField(default=0, verbose_name="Ko'rishlar soni")
+    qoshilgan_sana = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Qo'shilgan sana")
 
     class Meta:
         verbose_name = "Kitob"
@@ -199,6 +251,26 @@ class Book(models.Model):
         """Kitob hozir qaysi o'quvchidaligini qaytaradi (qaytarilmagan bo'lsa)."""
         loan = self.qarzlar.filter(qaytarilgan_sana__isnull=True).select_related("oquvchi").first()
         return loan.oquvchi if loan else None
+
+    @property
+    def mualliflar_matni(self) -> str:
+        """Mualliflar ismlari ro'yxatini matn ko'rinishida qaytaradi."""
+        return ", ".join(m.ism for m in self.mualliflar.all()) or "Muallif ko'rsatilmagan"
+
+    def faol_qarzlar(self):
+        """Hozir o'quvchilarda bo'lgan (qaytarilmagan) qarz yozuvlari."""
+        return self.qarzlar.filter(qaytarilgan_sana__isnull=True)
+
+    @property
+    def band_nusxalar_soni(self) -> int:
+        """Hozir o'quvchilarda qarzda turgan nusxalar soni."""
+        return self.faol_qarzlar().count()
+
+    @property
+    def bosh_nusxalar_soni(self) -> int:
+        """Kutubxonada mavjud bo'sh nusxalar soni."""
+        jami = self.nusxalar_soni or 1
+        return max(0, jami - self.band_nusxalar_soni)
 
     def __str__(self) -> str:
         return self.nomi
@@ -250,12 +322,18 @@ class BookFile(models.Model):
         ("epub", "EPUB"),
     ]
 
-    kitob = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="fayllar")
-    storage_key = models.CharField(max_length=500)
-    format = models.CharField(max_length=10, choices=FORMAT_TANLOVI)
-    hajm = models.PositiveBigIntegerField(default=0)
-    sahifalar_soni = models.PositiveIntegerField(null=True, blank=True)
-    tartib = models.PositiveSmallIntegerField(default=0)
+    kitob = models.ForeignKey(
+        Book,
+        on_delete=models.CASCADE,
+        related_name="fayllar",
+        verbose_name="Kitob",
+        help_text="Fayl tegishli bo'lgan kitob",
+    )
+    storage_key = models.CharField(max_length=500, verbose_name="Storage kaliti")
+    format = models.CharField(max_length=10, choices=FORMAT_TANLOVI, verbose_name="Fayl formati")
+    hajm = models.PositiveBigIntegerField(default=0, verbose_name="Fayl hajmi (baytlarda)")
+    sahifalar_soni = models.PositiveIntegerField(null=True, blank=True, verbose_name="Sahifalar soni")
+    tartib = models.PositiveSmallIntegerField(default=0, verbose_name="Tartib raqami")
 
     class Meta:
         verbose_name = "Kitob fayli"
@@ -269,15 +347,29 @@ class BookFile(models.Model):
 class Reader(models.Model):
     """Kutubxona o'quvchisi (login talab qilinmaydi, jurnal uchun)."""
 
-    fish = models.CharField(max_length=200, db_index=True)
-    guruh = models.CharField(max_length=50, blank=True)
-    telefon = models.CharField(max_length=20, blank=True)
-    izoh = models.TextField(blank=True)
+    fish = models.CharField(max_length=200, db_index=True, verbose_name="F.I.SH.")
+    guruh = models.CharField(max_length=50, blank=True, verbose_name="Guruhi")
+    telefon = models.CharField(max_length=20, blank=True, verbose_name="Telefon raqami")
+    izoh = models.TextField(blank=True, verbose_name="Izoh")
 
     class Meta:
         verbose_name = "O'quvchi"
         verbose_name_plural = "O'quvchilar"
         ordering = ["fish"]
+
+    def faol_qarzlar(self):
+        """O'quvchining hozirgi qaytarilmagan kitoblari."""
+        return self.qarzlar.filter(qaytarilgan_sana__isnull=True).select_related("kitob")
+
+    @property
+    def faol_qarzlar_soni(self) -> int:
+        """O'quvchi qo'lidagi qaytarilmagan kitoblar soni."""
+        return self.faol_qarzlar().count()
+
+    @property
+    def qarzdormi(self) -> bool:
+        """O'quvchida qaytarilmagan kitob bormi?"""
+        return self.faol_qarzlar().exists()
 
     def __str__(self) -> str:
         if self.guruh:
@@ -288,21 +380,49 @@ class Reader(models.Model):
 class LoanEntry(models.Model):
     """Kitob berish/qaytarish jurnali yozuvi."""
 
-    kitob = models.ForeignKey(Book, on_delete=models.PROTECT, related_name="qarzlar")
-    oquvchi = models.ForeignKey(Reader, on_delete=models.PROTECT, related_name="qarzlar")
-    berilgan_sana = models.DateTimeField(auto_now_add=True)
-    qaytarilgan_sana = models.DateTimeField(null=True, blank=True)
+    kitob = models.ForeignKey(
+        Book,
+        on_delete=models.PROTECT,
+        related_name="qarzlar",
+        verbose_name="Kitob",
+        help_text="Berilgan bosma kitob",
+    )
+    oquvchi = models.ForeignKey(
+        Reader,
+        on_delete=models.PROTECT,
+        related_name="qarzlar",
+        verbose_name="O'quvchi",
+        help_text="Kitob berilgan o'quvchi",
+    )
+    berilgan_sana = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        verbose_name="Berilgan sana",
+    )
+    qaytarilgan_sana = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="Qaytarilgan sana",
+        help_text="Kitob qaytarilganda sana yoziladi. Bo'sh bo'lsa — kitob qarzda hisoblanadi.",
+    )
     kutubxonachi = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="berilgan_qarzlar",
+        verbose_name="Kutubxonachi",
+        help_text="Kitobni bergan xodim",
     )
-    izoh = models.TextField(blank=True)
+    izoh = models.TextField(blank=True, verbose_name="Izoh")
 
     class Meta:
         verbose_name = "Kitob berish/qaytarish"
         verbose_name_plural = "Kitob berish/qaytarish"
         ordering = ["-berilgan_sana"]
+        indexes = [
+            models.Index(fields=["kitob", "qaytarilgan_sana"]),
+            models.Index(fields=["oquvchi", "qaytarilgan_sana"]),
+        ]
 
     def clean(self):
         super().clean()
@@ -394,11 +514,15 @@ class ChatMessage(models.Model):
     ]
 
     session = models.ForeignKey(
-        ChatSession, on_delete=models.CASCADE, related_name="xabarlar"
+        ChatSession,
+        on_delete=models.CASCADE,
+        related_name="xabarlar",
+        verbose_name="Suhbat sessiyasi",
+        help_text="Xabar tegishli bo'lgan AI sessiyasi",
     )
-    rol = models.CharField(max_length=20, choices=ROL_TANLOVI)
-    matn = models.TextField()
-    yaratilgan_sana = models.DateTimeField(auto_now_add=True)
+    rol = models.CharField(max_length=20, choices=ROL_TANLOVI, verbose_name="Xabar muallifi")
+    matn = models.TextField(verbose_name="Xabar matni")
+    yaratilgan_sana = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="Yaratilgan sana")
 
     class Meta:
         verbose_name = "Suhbat xabari"

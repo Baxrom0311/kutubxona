@@ -385,9 +385,8 @@ class PrintedBookAdmin(BaseBookAdmin):
         super().save_model(request, obj, form, change)
 
 
-@admin.register(Book)
 class BookAdmin(DigitalBookAdmin):
-    """Orqaga moslik uchun BookAdmin klassi."""
+    """Orqaga moslik uchun BookAdmin klassi (Admin panelda ro'yxatdan o'tkazilmaydi)."""
 
     model = Book
     form = BookAdminForm
