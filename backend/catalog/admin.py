@@ -385,32 +385,20 @@ class PrintedBookAdmin(BaseBookAdmin):
         super().save_model(request, obj, form, change)
 
 
+@admin.register(Book)
 class BookAdmin(DigitalBookAdmin):
-    """Orqaga moslik uchun BookAdmin klassi (Admin panelda ro'yxatdan o'tkazilmaydi)."""
+    """
+    LoanEntryAdmin autocomplete ishlashi uchun ro'yxatdan o'tkaziladi.
+    Admin menyusida (app listda) 'Kitoblar' ko'rsatilmaydi — faqat 'Bosma kitoblar'
+    va 'Raqamli kitoblar' ko'rinadi.
+    """
 
     model = Book
     form = BookAdminForm
-    fieldsets = (
-        (
-            _("Kitob haqida"),
-            {
-                "fields": ("til", "nomi", "mualliflar", "tavsif", "nashriyot", "yil"),
-                "description": _(
-                    "Avval kitob tilini tanlang. Kitob nomi va avtomatik muqova shu asl tilda saqlanadi."
-                ),
-            },
-        ),
-        (
-            _("Toifalash"),
-            {"fields": ("turi", "yonalishlar")},
-        ),
-        (
-            _("Mavjudligi"),
-            {
-                "fields": ("mavjudlik", "nusxalar_soni"),
-            },
-        ),
-    )
+    search_fields = ("nomi", "mualliflar__ism", "slug", "nashriyot")
+
+    def has_module_permission(self, request):
+        return False
 
     def get_queryset(self, request):
         return admin.ModelAdmin.get_queryset(self, request)

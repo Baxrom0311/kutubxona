@@ -413,18 +413,20 @@ def test_proxy_modellar_admin_paneldan_joy_olgan(client, kutubxonachi, form_dars
     assert not PrintedBook.objects.filter(pk=d_book.pk, mavjudlik="bosma").exists()
 
 
-def test_admin_umumiy_kitoblar_menyu_yoq_faqat_bosma_va_raqamli(client, kutubxonachi):
-    """Admin panelda umumiy 'Kitoblar' (Book) bo'limi yo'q, faqat 'Raqamli kitoblar' va 'Bosma kitoblar' mavjud."""
+def test_admin_umumiy_kitoblar_menyu_yoq_faqat_bosma_va_raqamli(client, kutubxonachi, rf):
+    """Admin panelda umumiy 'Kitoblar' (Book) menyuda ko'rinmaydi, faqat 'Raqamli kitoblar' va 'Bosma kitoblar' mavjud."""
     kutubxonachi.is_superuser = True
     kutubxonachi.save(update_fields=["is_superuser"])
     client.force_login(kutubxonachi)
 
-    # Django admin registry-da Book yo'q, DigitalBook va PrintedBook bor
-    assert Book not in site._registry
-    assert DigitalBook in site._registry
-    assert PrintedBook in site._registry
+    # Book has_module_permission=False bo'lgani uchun admin menyusida ko'rsatilmaydi
+    request = rf.get("/admin/")
+    request.user = kutubxonachi
+    assert site._registry[Book].has_module_permission(request) is False
+    assert site._registry[DigitalBook].has_module_permission(request) is True
+    assert site._registry[PrintedBook].has_module_permission(request) is True
 
-    # Admin bosh sahifasida tekshirish
+    # Admin bosh sahifasida tekshirish: faqat digitalbook va printedbook chiqadi
     res = client.get("/admin/")
     assert res.status_code == 200
     content = res.content.decode("utf-8")
