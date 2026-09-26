@@ -6,6 +6,8 @@ import uuid
 from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.db.models import Count, Q, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -54,6 +56,24 @@ class QaytarilganFilter(admin.SimpleListFilter):
         return queryset
 
 
+def mavjud_bosma_kitoblar(instance=None):
+    """Hozir bo'sh nusxasi bor bosma kitoblar.
+
+    Hisob bazada bajariladi — barcha kitoblarni xotiraga yuklamaydi.
+    Yozuv tahrirlanayotgan bo'lsa, o'sha yozuvning o'zi band deb sanalmaydi.
+    """
+    faol = Q(qarzlar__qaytarilgan_sana__isnull=True)
+    if instance is not None and instance.pk:
+        faol &= ~Q(qarzlar__pk=instance.pk)
+
+    return (
+        Book.objects.filter(mavjudlik="bosma")
+        .annotate(band=Count("qarzlar", filter=faol, distinct=True))
+        .filter(band__lt=Coalesce("nusxalar_soni", Value(1)))
+        .order_by("nomi")
+    )
+
+
 class LoanEntryForm(forms.ModelForm):
     """Kutubxonachi kitob berayotganda faqat mavjud BOSMA kitoblarni ko'rsatuvchi form."""
 
@@ -63,25 +83,12 @@ class LoanEntryForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from django.db.models import Count
 
-        bosma_kitoblar = Book.objects.filter(mavjudlik="bosma")
-        active_loans = LoanEntry.objects.filter(qaytarilgan_sana__isnull=True)
-        if self.instance.pk and self.instance.kitob_id:
-            active_loans = active_loans.exclude(pk=self.instance.pk)
-
-        busy_counts = dict(
-            active_loans.values("kitob_id").annotate(cnt=Count("id")).values_list("kitob_id", "cnt")
-        )
-
-        available_ids = [
-            b.id for b in bosma_kitoblar if busy_counts.get(b.id, 0) < (b.nusxalar_soni or 1)
-        ]
-
-        self.fields["kitob"].queryset = Book.objects.filter(id__in=available_ids).order_by("nomi")
+        self.fields["kitob"].queryset = mavjud_bosma_kitoblar(self.instance)
         self.fields["kitob"].label = _("Qaysi kitob berildi (Faqat bosma)")
         self.fields["kitob"].help_text = _(
-            "Faqat kutubxonadagi mavjud bosma nusxalar ko'rinadi (onlayn kitoblar chiqmaydi)."
+            "Faqat kutubxonadagi bo'sh bosma nusxalar ko'rinadi "
+            "(onlayn kitoblar va hammasi berilgan kitoblar chiqmaydi)."
         )
         self.fields["oquvchi"].label = _("Kimga berildi")
         self.fields["oquvchi"].help_text = _("Agar o'quvchi ro'yxatda bo'lmasa, avval «O'quvchilar» bo'limida qo'shing.")
@@ -373,7 +380,20 @@ class PrintedBookAdmin(BaseBookAdmin):
     )
 
     def get_queryset(self, request):
-        return super().get_queryset(request).filter(mavjudlik="bosma")
+        # Qarzlar bitta so'rovda sanaladi — aks holda ro'yxatdagi har kitob
+        # uchun alohida COUNT ketardi (N+1).
+        return (
+            super()
+            .get_queryset(request)
+            .filter(mavjudlik="bosma")
+            .annotate(
+                band_nusxalar=Count(
+                    "qarzlar",
+                    filter=Q(qarzlar__qaytarilgan_sana__isnull=True),
+                    distinct=True,
+                )
+            )
+        )
 
     @admin.display(description=_("Nusxalar soni"))
     def nusxalar_soni_korinishi(self, obj: PrintedBook) -> str:
@@ -381,7 +401,7 @@ class PrintedBookAdmin(BaseBookAdmin):
 
     @admin.display(description=_("Band / Qarzda"))
     def band_nusxalar(self, obj: PrintedBook) -> str:
-        qarz_soni = obj.qarzlar.filter(qaytarilgan_sana__isnull=True).count()
+        qarz_soni = obj.band_nusxalar_soni
         jami = obj.nusxalar_soni or 1
         if qarz_soni >= jami:
             return f"❌ Hammasi berilgan ({qarz_soni}/{jami})"
@@ -412,7 +432,11 @@ class BookAdmin(DigitalBookAdmin):
         return False
 
     def get_queryset(self, request):
-        return Book.objects.filter(mavjudlik="bosma")
+        # LoanEntryAdmin autocomplete shu ro'yxatdan qidiradi, shuning uchun
+        # forma queryset'i bilan bir xil bo'lishi kerak — aks holda
+        # kutubxonachi tanlagan kitob saqlashda "noto'g'ri tanlov" deb
+        # rad etilardi.
+        return mavjud_bosma_kitoblar()
 
     def save_model(self, request, obj, form, change):
         admin.ModelAdmin.save_model(self, request, obj, form, change)
@@ -448,10 +472,6 @@ class LoanEntryAdmin(admin.ModelAdmin):
     actions = ["qaytarilgan_deb_belgilash"]
     date_hierarchy = "berilgan_sana"
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "kitob":
-            kwargs["queryset"] = Book.objects.filter(mavjudlik="bosma").order_by("nomi")
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
     fieldsets = (
         (
             _("Kitob berish"),

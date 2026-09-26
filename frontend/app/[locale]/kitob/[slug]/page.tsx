@@ -46,6 +46,12 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
   const yonalishNomi =
     kitob.yonalishlar?.[0]?.nomi?.[lang] || kitob.yonalishlar?.[0]?.nomi?.uz || turNomi;
 
+  // Bosma kitobda qarzga berilganlari ayirilgan bo'sh nusxalar ko'rsatiladi.
+  const bosmaKitob = kitob.mavjudlik === "bosma" || !kitob.oqish_mumkin;
+  const jamiNusxa = kitob.nusxalar_soni ?? 1;
+  const boshNusxa = kitob.bosh_nusxalar_soni ?? jamiNusxa;
+  const hammasiBand = bosmaKitob && boshNusxa <= 0;
+
   const malumotlar = [
     { yorliq: t("nashriyot"), qiymat: kitob.nashriyot || t("nomalum") },
     { yorliq: t("chiqarilganYili"), qiymat: kitob.yil ? String(kitob.yil) : t("nomalum") },
@@ -53,8 +59,8 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
       yorliq: t("tili"),
       qiymat: kitob.til ? t(`tillar.${kitob.til}`) : t("nomalum"),
     },
-    ...(kitob.mavjudlik === "bosma" || !kitob.oqish_mumkin
-      ? [{ yorliq: t("nusxalarSoni"), qiymat: `${kitob.nusxalar_soni || 1} ta` }]
+    ...(bosmaKitob
+      ? [{ yorliq: t("boshNusxalar"), qiymat: `${boshNusxa} / ${jamiNusxa}` }]
       : []),
     { yorliq: t("korishlar"), qiymat: String(kitob.korishlar_soni ?? 0) },
   ];
@@ -122,11 +128,25 @@ export default async function KitobDetailPage({ params }: KitobDetailPageProps) 
             <div className="rounded-xl bg-surface-2 px-4 py-4 flex gap-3">
               <Library size={19} strokeWidth={1.75} className="text-brand flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-[14px] font-medium text-ink">{t("bosmaSarlavha")}</p>
-                <p className="mt-1 text-[13px] leading-relaxed text-muted">{t("bosmaTavsif")}</p>
-                <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-brand/10 text-brand text-[12px] font-semibold">
+                <p className="text-[14px] font-medium text-ink">
+                  {hammasiBand ? t("hammasiBerilgan") : t("bosmaSarlavha")}
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                  {hammasiBand ? t("hammasiBerilganTavsif") : t("bosmaTavsif")}
+                </p>
+                <div
+                  className={`mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[12px] font-semibold ${
+                    hammasiBand
+                      ? "bg-surface text-muted"
+                      : "bg-brand/10 text-brand"
+                  }`}
+                >
                   <span>📚</span>
-                  <span>{t("nusxalarSoni")}: {kitob.nusxalar_soni || 1} ta nusxa</span>
+                  <span>
+                    {hammasiBand
+                      ? `${t("boshNusxalar")}: 0 / ${jamiNusxa}`
+                      : t("boshBor", { n: boshNusxa })}
+                  </span>
                 </div>
               </div>
             </div>

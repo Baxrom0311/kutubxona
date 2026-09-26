@@ -300,3 +300,67 @@ def test_mavjudlik_filtri(api_client, kitob, form_darslik):
     natijalar = res.json()["natijalar"]
     assert len(natijalar) == 1
     assert natijalar[0]["slug"] == kitob.slug
+
+
+def test_bosh_nusxalar_soni_qarzga_qarab_kamayadi(api_client, form_darslik, oquvchi, kutubxonachi):
+    """Kitob berilganda API'dagi bo'sh nusxalar soni kamayishi kerak."""
+    from catalog.models import LoanEntry, Reader
+
+    kitob = Book.objects.create(
+        nomi="Ikki nusxali qo'llanma", turi=form_darslik, mavjudlik="bosma", nusxalar_soni=2
+    )
+
+    def olish():
+        d = api_client.get(f"/api/kitoblar/{kitob.slug}/").json()
+        return d["nusxalar_soni"], d["bosh_nusxalar_soni"]
+
+    assert olish() == (2, 2)
+
+    LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+    assert olish() == (2, 1)
+
+    ikkinchi = Reader.objects.create(fish="Ikkinchi o'quvchi")
+    loan2 = LoanEntry.objects.create(kitob=kitob, oquvchi=ikkinchi, kutubxonachi=kutubxonachi)
+    assert olish() == (2, 0)
+
+    loan2.qaytarish()
+    assert olish() == (2, 1)
+
+
+def test_bosh_nusxalar_royxatda_ham_togri(api_client, form_darslik, oquvchi, kutubxonachi):
+    """Katalog ro'yxatida ham bo'sh nusxa soni to'g'ri bo'lsin (annotatsiya)."""
+    from catalog.models import LoanEntry
+
+    kitob = Book.objects.create(
+        nomi="Ro'yxat sinovi", turi=form_darslik, mavjudlik="bosma", nusxalar_soni=3
+    )
+    LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+
+    res = api_client.get("/api/kitoblar/?mavjudlik=bosma")
+    topilgan = next(k for k in res.json()["natijalar"] if k["slug"] == kitob.slug)
+    assert topilgan["nusxalar_soni"] == 3
+    assert topilgan["bosh_nusxalar_soni"] == 2
+
+
+def test_yonalish_filtri_bosh_nusxani_buzmaydi(
+    api_client, form_darslik, subject_kardiologiya, oquvchi, kutubxonachi
+):
+    """Yo'nalish filtri m2m JOIN qo'shadi — hisob ko'paymasligi kerak."""
+    from catalog.models import LoanEntry
+
+    kitob = Book.objects.create(
+        nomi="Yo'nalishli bosma", turi=form_darslik, mavjudlik="bosma", nusxalar_soni=2
+    )
+    kitob.yonalishlar.add(subject_kardiologiya)
+    LoanEntry.objects.create(kitob=kitob, oquvchi=oquvchi, kutubxonachi=kutubxonachi)
+
+    res = api_client.get(f"/api/kitoblar/?yonalish={subject_kardiologiya.slug}")
+    topilgan = next(k for k in res.json()["natijalar"] if k["slug"] == kitob.slug)
+    assert topilgan["bosh_nusxalar_soni"] == 1
+
+
+def test_raqamli_kitobda_nusxa_maydonlari_bosh(api_client, kitob):
+    """Onlayn kitobda nusxa haqida gap bo'lmasligi kerak."""
+    d = api_client.get(f"/api/kitoblar/{kitob.slug}/").json()
+    assert d["nusxalar_soni"] is None
+    assert d["bosh_nusxalar_soni"] is None

@@ -84,6 +84,8 @@ class BookListSerializer(serializers.ModelSerializer):
     muqova = serializers.SerializerMethodField()
     formatlar = serializers.SerializerMethodField()
     oqish_mumkin = serializers.SerializerMethodField()
+    nusxalar_soni = serializers.SerializerMethodField()
+    bosh_nusxalar_soni = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -99,6 +101,7 @@ class BookListSerializer(serializers.ModelSerializer):
             "formatlar",
             "mavjudlik",
             "nusxalar_soni",
+            "bosh_nusxalar_soni",
             "oqish_mumkin",
             "korishlar_soni",
         ]
@@ -134,10 +137,20 @@ class BookListSerializer(serializers.ModelSerializer):
         return obj.mavjudlik == "raqamli" and bool(obj.fayllar.all())
 
     def get_nusxalar_soni(self, obj) -> int | None:
-        """Bosma kitoblar uchun nusxalar soni (kamida 1)."""
-        if obj.mavjudlik == "bosma":
-            return obj.nusxalar_soni or 1
-        return None
+        """Kutubxonadagi jami bosma nusxalar soni (kamida 1)."""
+        if obj.mavjudlik != "bosma":
+            return None
+        return obj.nusxalar_soni or 1
+
+    def get_bosh_nusxalar_soni(self, obj) -> int | None:
+        """Hozir kutubxonada bo'sh turgan nusxalar soni.
+
+        Qarzga berilgan nusxalar ayiriladi, shuning uchun foydalanuvchi
+        kutubxonaga borishdan oldin kitob joyidami yoki yo'qligini biladi.
+        """
+        if obj.mavjudlik != "bosma":
+            return None
+        return obj.bosh_nusxalar_soni
 
 
 class BookDetailSerializer(BookListSerializer):

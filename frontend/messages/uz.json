@@ -75,9 +75,12 @@
     },
     "bosmaSarlavha": "Bu kitobning bosma nusxasi bor",
     "bosmaTavsif": "Kitobni kutubxonadan olib o‘qishingiz mumkin. Ish vaqti va manzil sahifa pastida.",
-    "nusxalarSoni": "Kutubxonada mavjud",
     "bosmaBelgi": "Kutubxonada",
-    "onlaynBelgi": "Onlayn"
+    "boshNusxalar": "Bo‘sh nusxalar",
+    "bandBelgi": "Hozir band",
+    "boshBor": "{n, plural, other {Hozir # ta nusxa bo‘sh}}",
+    "hammasiBerilgan": "Hozir barcha nusxalar berilgan",
+    "hammasiBerilganTavsif": "Nusxalar qaytarilgach olishingiz mumkin. Aniqlashtirish uchun kutubxonaga murojaat qiling."
   },
   "ai": {
     "sarlavha": "AI maslahatchi",

@@ -26,6 +26,13 @@ export default function KitobKartochka({ kitob, priority }: KitobKartochkaProps)
     kitob.turi?.nomi?.uz ||
     "";
 
+  // Bosma kitobda qarzga berilganlari ayirilgan bo'sh nusxalar ko'rsatiladi,
+  // shunda foydalanuvchi kutubxonaga borishdan oldin biladi.
+  const bosmaKitob = !kitob.oqish_mumkin;
+  const jamiNusxa = kitob.nusxalar_soni ?? 1;
+  const boshNusxa = kitob.bosh_nusxalar_soni ?? jamiNusxa;
+  const hammasiBand = bosmaKitob && boshNusxa <= 0;
+
   return (
     <Link href={`/kitob/${kitob.slug}`} className="group block">
       {/* Muqova — kartochkaning asosiy elementi */}
@@ -39,17 +46,25 @@ export default function KitobKartochka({ kitob, priority }: KitobKartochkaProps)
           sizes="(max-width: 640px) 44vw, (max-width: 1024px) 28vw, 200px"
         />
 
-        {kitob.oqish_mumkin && kitob.formatlar?.length > 0 && (
-          <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/40 text-white text-[10px] font-semibold tracking-wide backdrop-blur-sm">
-            {kitob.formatlar[0].toUpperCase()}
+        {/* Yorliqlar doim yuqori o'ng burchakda: yasalgan muqovada nom
+            tepada, muallif pastda turadi va ularning ustiga tushmaydi. */}
+        {bosmaKitob ? (
+          // Yorliq qisqa bo'lishi shart — muqovadagi nom bilan to'qnashmasin.
+          // To'liq izoh muqova ostidagi qatorda so'z bilan yoziladi.
+          <span
+            title={hammasiBand ? t("bandBelgi") : t("boshNusxalar")}
+            className={`absolute top-2 right-2 px-1.5 py-0.5 rounded text-white text-[10px] font-semibold tabular-nums backdrop-blur-sm ${
+              hammasiBand ? "bg-amber-700/85" : "bg-black/55"
+            }`}
+          >
+            {boshNusxa}/{jamiNusxa}
           </span>
-        )}
-
-        {!kitob.oqish_mumkin && (
-          <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-semibold tracking-wide backdrop-blur-sm flex items-center gap-1">
-            <span>📕</span>
-            <span>{kitob.nusxalar_soni ? `${kitob.nusxalar_soni} ta nusxa` : t("bosmaBelgi")}</span>
-          </span>
+        ) : (
+          kitob.formatlar?.length > 0 && (
+            <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/45 text-white text-[10px] font-semibold tracking-wide backdrop-blur-sm">
+              {kitob.formatlar[0].toUpperCase()}
+            </span>
+          )
         )}
       </div>
 
@@ -65,11 +80,12 @@ export default function KitobKartochka({ kitob, priority }: KitobKartochkaProps)
         <p className="mt-1.5 text-[12px] text-muted/80">
           {yonalishNomi}
           {kitob.yil ? `, ${kitob.yil}` : ""}
-          {/* Onlayn o'qib bo'lmaydigan kitob darhol ajralib tursin. */}
-          {!kitob.oqish_mumkin && (
-            <span className="text-brand font-medium">
-              {" "}
-              · {t("bosmaBelgi")}{kitob.nusxalar_soni ? ` (${kitob.nusxalar_soni} ta)` : ""}
+          {bosmaKitob && (
+            <span className={hammasiBand ? "text-muted font-medium" : "text-brand font-medium"}>
+              {" · "}
+              {hammasiBand
+                ? t("bandBelgi")
+                : `${t("bosmaBelgi")} ${boshNusxa}/${jamiNusxa}`}
             </span>
           )}
         </p>

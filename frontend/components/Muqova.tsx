@@ -59,7 +59,9 @@ export default function Muqova({
         borderLeft: `6px solid ${chetI}`,
       }}
     >
-      <div className={katta ? "px-5 pt-6" : "px-3.5 pt-4"}>
+      {/* Kichik muqovada yuqori o'ng burchakda yorliq turadi (format yoki
+          «Kutubxonada»), shuning uchun nomga o'ng tomondan joy qoldiriladi. */}
+      <div className={katta ? "px-5 pt-6" : "px-3.5 pt-4 pe-16"}>
         <p
           className={`font-display text-white leading-snug line-clamp-5 ${
             katta ? "text-[19px]" : "text-[13px]"

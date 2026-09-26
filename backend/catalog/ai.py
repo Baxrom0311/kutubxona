@@ -5,11 +5,15 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 import requests
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Count, Q
 
 from catalog.models import AiBotConfig, Book, ChatMessage, ChatSession
 
 logger = logging.getLogger(__name__)
+
+# AI promptiga sig'adigan kitoblar soni. Juda katta bo'lsa prompt uzayib
+# ketadi, juda kichik bo'lsa AI mavjud kitobni "yo'q" deb aytadi.
+KATALOG_KONTEKSTI_LIMITI = 200
 
 
 class DeepSeekService:
@@ -22,20 +26,50 @@ class DeepSeekService:
 
     def _katalog_kontekstini_yaratish(self) -> str:
         """Kutubxonadagi kitoblar haqida qisqacha ma'lumotlar bazasini prompt uchun yig'adi."""
+        # Qaytarilmagan qarzlar bitta so'rovda hisoblanadi (N+1 bo'lmasligi uchun).
         kitoblar = (
             Book.objects.select_related("turi")
             .prefetch_related("mualliflar", "yonalishlar")
-            .all()[:50]
+            .annotate(
+                band_nusxalar=Count(
+                    "qarzlar",
+                    filter=Q(qarzlar__qaytarilgan_sana__isnull=True),
+                    distinct=True,
+                )
+            )[:KATALOG_KONTEKSTI_LIMITI]
         )
         if not kitoblar:
             return "Hozirda kutubxonada kitoblar mavjud emas."
 
-        satrlar = ["Kutubxonadagi mavjud adabiyotlar ro'yxati:"]
+        jami = Book.objects.count()
+        satrlar = ["Kutubxonadagi adabiyotlar ro'yxati:"]
         for k in kitoblar:
             mualliflar = ", ".join(m.ism for m in k.mualliflar.all()) or "Muallif ko'rsatilmagan"
             yonalishlar = ", ".join(y.nomi_uz for y in k.yonalishlar.all()) or "Umumiy"
+
+            # AI bosma kitobni "onlayn o'qing" deb tavsiya qilmasligi uchun
+            # holat aniq yoziladi.
+            if k.mavjudlik == "raqamli":
+                holat = "Saytda onlayn o'qiladi"
+            elif k.bosh_nusxalar_soni > 0:
+                holat = (
+                    f"Faqat bosma nusxa, kutubxonadan olinadi "
+                    f"(hozir {k.bosh_nusxalar_soni} ta bo'sh, jami {k.nusxalar_soni or 1} ta)"
+                )
+            else:
+                holat = "Faqat bosma nusxa, hozir barcha nusxalar qarzga berilgan"
+
             satrlar.append(
-                f"- Kitob: \"{k.nomi}\" | Slug: {k.slug} | Muallif: {mualliflar} | Turi: {k.turi.nomi_uz} | Yo'nalish: {yonalishlar} | Tili: {k.til}"
+                f"- Kitob: \"{k.nomi}\" | Slug: {k.slug} | Muallif: {mualliflar}"
+                f" | Turi: {k.turi.nomi_uz} | Yo'nalish: {yonalishlar} | Tili: {k.til}"
+                f" | Holati: {holat}"
+            )
+
+        if jami > len(satrlar) - 1:
+            satrlar.append(
+                f"(Ro'yxatda eng yangi {len(satrlar) - 1} ta kitob ko'rsatildi, "
+                f"kutubxonada jami {jami} ta kitob bor. Ro'yxatda yo'q mavzu so'ralsa, "
+                f"kitob umuman yo'q demang — katalogdan qidirishni taklif qiling.)"
             )
         return "\n".join(satrlar)
 

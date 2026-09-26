@@ -107,3 +107,43 @@ def test_korishni_hisoblash(kitob):
     kitob.korishni_qoshish()
     kitob.refresh_from_db()
     assert kitob.korishlar_soni == 1
+
+
+def test_kop_nusxali_kitob_nusxalar_sonicha_beriladi(db, form_darslik, kutubxonachi):
+    """3 nusxali kitob 3 marta berilishi, 4-martasida rad etilishi kerak."""
+    from catalog.models import Book, LoanEntry, Reader
+
+    kitob = Book.objects.create(
+        nomi="Uch nusxali darslik", turi=form_darslik, mavjudlik="bosma", nusxalar_soni=3
+    )
+    oquvchilar = [Reader.objects.create(fish=f"O'quvchi {i}") for i in range(4)]
+
+    for i in range(3):
+        qarz = LoanEntry(kitob=kitob, oquvchi=oquvchilar[i], kutubxonachi=kutubxonachi)
+        qarz.full_clean()
+        qarz.save()
+        assert kitob.bosh_nusxalar_soni == 3 - (i + 1)
+
+    tortinchi = LoanEntry(kitob=kitob, oquvchi=oquvchilar[3], kutubxonachi=kutubxonachi)
+    with pytest.raises(ValidationError):
+        tortinchi.full_clean()
+
+    # Bitta nusxa qaytarilsa yana berish mumkin
+    kitob.qarzlar.filter(qaytarilgan_sana__isnull=True).first().qaytarish()
+    assert kitob.bosh_nusxalar_soni == 1
+    tortinchi.full_clean()
+
+
+def test_hozirgi_oquvchilar_barcha_nusxalarni_qaytaradi(db, form_darslik, kutubxonachi):
+    """Ko'p nusxali kitobda barcha oluvchilar ko'rinishi kerak."""
+    from catalog.models import Book, LoanEntry, Reader
+
+    kitob = Book.objects.create(
+        nomi="Ikki nusxa", turi=form_darslik, mavjudlik="bosma", nusxalar_soni=2
+    )
+    a = Reader.objects.create(fish="Anvar")
+    b = Reader.objects.create(fish="Bobur")
+    LoanEntry.objects.create(kitob=kitob, oquvchi=a, kutubxonachi=kutubxonachi)
+    LoanEntry.objects.create(kitob=kitob, oquvchi=b, kutubxonachi=kutubxonachi)
+
+    assert {o.fish for o in kitob.hozirgi_oquvchilar()} == {"Anvar", "Bobur"}

@@ -1,7 +1,7 @@
 """Kutubxona REST API ViewSet'lari."""
 
 from datetime import timedelta
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import status, viewsets
@@ -35,7 +35,21 @@ class BookViewSet(viewsets.ReadOnlyModelViewSet):
         return (
             Book.objects.select_related("turi")
             .prefetch_related("mualliflar", "yonalishlar", "fayllar")
-            .all()
+            # Qaytarilmagan qarzlar soni bitta so'rovda hisoblanadi, aks holda
+            # katalogdagi har kitob uchun alohida COUNT ketardi (N+1).
+            # `distinct=True` shart: yo'nalish filtri m2m JOIN qo'shganda
+            # qatorlar ko'payib, hisob noto'g'ri chiqishi mumkin.
+            .annotate(
+                band_nusxalar=Count(
+                    "qarzlar",
+                    filter=Q(qarzlar__qaytarilgan_sana__isnull=True),
+                    distinct=True,
+                )
+            )
+            # annotate() GROUP BY qo'shadi va DRF queryset'ni "tartiblanmagan"
+            # deb hisoblab, sahifalashda ogohlantirish beradi. Tartibni aniq
+            # ko'rsatamiz; `saralash` filtri berilsa u baribir ustun turadi.
+            .order_by("-qoshilgan_sana")
         )
 
     def get_serializer_class(self):

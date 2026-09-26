@@ -42,7 +42,10 @@ export interface Kitob {
   formatlar: ("pdf" | "epub")[];
   /** "raqamli" — saytda o'qiladi; "bosma" — faqat kutubxonadagi nusxa. */
   mavjudlik: "raqamli" | "bosma";
+  /** Kutubxonadagi jami bosma nusxalar (raqamlida null). */
   nusxalar_soni?: number | null;
+  /** Hozir bo'sh turgan nusxalar — qarzga berilganlari ayirilgan. */
+  bosh_nusxalar_soni?: number | null;
   /** Raqamli va fayli biriktirilgan bo'lsagina rost. */
   oqish_mumkin: boolean;
   korishlar_soni: number;

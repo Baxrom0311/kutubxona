@@ -247,9 +247,20 @@ class Book(models.Model):
         Book.objects.filter(pk=self.pk).update(korishlar_soni=models.F("korishlar_soni") + 1)
         self.korishlar_soni = Book.objects.filter(pk=self.pk).values_list("korishlar_soni", flat=True).first()
 
+    def hozirgi_oquvchilar(self) -> list:
+        """Kitobning nusxalari hozir kimlarda ekanini qaytaradi.
+
+        Nusxa bir nechta bo'lishi mumkin, shuning uchun ro'yxat qaytadi.
+        """
+        return [loan.oquvchi for loan in self.faol_qarzlar().select_related("oquvchi")]
+
     def hozir_kimda(self):
-        """Kitob hozir qaysi o'quvchidaligini qaytaradi (qaytarilmagan bo'lsa)."""
-        loan = self.qarzlar.filter(qaytarilgan_sana__isnull=True).select_related("oquvchi").first()
+        """Birinchi qaytarilmagan nusxa kimdaligini qaytaradi.
+
+        Diqqat: kitobda bir nechta nusxa bo'lsa bu faqat bittasini ko'rsatadi —
+        to'liq ro'yxat uchun `hozirgi_oquvchilar()` ishlatilsin.
+        """
+        loan = self.faol_qarzlar().select_related("oquvchi").first()
         return loan.oquvchi if loan else None
 
     @property
@@ -263,12 +274,19 @@ class Book(models.Model):
 
     @property
     def band_nusxalar_soni(self) -> int:
-        """Hozir o'quvchilarda qarzda turgan nusxalar soni."""
+        """Hozir o'quvchilarda qarzda turgan nusxalar soni.
+
+        Queryset `band_nusxalar` deb annotatsiya qilingan bo'lsa (API va admin
+        ro'yxatlarida shunday), qo'shimcha so'rov yuborilmaydi.
+        """
+        annotatsiya = getattr(self, "band_nusxalar", None)
+        if annotatsiya is not None:
+            return annotatsiya
         return self.faol_qarzlar().count()
 
     @property
     def bosh_nusxalar_soni(self) -> int:
-        """Kutubxonada mavjud bo'sh nusxalar soni."""
+        """Kutubxonada hozir bo'sh turgan nusxalar soni."""
         jami = self.nusxalar_soni or 1
         return max(0, jami - self.band_nusxalar_soni)
 

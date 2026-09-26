@@ -75,9 +75,12 @@
     },
     "bosmaSarlavha": "This book has a printed copy",
     "bosmaTavsif": "You can borrow it at the library. Address and opening hours are at the bottom of the page.",
-    "nusxalarSoni": "In library",
     "bosmaBelgi": "At the library",
-    "onlaynBelgi": "Online"
+    "boshNusxalar": "Available copies",
+    "bandBelgi": "All on loan",
+    "boshBor": "{n, plural, one {# copy available now} other {# copies available now}}",
+    "hammasiBerilgan": "All copies are on loan right now",
+    "hammasiBerilganTavsif": "You can borrow it once a copy comes back. Ask the library to check."
   },
   "ai": {
     "sarlavha": "AI assistant",
