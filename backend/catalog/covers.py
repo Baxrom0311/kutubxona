@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 from catalog.models import Book
 
 BRAND_LOGO = Path(__file__).with_name("assets") / "brand-logo.png"
-BRAND_REVISION = "2026-10-03-title-normal"
+BRAND_REVISION = "2026-10-03-title-compact"
 BRAND_LINES = (
     "RESPUBLIKA O‘RTA TIBBIY XODIMLARI",
     "MALAKASINI OSHIRISH VA ULARNI",
@@ -139,14 +139,14 @@ def _draw_brand(image: Image.Image, draw: ImageDraw.ImageDraw, primary) -> None:
 
 
 def _fit_title(text: str, max_width: int, max_height: int):
-    for size in (88, 84, 80, 76, 70, 64, 58, 52):
+    for size in (68, 64, 60, 56, 52, 48):
         font = _font(size, bold=True)
-        line_height = round(size * 1.18)
+        line_height = round(size * 1.2)
         lines = _wrap_text(text, font, max_width=max_width, max_lines=7)
         if len(lines) * line_height <= max_height:
             return font, lines, line_height
-    font = _font(52, bold=True)
-    return font, _wrap_text(text, font, max_width=max_width, max_lines=7), 62
+    font = _font(48, bold=True)
+    return font, _wrap_text(text, font, max_width=max_width, max_lines=7), 58
 
 
 def _next_palette():
