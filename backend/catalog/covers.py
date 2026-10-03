@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 from catalog.models import Book
 
 BRAND_LOGO = Path(__file__).with_name("assets") / "brand-logo.png"
+BRAND_REVISION = "2026-10-03"
 BRAND_LINES = (
     "RESPUBLIKA O‘RTA TIBBIY XODIMLARI",
     "MALAKASINI OSHIRISH VA ULARNI",

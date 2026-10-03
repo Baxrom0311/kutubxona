@@ -3,6 +3,7 @@
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from catalog.covers import BRAND_REVISION
 from catalog.models import Author, Book, BookFile, Form, Subject
 from catalog.storage import get_saqlagich
 
@@ -126,7 +127,11 @@ class BookListSerializer(serializers.ModelSerializer):
 
     def get_muqova(self, obj) -> str:
         saqlagich = get_saqlagich()
-        return saqlagich.ochiq_url(obj.muqova_key)
+        url = saqlagich.ochiq_url(obj.muqova_key)
+        if not url:
+            return ""
+        separator = "&" if "?" in url else "?"
+        return f"{url}{separator}v={BRAND_REVISION}"
 
     def get_formatlar(self, obj) -> list[str]:
         return list(dict.fromkeys(f.format for f in obj.fayllar.all()))
@@ -218,4 +223,3 @@ class AiBotConfigSerializer(serializers.ModelSerializer):
             "faol",
             "yangilangan_sana",
         ]
-
