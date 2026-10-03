@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Tizim paketlari (Postgres mijoz va gcc)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libpq-dev gcc postgresql-client && rm -rf /var/lib/apt/lists/*
+        libpq-dev gcc postgresql-client fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
 
 # Xavfsizlik uchun xavfsiz foydalanuvchi yaratish
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser

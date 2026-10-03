@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 from catalog.models import Book
 
 BRAND_LOGO = Path(__file__).with_name("assets") / "brand-logo.png"
-BRAND_REVISION = "2026-10-03-title-v2"
+BRAND_REVISION = "2026-10-03-font-fix"
 BRAND_LINES = (
     "RESPUBLIKA O‘RTA TIBBIY XODIMLARI",
     "MALAKASINI OSHIRISH VA ULARNI",
@@ -166,7 +166,7 @@ def _font(size: int, bold: bool = False):
     for candidate in candidates:
         if candidate and Path(candidate).exists():
             return ImageFont.truetype(candidate, size=size)
-    return ImageFont.load_default()
+    return ImageFont.load_default(size=size)
 
 
 def _wrap_text(text: str, draw_font, max_width: int, max_lines: int) -> list[str]:
