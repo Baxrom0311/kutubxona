@@ -5,7 +5,7 @@ import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "./ThemeProvider";
-import Logotip from "./Logotip";
+import Image from "next/image";
 import { Globe, Menu, Moon, Sun, X } from "lucide-react";
 
 export default function Navbar() {
@@ -40,13 +40,21 @@ export default function Navbar() {
     <header className="fixed top-0 inset-x-0 z-40 h-16 bg-surface/80 backdrop-blur-xl border-b border-line">
       <div className="h-full max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <Logotip size={30} />
-          <span className="font-display text-[19px] tracking-tight text-ink">
-            Kutubxona
+          <Image
+            src="/logo-malaka-oshirish.png"
+            alt=""
+            width={44}
+            height={44}
+            priority
+            className="h-11 w-11 rounded-md bg-white object-contain"
+          />
+          <span className="max-w-[min(52vw,390px)] font-display text-[12px] sm:text-[13px] leading-tight text-ink">
+            <span className="sm:hidden">{t("brandCompact")}</span>
+            <span className="hidden sm:block">{t("brandFull")}</span>
           </span>
         </Link>
 
-        <nav className="hidden sm:flex items-center gap-7 text-[14px]">
+        <nav className="hidden lg:flex items-center gap-7 text-[14px]">
           {havolalar.map((h) => (
             <Link
               key={h.href}
@@ -96,7 +104,7 @@ export default function Navbar() {
             type="button"
             aria-label={t("menyu")}
             aria-expanded={mobileMenuOpen}
-            className="sm:hidden w-9 h-9 rounded-lg text-ink-2 hover:bg-surface-2 flex items-center justify-center transition-colors"
+            className="lg:hidden w-9 h-9 rounded-lg text-ink-2 hover:bg-surface-2 flex items-center justify-center transition-colors"
           >
             {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -104,7 +112,7 @@ export default function Navbar() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-surface border-b border-line px-4 py-2">
+        <div className="lg:hidden bg-surface border-b border-line px-4 py-2">
           {havolalar.map((h) => (
             <Link
               key={h.href}

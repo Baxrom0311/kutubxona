@@ -47,6 +47,9 @@ export default async function HomePage({ params }: HomePageProps) {
             <h1 className="rise rise-1 font-display text-[32px] sm:text-[42px] lg:text-[48px] leading-[1.08] text-ink">
               {t("sarlavha")}
             </h1>
+            <p className="rise rise-1 mt-4 max-w-lg text-[15px] leading-relaxed text-ink-2">
+              {t("markazTavsifi")}
+            </p>
 
             <form
               action={`/${locale}/katalog`}

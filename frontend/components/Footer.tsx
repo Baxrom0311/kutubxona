@@ -1,6 +1,6 @@
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
-import Logotip from "./Logotip";
+import Image from "next/image";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 
 const MAPS_URL = "https://maps.app.goo.gl/gDrA4TofaJpohw2s8";
@@ -20,8 +20,14 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex items-center gap-2.5 lg:items-start">
-            <Logotip size={28} />
-            <span className="font-display text-[18px] text-ink">Kutubxona</span>
+            <Image
+              src="/logo-malaka-oshirish.png"
+              alt=""
+              width={44}
+              height={44}
+              className="h-11 w-11 flex-shrink-0 rounded-md bg-white object-contain"
+            />
+            <span className="max-w-xs font-display text-[15px] leading-snug text-ink">{tNav("brandFull")}</span>
           </div>
 
           <nav>

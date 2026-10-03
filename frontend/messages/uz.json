@@ -1,5 +1,7 @@
 {
   "nav": {
+    "brandFull": "Respublika o‘rta tibbiy xodimlari malakasini oshirish va ularni ixtisoslashtirish markazi — Urganch filiali",
+    "brandCompact": "Urganch filiali",
     "boshSahifa": "Bosh sahifa",
     "katalog": "Katalog",
     "til": "Til",
@@ -8,7 +10,8 @@
     "menyu": "Menyu"
   },
   "home": {
-    "sarlavha": "Bilim — eng yaxshi davo",
+    "sarlavha": "Tibbiyotda bilim va malaka",
+    "markazTavsifi": "Respublika o‘rta tibbiy xodimlari malakasini oshirish va ularni ixtisoslashtirish markazining Urganch filiali. Tibbiyot xodimlari uchun darsliklar va klinik adabiyotlar kutubxonasi.",
     "qidiruvPlaceholder": "Kitob nomi, muallif yoki mavzu",
     "qidirish": "Qidirish",
     "fondKitoblar": "{n, plural, other {# kitob}}",
@@ -121,7 +124,7 @@
     "yakshanba": "Yakshanba — dam olish kuni"
   },
   "metadata": {
-    "title": "Kutubxona",
-    "description": "Tibbiyot va hamshiralik ishi bo‘yicha kitoblarni onlayn qidiring va o‘qing."
+    "title": "Urganch filiali | O‘rta tibbiy xodimlar malaka markazi",
+    "description": "Respublika o‘rta tibbiy xodimlari malakasini oshirish va ularni ixtisoslashtirish markazi Urganch filiali. Tibbiyot darsliklari va klinik adabiyotlar kutubxonasi."
   }
 }

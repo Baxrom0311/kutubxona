@@ -1,5 +1,7 @@
 {
   "nav": {
+    "brandFull": "Urgench Branch of the Republican Center for Advanced Training and Specialization of Mid-Level Medical Personnel",
+    "brandCompact": "Urgench Branch",
     "boshSahifa": "Home",
     "katalog": "Catalog",
     "til": "Language",
@@ -8,7 +10,8 @@
     "menyu": "Menu"
   },
   "home": {
-    "sarlavha": "Knowledge is the best medicine",
+    "sarlavha": "Knowledge and skills in healthcare",
+    "markazTavsifi": "The Urgench Branch of the Republican Center for Advanced Training and Specialization of Mid-Level Medical Personnel. A library of textbooks and clinical resources for healthcare professionals.",
     "qidiruvPlaceholder": "Title, author or subject",
     "qidirish": "Search",
     "fondKitoblar": "{n, plural, one {# book} other {# books}}",
@@ -121,7 +124,7 @@
     "yakshanba": "Sunday — closed"
   },
   "metadata": {
-    "title": "Library",
-    "description": "Search and read medicine and nursing books online."
+    "title": "Urgench Branch | Medical Staff Training Center",
+    "description": "The Urgench Branch of the Republican Center for Advanced Training and Specialization of Mid-Level Medical Personnel. Medical textbooks and clinical resources."
   }
 }
