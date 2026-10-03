@@ -9,6 +9,14 @@ from PIL import Image, ImageDraw, ImageFont
 
 from catalog.models import Book
 
+BRAND_LOGO = Path(__file__).with_name("assets") / "brand-logo.png"
+BRAND_LINES = (
+    "RESPUBLIKA O‘RTA TIBBIY XODIMLARI",
+    "MALAKASINI OSHIRISH VA ULARNI",
+    "IXTISOSLASHTIRISH MARKAZI",
+    "URGANCH FILIALI",
+)
+
 
 PALETTES = [
     ((14, 63, 88), (20, 184, 166), (255, 255, 255)),
@@ -77,22 +85,21 @@ def render_cover(book: Book) -> Image.Image:
 
     draw.rounded_rectangle((58, 58, width - 58, height - 58), radius=36, outline=(255, 255, 255), width=3)
     draw.rectangle((0, height - 230, width, height), fill=(0, 0, 0))
-    draw.rectangle((0, 0, width, 170), fill=(255, 255, 255))
+    draw.rectangle((0, 0, width, 250), fill=(255, 255, 255))
 
-    badge_font = _font(34, bold=True)
-    title_font = _font(64, bold=True)
+    _draw_brand(image, draw, primary)
     author_font = _font(34)
     small_font = _font(28, bold=True)
 
     lang = book.til if book.til in LIBRARY_LABELS else "uz"
     turi = book.turi.nomi(lang).upper() if book.turi_id else DEFAULT_TYPE_LABELS[lang]
-    draw.text((80, 72), LIBRARY_LABELS[lang], font=badge_font, fill=primary)
-    draw.text((80, 118), turi[:34], font=small_font, fill=accent)
+    draw.text((220, 190), f"{LIBRARY_LABELS[lang]}  ·  {turi[:24]}", font=small_font, fill=primary)
 
-    y = 285
-    for line in _wrap_text(book.nomi, title_font, max_width=740, max_lines=7):
+    title_font, title_lines, title_line_height = _fit_title(book.nomi, max_width=740, max_height=500)
+    y = 315
+    for line in title_lines:
         draw.text((80, y), line, font=title_font, fill=text)
-        y += 78
+        y += title_line_height
 
     authors = ", ".join(a.ism for a in book.mualliflar.all()) or DEFAULT_AUTHOR_LABELS[lang]
     y = min(y + 45, 855)
@@ -112,6 +119,33 @@ def render_cover(book: Book) -> Image.Image:
     draw.text((80, height - 118), meta, font=small_font, fill=(180, 235, 230))
 
     return image
+
+
+def _draw_brand(image: Image.Image, draw: ImageDraw.ImageDraw, primary) -> None:
+    if BRAND_LOGO.exists():
+        with Image.open(BRAND_LOGO) as logo:
+            logo = logo.convert("RGBA")
+            logo.thumbnail((142, 142), Image.Resampling.LANCZOS)
+            x = 58 + (142 - logo.width) // 2
+            y = 40 + (142 - logo.height) // 2
+            image.paste(logo, (x, y), logo)
+
+    brand_font = _font(23, bold=True)
+    y = 48
+    for line in BRAND_LINES:
+        draw.text((220, y), line, font=brand_font, fill=primary)
+        y += 34
+
+
+def _fit_title(text: str, max_width: int, max_height: int):
+    for size in (88, 82, 76, 70, 64, 58, 52):
+        font = _font(size, bold=True)
+        line_height = round(size * 1.2)
+        lines = _wrap_text(text, font, max_width=max_width, max_lines=7)
+        if len(lines) * line_height <= max_height:
+            return font, lines, line_height
+    font = _font(52, bold=True)
+    return font, _wrap_text(text, font, max_width=max_width, max_lines=7), 62
 
 
 def _next_palette():
