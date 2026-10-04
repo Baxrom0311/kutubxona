@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { Download, Monitor, X } from "lucide-react";
+import { Download, Laptop, Monitor, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -34,11 +34,13 @@ function getPwaSnapshot(): boolean {
 }
 
 function getServerSnapshot(): boolean {
-  return true;
+  return true; // SSR paytida miltillashni oldini olish uchun yashirin turadi
 }
 
-export default function InstallPwaButton() {
-  const t = useTranslations("pwa");
+export default function FooterAppInstall() {
+  const t = useTranslations("footer");
+  const tPwa = useTranslations("pwa");
+
   const isPwaMode = useSyncExternalStore(subscribeToPwa, getPwaSnapshot, getServerSnapshot);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,6 +58,7 @@ export default function InstallPwaButton() {
     };
   }, []);
 
+  // PWA dan foydalanganda yoki endi o'rnatilganda chiqmaydi
   if (isPwaMode || installedManually) {
     return null;
   }
@@ -75,18 +78,29 @@ export default function InstallPwaButton() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleInstallClick}
-        title={t("dasturniOrnatish")}
-        aria-label={t("dasturniOrnatish")}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium text-brand hover:bg-brand/10 transition-colors border border-brand/20 cursor-pointer"
-      >
-        <Download size={15} strokeWidth={2} className="flex-shrink-0" />
-        <span className="hidden sm:inline">{t("ornatish")}</span>
-      </button>
+      <div className="mt-4 pt-3 border-t border-line/60">
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-7 h-7 rounded-lg bg-brand/10 text-brand flex items-center justify-center flex-shrink-0">
+            <Laptop size={15} strokeWidth={2} />
+          </div>
+          <span className="text-[13px] font-semibold text-ink">
+            {t("appniOrnating")}
+          </span>
+        </div>
+        <p className="text-[12px] text-muted leading-snug mb-3">
+          {t("appTavsifi")}
+        </p>
+        <button
+          type="button"
+          onClick={handleInstallClick}
+          className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl bg-brand hover:bg-brand-strong text-white text-[13px] font-semibold transition-colors shadow-sm cursor-pointer"
+        >
+          <Download size={14} strokeWidth={2} />
+          <span>{t("ornatishTugmasi")}</span>
+        </button>
+      </div>
 
-      {/* Modal yo'riqnoma */}
+      {/* Safari / qo'lda o'rnatish yo'riqnomasi */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
@@ -98,7 +112,7 @@ export default function InstallPwaButton() {
               type="button"
               onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-4 text-muted hover:text-ink p-1 rounded-lg hover:bg-surface-2 transition-colors cursor-pointer"
-              aria-label={t("yopish")}
+              aria-label={tPwa("yopish")}
             >
               <X size={18} />
             </button>
@@ -108,22 +122,22 @@ export default function InstallPwaButton() {
                 <Monitor size={22} />
               </div>
               <h3 className="font-display font-semibold text-lg text-ink">
-                {t("sarlavha")}
+                {tPwa("sarlavha")}
               </h3>
             </div>
 
             <p className="text-[14px] text-muted leading-relaxed mb-5">
-              {t("tavsif")}
+              {tPwa("tavsif")}
             </p>
 
             <div className="space-y-3 bg-surface-2/60 rounded-xl p-3.5 border border-line text-[13px] text-ink mb-6">
               <div className="flex items-start gap-2">
                 <span className="font-semibold text-brand min-w-[18px]">1.</span>
-                <span>{t("chromeQollanma")}</span>
+                <span>{tPwa("chromeQollanma")}</span>
               </div>
               <div className="flex items-start gap-2">
                 <span className="font-semibold text-brand min-w-[18px]">2.</span>
-                <span>{t("safariQollanma")}</span>
+                <span>{tPwa("safariQollanma")}</span>
               </div>
             </div>
 
@@ -132,7 +146,7 @@ export default function InstallPwaButton() {
               onClick={() => setIsModalOpen(false)}
               className="w-full py-2.5 rounded-xl bg-brand text-white font-medium text-[14px] hover:opacity-90 transition-opacity cursor-pointer"
             >
-              {t("yopish")}
+              {tPwa("yopish")}
             </button>
           </div>
         </div>

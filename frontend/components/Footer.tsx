@@ -2,6 +2,7 @@ import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
+import FooterAppInstall from "./FooterAppInstall";
 
 const MAPS_URL = "https://maps.app.goo.gl/gDrA4TofaJpohw2s8";
 const TELEGRAM_URL = "https://t.me/bakhromdev";
@@ -84,6 +85,8 @@ export default function Footer() {
             </h2>
             <p className="text-[14px] text-muted">{t("ishVaqti")}</p>
             <p className="text-[14px] text-muted mt-1">{t("yakshanba")}</p>
+
+            <FooterAppInstall />
 
             <div className="flex gap-1 mt-5 -ml-2">
               <a
