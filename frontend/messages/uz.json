@@ -126,5 +126,16 @@
   "metadata": {
     "title": "Urganch filiali | O‘rta tibbiy xodimlar malaka markazi",
     "description": "Respublika o‘rta tibbiy xodimlari malakasini oshirish va ularni ixtisoslashtirish markazi Urganch filiali. Tibbiyot darsliklari va klinik adabiyotlar kutubxonasi."
+  },
+  "pwa": {
+    "ornatish": "O'rnatish",
+    "dasturniOrnatish": "Kompyuterga o'rnatish",
+    "ornatilgan": "O'rnatilgan",
+    "sarlavha": "Kutubxonani kompyuterga o'rnatish",
+    "tavsif": "Dasturni kompyuteringizga mustaqil ilova sifatida o'rnating. U alohida oynada ochiladi, tezroq ishlaydi va qulay foydalaniladi.",
+    "tugmaOrnatish": "Ilovani o'rnatish",
+    "safariQollanma": "Safari (macOS): yuqori menyudan «Fayl» (File) → «Dock ga qo'shish» (Add to Dock) bandini tanlang.",
+    "chromeQollanma": "Chrome / Edge: manzil qatoridagi o'rnatish belgisini yoki quyidagi tugmani bosing.",
+    "yopish": "Yopish"
   }
 }

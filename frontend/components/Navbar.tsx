@@ -5,6 +5,7 @@ import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "./ThemeProvider";
+import InstallPwaButton from "./InstallPwaButton";
 import Image from "next/image";
 import { Globe, Menu, Moon, Sun, X } from "lucide-react";
 
@@ -71,7 +72,9 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <InstallPwaButton />
+
           <div className="relative flex items-center text-ink-2 hover:text-ink transition-colors">
             <Globe size={16} strokeWidth={1.75} className="absolute left-2 pointer-events-none" />
             <select

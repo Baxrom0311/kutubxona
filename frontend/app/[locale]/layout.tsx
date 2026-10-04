@@ -38,10 +38,14 @@ export async function generateMetadata({
   }
   const t = await getTranslations({ locale, namespace: "metadata" });
   return {
-    // Ikonkalar `app/icon.svg`, `app/favicon.ico` va `app/apple-icon.png`
-    // fayllaridan avtomatik olinadi — bu yerda qayta e'lon qilish shart emas.
     title: t("title"),
     description: t("description"),
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Kutubxona",
+    },
   };
 }
 
@@ -64,6 +68,8 @@ export default async function LocaleLayout({
     <html lang={locale} className={isDark ? "dark" : ""} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#0e3f58" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

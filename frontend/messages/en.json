@@ -126,5 +126,16 @@
   "metadata": {
     "title": "Urgench Branch | Medical Staff Training Center",
     "description": "The Urgench Branch of the Republican Center for Advanced Training and Specialization of Mid-Level Medical Personnel. Medical textbooks and clinical resources."
+  },
+  "pwa": {
+    "ornatish": "Install",
+    "dasturniOrnatish": "Install on computer",
+    "ornatilgan": "Installed",
+    "sarlavha": "Install Library on Computer",
+    "tavsif": "Install the app on your computer as a standalone program. It opens in its own window, launches faster, and is convenient to use.",
+    "tugmaOrnatish": "Install App",
+    "safariQollanma": "On Safari (macOS): from the menu select «File» → «Add to Dock».",
+    "chromeQollanma": "On Chrome / Edge: click the install icon in the address bar or the button below.",
+    "yopish": "Close"
   }
 }

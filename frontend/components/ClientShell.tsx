@@ -27,6 +27,18 @@ export default function ClientShell({
     return () => window.removeEventListener("open-ai-chat", handleOpenAi);
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .catch((err) => {
+            console.error("Service worker registration failed:", err);
+          });
+      });
+    }
+  }, []);
+
   if (oqishRejimi) {
     return (
       <ThemeProvider initialTheme={initialTheme}>
