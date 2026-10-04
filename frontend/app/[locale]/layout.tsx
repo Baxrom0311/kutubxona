@@ -75,6 +75,17 @@ export default async function LocaleLayout({
             __html: `
               (function() {
                 try {
+                  window.__pwaInstallPrompt = null;
+                  window.addEventListener('beforeinstallprompt', function(e) {
+                    e.preventDefault();
+                    window.__pwaInstallPrompt = e;
+                    window.dispatchEvent(new CustomEvent('pwa-prompt-ready'));
+                  });
+                  window.addEventListener('appinstalled', function() {
+                    window.__pwaInstallPrompt = null;
+                    window.dispatchEvent(new CustomEvent('pwa-installed'));
+                  });
+
                   var saved = localStorage.getItem('theme');
                   if (!saved) {
                     var match = document.cookie.match(/(?:^|;\\s*)theme=([^;]+)/);

@@ -2,11 +2,12 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "Elektron Kutubxona | Urganch filiali",
     short_name: "Kutubxona",
     description:
       "Respublika o‘rta tibbiy xodimlar malakasini oshirish va ularni ixtisoslashtirish markazi Urganch filiali elektron kutubxonasi",
-    start_url: "/",
+    start_url: "/?source=pwa",
     scope: "/",
     display: "standalone",
     orientation: "any",
@@ -19,11 +20,13 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icon-192x192.png",
         sizes: "192x192",
         type: "image/png",
+        purpose: "any",
       },
       {
         src: "/icon-512x512.png",
         sizes: "512x512",
         type: "image/png",
+        purpose: "any",
       },
       {
         src: "/icon-maskable-512x512.png",
