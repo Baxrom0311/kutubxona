@@ -1,5 +1,6 @@
 import {
   KatalogFiltri,
+  KioskStatistika,
   Kitob,
   KitobToliq,
   OqishJavobi,
@@ -88,3 +89,16 @@ export async function yonalishlarniOlish(): Promise<Yonalish[]> {
     return [];
   }
 }
+
+export async function statistikaOlish(): Promise<KioskStatistika | null> {
+  try {
+    const res = await fetch(`${ASOS}/statistika/`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+

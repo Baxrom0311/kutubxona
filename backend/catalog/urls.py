@@ -6,6 +6,7 @@ from catalog.api import (
     ChatBotView,
     ChatSessionView,
     FormViewSet,
+    KioskStatistikaView,
     SubjectViewSet,
 )
 
@@ -15,6 +16,7 @@ router.register(r"turlar", FormViewSet, basename="tur")
 router.register(r"yonalishlar", SubjectViewSet, basename="yonalish")
 
 urlpatterns = [
+    path("statistika/", KioskStatistikaView.as_view(), name="kiosk-statistika"),
     path("chat/", ChatBotView.as_view(), name="ai-chat"),
     path("chat/sessiya/<uuid:session_id>/", ChatSessionView.as_view(), name="ai-chat-session"),
 ] + router.urls

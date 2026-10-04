@@ -20,6 +20,7 @@ export default function ClientShell({
   // O'qish oynasi butun ekranni egallaydi — menyu va footer yashiriladi.
   // AI maslahatchi esa kitob o'qiyotganda savol berish uchun ham kerak.
   const oqishRejimi = pathname.includes("/oqish/");
+  const kioskRejimi = pathname.includes("/kiosk");
 
   useEffect(() => {
     const handleOpenAi = () => setAiChatOpen(true);
@@ -38,6 +39,14 @@ export default function ClientShell({
       });
     }
   }, []);
+
+  if (kioskRejimi) {
+    return (
+      <ThemeProvider initialTheme={initialTheme}>
+        {children}
+      </ThemeProvider>
+    );
+  }
 
   if (oqishRejimi) {
     return (

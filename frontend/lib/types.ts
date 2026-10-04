@@ -82,3 +82,60 @@ export interface OqishJavobi {
   format: "pdf" | "epub";
   amal_qiladi: string;
 }
+
+export interface KioskAsosiy {
+  jami_kitoblar: number;
+  raqamli_kitoblar: number;
+  bosma_kitoblar: number;
+  jami_nusxalar: number;
+  bosh_nusxalar: number;
+  band_nusxalar: number;
+  kitobxonlar_soni: number;
+  faol_kitobxonlar: number;
+  jami_korishlar: number;
+  yonalishlar_soni: number;
+  turlar_soni: number;
+}
+
+export interface KioskOylikDinamika {
+  oy: string;
+  oy_raqami: number;
+  yil: number;
+  kitobxonlar: number;
+  olingan_kitoblar: number;
+}
+
+export interface KioskKitobReytingi {
+  orin: number;
+  slug: string;
+  nomi: string;
+  mualliflar: string[];
+  turi: string;
+  yonalish: string;
+  korishlar_soni: number;
+  olingan_soni: number;
+  mavjudlik: "raqamli" | "bosma";
+  muqova: string;
+}
+
+export interface KioskYonalishStat {
+  slug: string;
+  nomi: string;
+  kitoblar_soni: number;
+}
+
+export interface KioskTilStat {
+  kod: string;
+  nomi: string;
+  soni: number;
+  foiz: number;
+}
+
+export interface KioskStatistika {
+  asosiy: KioskAsosiy;
+  oylik_dinamika: KioskOylikDinamika[];
+  kitoblar_reytingi: KioskKitobReytingi[];
+  yonalishlar: KioskYonalishStat[];
+  tillar: KioskTilStat[];
+}
+

@@ -44,6 +44,12 @@ export default function Footer() {
                   {tNav("katalog")}
                 </Link>
               </li>
+              <li>
+                <Link href="/kiosk" className="text-muted hover:text-brand transition-colors inline-flex items-center gap-1.5">
+                  <span>Kiosk paneli</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-brand/10 text-brand font-medium">LIVE</span>
+                </Link>
+              </li>
             </ul>
           </nav>
 
